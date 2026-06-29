@@ -227,7 +227,10 @@ const AUTOMASI_CARDS = [
     desc: "Ubah CV lama berbasis teks menjadi format ATS-Friendly secara instan.",
     type: "Automation",
     pricing: "Free",
+    costPerRun: 0,
     users: 4,
+    image:
+      "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=400&h=200&fit=crop&auto=format",
   },
   {
     id: "invoice-gen",
@@ -235,7 +238,10 @@ const AUTOMASI_CARDS = [
     desc: "Generate invoice profesional dari data sederhana dalam hitungan detik.",
     type: "Automation",
     pricing: "Free",
+    costPerRun: 0,
     users: 12,
+    image:
+      "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=200&fit=crop&auto=format",
   },
   {
     id: "email-blast",
@@ -243,7 +249,10 @@ const AUTOMASI_CARDS = [
     desc: "Personalisasi ratusan email marketing secara otomatis dengan AI.",
     type: "Automation",
     pricing: "Paid",
+    costPerRun: 150,
     users: 31,
+    image:
+      "https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=400&h=200&fit=crop&auto=format",
   },
   {
     id: "social-caption",
@@ -251,7 +260,10 @@ const AUTOMASI_CARDS = [
     desc: "Generate caption Instagram, Twitter, dan LinkedIn dari brief singkat.",
     type: "Automation",
     pricing: "Free",
+    costPerRun: 0,
     users: 58,
+    image:
+      "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&h=200&fit=crop&auto=format",
   },
   {
     id: "pdf-summarizer",
@@ -259,7 +271,10 @@ const AUTOMASI_CARDS = [
     desc: "Rangkum dokumen PDF panjang menjadi poin-poin penting dalam menit.",
     type: "Automation",
     pricing: "Paid",
+    costPerRun: 100,
     users: 19,
+    image:
+      "https://images.unsplash.com/photo-1568667256549-094345857637?w=400&h=200&fit=crop&auto=format",
   },
   {
     id: "data-cleaner",
@@ -267,7 +282,10 @@ const AUTOMASI_CARDS = [
     desc: "Bersihkan dan format data spreadsheet kotor secara otomatis.",
     type: "Automation",
     pricing: "Paid",
+    costPerRun: 200,
     users: 7,
+    image:
+      "https://images.unsplash.com/photo-1543286386-2e659306cd6c?w=400&h=200&fit=crop&auto=format",
   },
 ];
 
@@ -280,6 +298,8 @@ const MODULE_CARDS = [
     category: "Keuangan",
     pricing: "Free",
     users: 143,
+    image:
+      "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400&h=200&fit=crop&auto=format",
   },
   {
     id: "crm-lite",
@@ -288,6 +308,8 @@ const MODULE_CARDS = [
     category: "Bisnis",
     pricing: "Pro",
     users: 67,
+    image:
+      "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=200&fit=crop&auto=format",
   },
   {
     id: "hr-attendance",
@@ -296,6 +318,8 @@ const MODULE_CARDS = [
     category: "HR",
     pricing: "Pro",
     users: 34,
+    image:
+      "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=400&h=200&fit=crop&auto=format",
   },
   {
     id: "content-planner",
@@ -304,6 +328,8 @@ const MODULE_CARDS = [
     category: "Marketing",
     pricing: "Free",
     users: 211,
+    image:
+      "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=400&h=200&fit=crop&auto=format",
   },
   {
     id: "inventory-manager",
@@ -312,6 +338,8 @@ const MODULE_CARDS = [
     category: "Operasional",
     pricing: "Pro",
     users: 88,
+    image:
+      "https://images.unsplash.com/photo-1553413077-190dd305871c?w=400&h=200&fit=crop&auto=format",
   },
   {
     id: "project-tracker",
@@ -320,6 +348,8 @@ const MODULE_CARDS = [
     category: "Produktivitas",
     pricing: "Free",
     users: 176,
+    image:
+      "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400&h=200&fit=crop&auto=format",
   },
 ];
 
@@ -331,32 +361,63 @@ function ProductCard({
   pricingBadge,
   users,
   ctaLabel,
+  image,
+  costPerRun,
 }) {
   return (
     <article className="db-product-card">
-      <div className="db-product-card-header">
-        <div className="db-product-card-chips">
-          <span className={`db-chip db-chip-amber`}>{typeBadge}</span>
-          <span
-            className={`db-chip ${pricingBadge === "Free" ? "db-chip-green" : "db-chip-blue"}`}
-          >
-            {pricingBadge}
-          </span>
+      {image && (
+        <div className="db-product-card-img-wrap">
+          <img src={image} alt={title} className="db-product-card-img" />
+          <div className="db-product-card-img-chips">
+            <span className="db-chip db-chip-amber">{typeBadge}</span>
+            <span
+              className={`db-chip ${pricingBadge === "Free" || pricingBadge === "0" ? "db-chip-green" : "db-chip-blue"}`}
+            >
+              {pricingBadge}
+            </span>
+          </div>
         </div>
-      </div>
-      <h3 className="db-product-card-title">{title}</h3>
-      <p className="db-product-card-desc">{desc}</p>
-      <div className="db-product-card-footer">
-        <span className="db-usage-count">
-          <IconPeople />
-          {users} pengguna
-        </span>
-        <button
-          className="ghost-button"
-          style={{ fontSize: "13px", height: "32px", padding: "0 14px" }}
-        >
-          <IconPlay /> {ctaLabel}
-        </button>
+      )}
+      {!image && (
+        <div className="db-product-card-header">
+          <div className="db-product-card-chips">
+            <span className="db-chip db-chip-amber">{typeBadge}</span>
+            <span
+              className={`db-chip ${pricingBadge === "Free" ? "db-chip-green" : "db-chip-blue"}`}
+            >
+              {pricingBadge}
+            </span>
+          </div>
+        </div>
+      )}
+      <div className="db-product-card-body">
+        <h3 className="db-product-card-title">{title}</h3>
+        <p className="db-product-card-desc">{desc}</p>
+        {costPerRun !== undefined && (
+          <div className="db-product-card-cost">
+            <span className="db-cost-label">Biaya per run</span>
+            <span className="db-cost-value">
+              {costPerRun === 0 ? (
+                <span className="db-cost-free">Gratis</span>
+              ) : (
+                <span>{costPerRun} kredit</span>
+              )}
+            </span>
+          </div>
+        )}
+        <div className="db-product-card-footer">
+          <span className="db-usage-count">
+            <IconPeople />
+            {users} pengguna
+          </span>
+          <button
+            className="ghost-button"
+            style={{ fontSize: "13px", height: "32px", padding: "0 14px" }}
+          >
+            <IconPlay /> {ctaLabel}
+          </button>
+        </div>
       </div>
     </article>
   );
@@ -478,6 +539,8 @@ function ViewAutomasi() {
             pricingBadge={item.pricing}
             users={item.users}
             ctaLabel="Jalankan"
+            image={item.image}
+            costPerRun={item.costPerRun}
           />
         ))}
       </div>
@@ -508,6 +571,7 @@ function ViewModule() {
             pricingBadge={item.pricing}
             users={item.users}
             ctaLabel="Buka"
+            image={item.image}
           />
         ))}
       </div>
