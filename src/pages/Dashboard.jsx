@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import "./Dashboard.css";
 
 /* ── Inline SVG icons ──────────────────────────────────────── */
@@ -515,6 +515,448 @@ function ViewModule() {
   );
 }
 
+/* ── AI Agent icons ───────────────────────────────────────── */
+function IconPencil() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+    </svg>
+  );
+}
+function IconChartBar() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="3" y="12" width="4" height="9" rx="1" />
+      <rect x="10" y="7" width="4" height="14" rx="1" />
+      <rect x="17" y="3" width="4" height="18" rx="1" />
+    </svg>
+  );
+}
+function IconSearch() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  );
+}
+function IconCode() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polyline points="16 18 22 12 16 6" />
+      <polyline points="8 6 2 12 8 18" />
+    </svg>
+  );
+}
+function IconSend() {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <line x1="22" y1="2" x2="11" y2="13" />
+      <polygon points="22 2 15 22 11 13 2 9 22 2" />
+    </svg>
+  );
+}
+function IconArrowLeft() {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <line x1="19" y1="12" x2="5" y2="12" />
+      <polyline points="12 19 5 12 12 5" />
+    </svg>
+  );
+}
+function IconPlus() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  );
+}
+
+const AI_SKILLS = [
+  {
+    id: "tulis",
+    title: "Tulis & Edit",
+    desc: "Bantu menulis email, laporan, konten, atau dokumen apapun",
+    icon: <IconPencil />,
+  },
+  {
+    id: "analisis",
+    title: "Analisis Data",
+    desc: "Interpretasi data, buat ringkasan, atau temukan insight",
+    icon: <IconChartBar />,
+  },
+  {
+    id: "riset",
+    title: "Riset & Rangkum",
+    desc: "Cari informasi, rangkum artikel, atau jelaskan topik kompleks",
+    icon: <IconSearch />,
+  },
+  {
+    id: "kode",
+    title: "Automasi & Kode",
+    desc: "Bantu coding, debugging, atau buat skrip otomasi",
+    icon: <IconCode />,
+  },
+];
+
+/* ── View: AI Agent Home ───────────────────────────────────── */
+function ViewAIAgentHome({
+  setAiChatActive,
+  setMessages,
+  setActiveChatId,
+  setChatHistory,
+  chatHistory,
+}) {
+  const [localInput, setLocalInput] = useState("");
+
+  function startChat(text) {
+    if (!text.trim()) return;
+    const newId = Date.now();
+    const newMsg = { id: Date.now(), role: "user", text: text.trim() };
+    const newHistoryItem = {
+      id: newId,
+      title: text.trim().slice(0, 40) + (text.trim().length > 40 ? "..." : ""),
+      time: "Baru saja",
+      preview: text.trim().slice(0, 32) + "...",
+    };
+    setChatHistory((prev) => [newHistoryItem, ...prev]);
+    setActiveChatId(newId);
+    setMessages([newMsg]);
+    setAiChatActive(true);
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      startChat(localInput);
+    }
+  }
+
+  return (
+    <div className="ai-home">
+      <div className="ai-home-center">
+        {/* Greeting */}
+        <div className="ai-home-greeting">
+          <span className="ai-eyebrow">AI Agent</span>
+          <h1 className="ai-home-heading">Halo, Grou App</h1>
+          <p className="ai-home-sub">
+            Saya siap membantu. Mau mulai dari mana?
+          </p>
+        </div>
+
+        {/* Skill cards */}
+        <div className="ai-skill-grid">
+          {AI_SKILLS.map((skill) => (
+            <button
+              key={skill.id}
+              className="ai-skill-card"
+              onClick={() => startChat(skill.title + " — ")}
+            >
+              <div className="ai-skill-icon-wrap" aria-hidden="true">
+                {skill.icon}
+              </div>
+              <div className="ai-skill-text">
+                <span className="ai-skill-title">{skill.title}</span>
+                <span className="ai-skill-desc">{skill.desc}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Input bar */}
+        <div className="ai-home-input-wrap">
+          <div className="ai-input-bar">
+            <input
+              className="ai-input-field"
+              type="text"
+              placeholder="Ketik pesan atau pilih skill di atas..."
+              value={localInput}
+              onChange={(e) => setLocalInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              aria-label="Pesan ke AI Agent"
+            />
+            <button
+              className="cta-button ai-send-btn"
+              onClick={() => startChat(localInput)}
+              aria-label="Kirim pesan"
+            >
+              <IconSend /> Kirim
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── View: AI Agent Chat ───────────────────────────────────── */
+function ViewAIAgentChat({
+  chatHistory,
+  activeChatId,
+  setActiveChatId,
+  messages,
+  setMessages,
+  inputValue,
+  setInputValue,
+  setAiChatActive,
+  setActiveNav,
+  setChatHistory,
+}) {
+  const messagesEndRef = useRef(null);
+  const textareaRef = useRef(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = Math.min(ta.scrollHeight, 120) + "px";
+  }, [inputValue]);
+
+  // Simulate AI response after user sends
+  function sendMessage() {
+    const text = inputValue.trim();
+    if (!text) return;
+    const userMsg = { id: Date.now(), role: "user", text };
+    setMessages((prev) => [...prev, userMsg]);
+    setInputValue("");
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          role: "ai",
+          text: "Saya sedang memproses permintaan Anda. Ini adalah respons simulasi — integrasi AI nyata bisa ditambahkan nanti.",
+        },
+      ]);
+    }, 800);
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  function handleNewChat() {
+    const newId = Date.now();
+    const newHistoryItem = {
+      id: newId,
+      title: "Obrolan Baru",
+      time: "Baru saja",
+      preview: "Mulai percakapan...",
+    };
+    setChatHistory((prev) => [newHistoryItem, ...prev]);
+    setActiveChatId(newId);
+    setMessages([]);
+    setInputValue("");
+  }
+
+  return (
+    <div className="ai-chat-shell">
+      {/* Left sidebar */}
+      <aside className="ai-chat-sidebar">
+        <div className="ai-chat-sidebar-top">
+          <button
+            className="ai-back-btn"
+            onClick={() => {
+              setAiChatActive(false);
+              setActiveNav("dashboard");
+            }}
+          >
+            <IconArrowLeft /> Kembali
+          </button>
+
+          <span className="ai-eyebrow ai-history-label">Riwayat Chat</span>
+
+          <ul className="ai-history-list" role="list">
+            {chatHistory.map((chat) => (
+              <li key={chat.id}>
+                <button
+                  className={`ai-history-item${chat.id === activeChatId ? " ai-history-active" : ""}`}
+                  onClick={() => {
+                    setActiveChatId(chat.id);
+                    setMessages([]);
+                  }}
+                >
+                  <span className="ai-history-title">{chat.title}</span>
+                  <span className="ai-history-preview">{chat.preview}</span>
+                  <span className="ai-history-time">{chat.time}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="ai-chat-sidebar-foot">
+          <button
+            className="cta-button ai-new-chat-btn"
+            onClick={handleNewChat}
+          >
+            <IconPlus /> Obrolan Baru
+          </button>
+        </div>
+      </aside>
+
+      {/* Main chat area */}
+      <div className="ai-chat-main">
+        {/* Top bar */}
+        <div className="ai-chat-topbar">
+          <span className="ai-chat-status-dot" aria-hidden="true" />
+          <span className="ai-chat-model-label">SiapPakai AI</span>
+        </div>
+
+        {/* Messages */}
+        <div className="ai-messages" role="log" aria-live="polite">
+          {messages.length === 0 ? (
+            <div className="ai-messages-empty">
+              <div>
+                <p className="ai-messages-empty-heading">Halo, Grou App 👋</p>
+                <p className="ai-messages-empty-sub">Mau mulai dari mana?</p>
+              </div>
+              <div className="ai-messages-empty-skills">
+                {AI_SKILLS.map((skill) => (
+                  <button
+                    key={skill.id}
+                    className="ai-messages-empty-skill-btn"
+                    onClick={() => {
+                      setInputValue(skill.title + " — ");
+                      textareaRef.current?.focus();
+                    }}
+                  >
+                    <span className="ai-messages-empty-skill-icon">
+                      {skill.icon}
+                    </span>
+                    <span className="ai-messages-empty-skill-title">
+                      {skill.title}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            messages.map((msg) =>
+              msg.role === "user" ? (
+                <div key={msg.id} className="ai-msg-row ai-msg-row--user">
+                  <div className="ai-bubble ai-bubble--user">{msg.text}</div>
+                </div>
+              ) : (
+                <div key={msg.id} className="ai-msg-row ai-msg-row--ai">
+                  <div className="ai-avatar-sp" aria-label="SiapPakai AI">
+                    SP
+                  </div>
+                  <div className="ai-bubble ai-bubble--ai">{msg.text}</div>
+                </div>
+              ),
+            )
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input area */}
+        <div className="ai-chat-input-area">
+          <div className="ai-chat-input-bar">
+            <textarea
+              ref={textareaRef}
+              className="ai-chat-textarea"
+              placeholder="Ketik pesan..."
+              rows={1}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              aria-label="Pesan ke SiapPakai AI"
+            />
+            <button
+              className="cta-button ai-chat-send-btn"
+              onClick={sendMessage}
+              aria-label="Kirim pesan"
+            >
+              <IconSend />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── View: placeholder for other nav items ─────────────────── */
 function ViewPlaceholder({ label }) {
   return (
@@ -530,9 +972,34 @@ function ViewPlaceholder({ label }) {
 /* ── Main Dashboard component ──────────────────────────────── */
 export default function Dashboard() {
   const [activeNav, setActiveNav] = useState("dashboard");
+  const [aiChatActive, setAiChatActive] = useState(false);
+  const [chatHistory, setChatHistory] = useState([
+    {
+      id: 1,
+      title: "Analisis CV untuk posisi PM",
+      time: "2 hours ago",
+      preview: "Bantu saya...",
+    },
+    {
+      id: 2,
+      title: "Buat email follow-up klien",
+      time: "Yesterday",
+      preview: "Tulis email...",
+    },
+    {
+      id: 3,
+      title: "Ringkas dokumen proposal",
+      time: "3 days ago",
+      preview: "Rangkum...",
+    },
+  ]);
+  const [activeChatId, setActiveChatId] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [inputValue, setInputValue] = useState("");
 
   function handleNavClick(id) {
     setActiveNav(id);
+    if (id !== "ai-agent") setAiChatActive(false);
     window.history.pushState({}, "", "/dashboard");
   }
 
@@ -544,6 +1011,16 @@ export default function Dashboard() {
         return <ViewAutomasi />;
       case "module":
         return <ViewModule />;
+      case "ai-agent":
+        return (
+          <ViewAIAgentHome
+            setAiChatActive={setAiChatActive}
+            setMessages={setMessages}
+            setActiveChatId={setActiveChatId}
+            setChatHistory={setChatHistory}
+            chatHistory={chatHistory}
+          />
+        );
       default:
         return (
           <ViewPlaceholder
@@ -553,6 +1030,24 @@ export default function Dashboard() {
           />
         );
     }
+  }
+
+  // Fullscreen chat — replaces the entire db-shell
+  if (aiChatActive) {
+    return (
+      <ViewAIAgentChat
+        chatHistory={chatHistory}
+        activeChatId={activeChatId}
+        setActiveChatId={setActiveChatId}
+        messages={messages}
+        setMessages={setMessages}
+        inputValue={inputValue}
+        setInputValue={setInputValue}
+        setAiChatActive={setAiChatActive}
+        setActiveNav={setActiveNav}
+        setChatHistory={setChatHistory}
+      />
+    );
   }
 
   return (
