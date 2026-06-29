@@ -3,267 +3,287 @@ import "./App.css";
 
 const tabs = [
   {
-    id: "usage",
-    label: "Understand product usage",
+    id: "business",
+    label: "For Business",
     accent: "#377cf6",
     image: "/tab-analytics.png",
-    title: "See what customers do before they tell you what broke",
+    title:
+      "Riset pasar, analisis kompetitor, dan insight pelanggan — semua otomatis",
     description:
-      "aikit records product behavior, maps every activation step, and makes it obvious where momentum gets lost so product, growth, and support can react in one loop.",
-    stat: "42% faster onboarding insight",
-    eyebrow: "Behavior intelligence",
-    primaryLinks: ["Session replay", "Funnels", "Retention", "Heatmaps"],
+      "aikit membantu pemilik bisnis dan tim marketing mengambil keputusan lebih cepat dengan data nyata dari sosmed, marketplace, dan maps — tanpa harus hire analis.",
+    stat: "10x lebih cepat dari riset manual",
+    eyebrow: "Business intelligence",
+    primaryLinks: [
+      "Riset pasar",
+      "Analisis kompetitor",
+      "Review scraper",
+      "Price tracker",
+    ],
     secondaryLinks: [
-      "Audience cohorts",
-      "Path analysis",
-      "Journey alerts",
-      "Insight boards",
+      "Lead generation",
+      "Sentimen pelanggan",
+      "Trend monitoring",
+      "Laporan otomatis",
     ],
     bulletGroups: [
       {
-        heading: "Capture",
+        heading: "Riset",
         items: [
-          "Autocapture events",
-          "Replay synced to issues",
-          "Privacy-safe masking",
+          "Data kompetitor real-time",
+          "Review & sentimen pasar",
+          "Price benchmarking",
         ],
       },
       {
-        heading: "Explain",
+        heading: "Analisis",
         items: [
-          "Conversion drop reasons",
-          "Power-user patterns",
-          "Activation scoring",
+          "Ringkasan AI otomatis",
+          "Identifikasi peluang",
+          "Pola keluhan pelanggan",
         ],
       },
       {
-        heading: "Act",
+        heading: "Aksi",
         items: [
-          "Target segments",
-          "Launch experiments",
-          "Share one-click dashboards",
+          "Ekspor Excel siap lapor",
+          "Share ke tim langsung",
+          "Rekomendasi strategi",
         ],
       },
     ],
   },
   {
-    id: "data",
-    label: "One place for product data",
+    id: "jobseeker",
+    label: "For Job Seeker",
     accent: "#37d7c8",
     image: "/tab-onboarding.png",
-    title: "Turn fragmented product signals into one operating system",
+    title:
+      "Tingkatkan peluang lolos interview dengan bantuan AI dari CV sampai offer",
     description:
-      "aikit brings warehouse events, support context, billing data, and product usage into one compact workspace so teams can decide faster without stitching together five separate tools.",
-    stat: "18 sources connected in under an hour",
-    eyebrow: "Data platform for builders",
-    primaryLinks: ["Postgres", "Snowflake", "Stripe", "Salesforce"],
+      "aikit membantu job seeker tampil lebih profesional — dari review CV, riset perusahaan, sampai simulasi interview — supaya kamu masuk dengan persiapan terbaik.",
+    stat: "3x lebih siap masuk interview",
+    eyebrow: "Career toolkit",
+    primaryLinks: [
+      "CV Reviewer",
+      "Cover Letter",
+      "Riset Perusahaan",
+      "Simulasi Interview",
+    ],
     secondaryLinks: [
-      "Data modeling",
-      "SQL editor",
-      "Managed warehouse",
-      "Reverse ETL",
+      "Optimasi LinkedIn",
+      "Salary benchmark",
+      "Job desc analyzer",
+      "Portfolio reviewer",
     ],
     bulletGroups: [
       {
-        heading: "Import",
+        heading: "Persiapan",
         items: [
-          "Warehouse syncs",
-          "Schema-aware connectors",
-          "Backfill without downtime",
+          "Review CV dengan skor AI",
+          "Tulis cover letter otomatis",
+          "Riset budaya perusahaan",
         ],
       },
       {
-        heading: "Model",
+        heading: "Latihan",
         items: [
-          "Product-ready SQL",
-          "Reusable semantic layers",
-          "AI-assisted exploration",
+          "Simulasi pertanyaan HR",
+          "Feedback jawaban kamu",
+          "Tips negosiasi gaji",
         ],
       },
       {
-        heading: "Ship",
+        heading: "Optimasi",
         items: [
-          "Audience exports",
-          "Webhook destinations",
-          "Analytics for every team",
+          "ATS score checker",
+          "Keyword dari job desc",
+          "Saran perbaikan per section",
         ],
       },
     ],
   },
   {
-    id: "issues",
-    label: "Debug & fix issues",
+    id: "creator",
+    label: "For Creator",
     accent: "#f3ba3f",
     image: "/tab-debug.png",
-    title: "Trace every issue from spike to root cause in minutes",
+    title:
+      "Buat konten lebih cepat, temukan tren lebih awal, grow lebih konsisten",
     description:
-      "Link logs, traces, deploy markers, and affected sessions to the same incident timeline so engineering can move from panic to proof with less context switching.",
-    stat: "63% less time spent triaging regressions",
-    eyebrow: "Developer workflow",
-    primaryLinks: ["Error groups", "Tracing", "Deploy markers", "Alerting"],
+      "aikit adalah toolkit wajib creator — generate caption, analisis kompetitor, cari hashtag trending, dan ringkas video panjang jadi skrip siap pakai.",
+    stat: "5x lebih cepat produksi konten",
+    eyebrow: "Creator toolkit",
+    primaryLinks: [
+      "Caption generator",
+      "Hashtag spy",
+      "TikTok analyzer",
+      "YouTube summarizer",
+    ],
     secondaryLinks: [
-      "Ownership rules",
-      "Replay correlation",
-      "Source maps",
-      "Fix verification",
+      "Hook writer",
+      "Thread generator",
+      "Konten kalender",
+      "Repurpose konten",
     ],
     bulletGroups: [
       {
-        heading: "Detect",
+        heading: "Ideasi",
         items: [
-          "Frontend and backend coverage",
-          "Noise-reduced grouping",
-          "Threshold alerts",
+          "Tren & topik viral",
+          "Angle konten baru",
+          "Analisis kompetitor creator",
         ],
       },
       {
-        heading: "Investigate",
+        heading: "Produksi",
         items: [
-          "Click-to-trace drilldown",
-          "Logs with user context",
-          "Replay attached automatically",
+          "Caption & hook otomatis",
+          "Skrip video siap pakai",
+          "Thread & carousel copy",
         ],
       },
       {
-        heading: "Resolve",
+        heading: "Distribusi",
         items: [
-          "Assign ownership",
-          "Track rollout impact",
-          "Confirm issue disappearance",
+          "Hashtag optimal per platform",
+          "Waktu posting terbaik",
+          "Repurpose ke multi-platform",
         ],
       },
     ],
   },
   {
-    id: "rollout",
-    label: "Test & roll out changes",
+    id: "personal",
+    label: "For Personal",
     accent: "#b461f3",
     image: "/tab-rollout.png",
-    title: "Experiment, release, and learn without slowing the team down",
+    title:
+      "AI tools untuk kehidupan sehari-hari yang lebih produktif dan efisien",
     description:
-      "Run controlled rollouts, measure outcomes in the same product surface, and keep every feature launch tied to the customer behavior it was meant to change.",
-    stat: "2x more confident launches per quarter",
-    eyebrow: "Release orchestration",
-    primaryLinks: [
-      "Feature flags",
-      "A/B tests",
-      "Progressive rollouts",
-      "Goal metrics",
-    ],
+      "aikit bukan cuma untuk bisnis — ada ratusan tools untuk bantu kamu belajar, menulis, merencanakan, dan menyelesaikan pekerjaan sehari-hari lebih cepat.",
+    stat: "Hemat 2–3 jam kerja per hari",
+    eyebrow: "Personal productivity",
+    primaryLinks: ["Summarizer", "Email writer", "Translator", "Study helper"],
     secondaryLinks: [
-      "Holdouts",
-      "Kill switches",
-      "Experiment templates",
-      "Impact reports",
+      "Grammar checker",
+      "Meeting notes",
+      "To-do planner",
+      "Idea generator",
     ],
     bulletGroups: [
       {
-        heading: "Launch",
+        heading: "Belajar",
         items: [
-          "Ship behind flags",
-          "Target users precisely",
-          "Start with safe cohorts",
+          "Rangkum artikel & video",
+          "Jelaskan konsep rumit",
+          "Buat flashcard otomatis",
         ],
       },
       {
-        heading: "Measure",
+        heading: "Kerja",
         items: [
-          "Attach product metrics",
-          "Read lift instantly",
-          "See qualitative feedback",
+          "Tulis email & laporan",
+          "Ringkas meeting notes",
+          "Terjemahan akurat",
         ],
       },
       {
-        heading: "Scale",
+        heading: "Harian",
         items: [
-          "Ramp gradually",
-          "Document learnings",
-          "Reuse winning experiments",
+          "Rencanakan hari kamu",
+          "Generate ide kreatif",
+          "Cek grammar & ejaan",
         ],
       },
     ],
   },
 ];
 
-const trustLogos = ["Ramp", "Retool", "Linear", "Vercel", "Cursor"];
+const trustLogos = [
+  "Produktivitas",
+  "Bisnis",
+  "Marketing",
+  "Riset",
+  "Personal",
+];
 
 const heroHighlights = [
-  "One shared source of product truth",
-  "Built for product, growth, and engineering",
-  "Fast enough to feel operational every day",
+  "Ratusan AI tools, satu platform",
+  "Pay-per-use, tanpa langganan paksa",
+  "Untuk kerja, bisnis, dan kehidupan sehari-hari",
 ];
 
 const libraryCards = [
   {
-    name: "Signal board",
-    role: "Product analytics cockpit",
-    place: "Realtime funnels and cohort health",
-    team: "Growth systems",
-    accent: "#41b6e6",
-    surface: "#98d9f0",
+    name: "Instagram Analyzer",
+    role: "Analisis profil & konten kompetitor Instagram secara otomatis",
+    place: "Engagement, top content & waktu posting",
+    team: "Rp15.000/run",
+    accent: "#e1306c",
+    surface: "#f7a1c4",
     image: "/lib-signal-board.png",
   },
   {
-    name: "Flow pilot",
-    role: "Onboarding command center",
-    place: "Activation checkpoints and drop-offs",
-    team: "Journey team",
-    accent: "#ff5c62",
-    surface: "#f7a1a8",
+    name: "CV Reviewer",
+    role: "Upload CV kamu, dapat feedback detail dari AI dalam 30 detik",
+    place: "Skor, kelemahan & saran perbaikan per section",
+    team: "Rp10.000/run",
+    accent: "#37d7c8",
+    surface: "#98f0e8",
     image: "/lib-flow-pilot.png",
   },
   {
-    name: "Warehouse one",
-    role: "Data workspace",
-    place: "Models, syncs, and warehouse QA",
-    team: "Data tools",
-    accent: "#b643ef",
-    surface: "#d48df4",
+    name: "Riset Pasar Instan",
+    role: "Ringkasan riset pasar untuk ide bisnis atau produk baru kamu",
+    place: "Target market, kompetitor & peluang dalam 1 laporan",
+    team: "Rp25.000/run",
+    accent: "#f3ba3f",
+    surface: "#fdd98a",
     image: "/lib-warehouse-one.png",
   },
   {
-    name: "Issue radar",
-    role: "Debug investigation hub",
-    place: "Alerts, traces, and replay context",
-    team: "Reliability",
-    accent: "#8fe0af",
-    surface: "#c8efd3",
+    name: "Email Writer",
+    role: "Tulis email profesional, pitching, atau follow-up dalam hitungan detik",
+    place: "Cold email, proposal, negosiasi & customer support",
+    team: "Rp5.000/run",
+    accent: "#ff5c62",
+    surface: "#f7a1a8",
     image: "/lib-issue-radar.png",
   },
   {
-    name: "Launch deck",
-    role: "Feature rollout control",
-    place: "Flags, segments, and impact reads",
-    team: "Release team",
-    accent: "#ff9f0d",
-    surface: "#ffd37d",
+    name: "YouTube Summarizer",
+    role: "Rangkum video YouTube panjang jadi poin-poin penting",
+    place: "Transkrip, insight utama & takeaway actionable",
+    team: "Rp8.000/run",
+    accent: "#ff0000",
+    surface: "#ff8080",
     image: "/lib-launch-deck.png",
   },
   {
-    name: "Audience lab",
-    role: "Experiment workspace",
-    place: "Hypotheses, test cells, and lift",
-    team: "Experimentation",
+    name: "Price Tracker",
+    role: "Pantau harga produk kompetitor di marketplace secara real-time",
+    place: "Price range, siapa termurah & tren harga",
+    team: "Rp20.000/run",
     accent: "#6f58ff",
     surface: "#afa2ff",
     image: "/lib-audience-lab.png",
   },
   {
-    name: "Support graph",
-    role: "Customer operations panel",
-    place: "Tickets linked to product behavior",
-    team: "Ops intelligence",
-    accent: "#ff6d74",
-    surface: "#ffb0b4",
+    name: "Konten Sosmed",
+    role: "Generate caption, thread, atau skrip konten siap posting",
+    place: "Instagram, TikTok, Twitter & LinkedIn",
+    team: "Rp8.000/run",
+    accent: "#1da1f2",
+    surface: "#90d4f7",
     image: "/lib-support-graph.png",
   },
   {
-    name: "Focus room",
-    role: "Weekly review dashboard",
-    place: "Goals, blockers, and owner updates",
-    team: "Exec rhythm",
-    accent: "#8167ff",
-    surface: "#bfaeff",
+    name: "Lead Scraper",
+    role: "Temukan prospek potensial berdasarkan kriteria bisnis kamu",
+    place: "Nama, jabatan, perusahaan & contact info publik",
+    team: "Rp50.000/run",
+    accent: "#0a66c2",
+    surface: "#7ab5e8",
     image: "/lib-focus-room.png",
   },
 ];
@@ -499,8 +519,8 @@ function MiniAppWindow({ variant }) {
 }
 
 function App() {
-  const [activeTab, setActiveTab] = useState("data");
-  const currentTab = tabs.find((tab) => tab.id === activeTab) ?? tabs[1];
+  const [activeTab, setActiveTab] = useState("business");
+  const currentTab = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
 
   return (
     <div className="page-shell">
@@ -553,19 +573,16 @@ function App() {
           <section className="hero">
             <div className="hero-copy">
               <Wordmark />
-              <h1>
-                The operating system for teams that build and ship products
-              </h1>
+              <h1>Ratusan AI tools siap pakai, untuk semua kebutuhan kamu</h1>
               <p>
-                aikit combines product analytics, customer understanding,
-                incident debugging, and release orchestration in one compact
-                workspace designed to feel clear at a glance and powerful in
-                motion.
+                aikit adalah platform pay-per-use dengan ratusan AI tools — dari
+                produktivitas kerja, riset bisnis, analisis sosmed, sampai
+                kebutuhan sehari-hari. Tinggal pilih tool, jalankan, dapat
+                hasilnya.
               </p>
               <p>
-                Instead of stitching together dashboards, replay tools, flags,
-                and warehouse queries, your team gets one product surface that
-                turns signals into decisions faster.
+                Tidak perlu langganan mahal atau setup teknis. Bayar hanya saat
+                kamu pakai, ekspor hasilnya, langsung jalan.
               </p>
 
               <ul className="hero-highlights" aria-label="Key benefits">
@@ -760,7 +777,6 @@ function App() {
 
                   <div className="library-card-ribbon">
                     <strong>{card.name}</strong>
-                    <span>{card.role}</span>
                   </div>
 
                   <div className="library-card-meta">
