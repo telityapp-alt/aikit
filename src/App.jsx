@@ -9,7 +9,7 @@ const tabs = [
     image: "/tab-analytics.png",
     title: "See what customers do before they tell you what broke",
     description:
-      "Builders records product behavior, maps every activation step, and makes it obvious where momentum gets lost so product, growth, and support can react in one loop.",
+      "aikit records product behavior, maps every activation step, and makes it obvious where momentum gets lost so product, growth, and support can react in one loop.",
     stat: "42% faster onboarding insight",
     eyebrow: "Behavior intelligence",
     primaryLinks: ["Session replay", "Funnels", "Retention", "Heatmaps"],
@@ -53,7 +53,7 @@ const tabs = [
     image: "/tab-onboarding.png",
     title: "Turn fragmented product signals into one operating system",
     description:
-      "Builders brings warehouse events, support context, billing data, and product usage into one compact workspace so teams can decide faster without stitching together five separate tools.",
+      "aikit brings warehouse events, support context, billing data, and product usage into one compact workspace so teams can decide faster without stitching together five separate tools.",
     stat: "18 sources connected in under an hour",
     eyebrow: "Data platform for builders",
     primaryLinks: ["Postgres", "Snowflake", "Stripe", "Salesforce"],
@@ -370,27 +370,19 @@ function CheckIcon() {
 }
 
 function HeaderLogo() {
-  return (
-    <div className="header-logo" aria-hidden="true">
-      <span />
-      <span />
-      <span />
-      <span />
-      <b />
-    </div>
-  );
+  return <span className="header-logo-text">aikit</span>;
 }
 
 function Wordmark() {
   return (
-    <div className="wordmark" aria-label="Builders wordmark">
+    <div className="wordmark" aria-label="aikit wordmark">
       <span className="wordmark-mark" aria-hidden="true">
         <i />
         <i />
         <i />
         <i />
       </span>
-      <span className="wordmark-text">Builders</span>
+      <span className="wordmark-text">aikit</span>
     </div>
   );
 }
@@ -565,7 +557,7 @@ function App() {
                 The operating system for teams that build and ship products
               </h1>
               <p>
-                Builders combines product analytics, customer understanding,
+                aikit combines product analytics, customer understanding,
                 incident debugging, and release orchestration in one compact
                 workspace designed to feel clear at a glance and powerful in
                 motion.
@@ -628,7 +620,7 @@ function App() {
               <div className="hero-image-shell">
                 <img
                   src="/builders-hero.png"
-                  alt="Builders hedgehog mascot working at a desk"
+                  alt="aikit hedgehog mascot working at a desk"
                   className="hero-generated-image"
                 />
               </div>
