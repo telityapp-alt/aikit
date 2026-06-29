@@ -1110,3 +1110,44 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ── Landing footer (compliance links) ─────────────────────── */
+.site-footer {
+    border-top: 1px solid #ddd4c4;
+    background: #fffdf8;
+}
+.site-footer-inner {
+    width: min(1040px, calc(100% - 108px));
+    margin: 0 auto;
+    padding: 28px 0;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+.site-footer-brand {
+    font-size: 17px;
+    font-weight: 700;
+    color: #0d1d38;
+    letter-spacing: -0.02em;
+}
+.site-footer-links {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+.site-footer-links a {
+    font-size: 14px;
+    font-weight: 600;
+    color: #55606d;
+    text-decoration: none;
+}
+.site-footer-links a:hover {
+    color: #0d1d38;
+}
+.site-footer-copy {
+    margin-left: auto;
+    font-size: 13px;
+    font-weight: 500;
+    color: #7b8594;
+}

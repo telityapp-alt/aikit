@@ -1,0 +1,90 @@
+/* Manajer Keuangan Pribadi — token-aligned with the dashboard. */
+
+.kp-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.kp-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.kp-input {
+  height: 42px;
+  padding: 0 14px;
+  background: #fff;
+  border: 1px solid #d9d1c2;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #0d1d38;
+  outline: none;
+  flex: 1;
+  min-width: 160px;
+}
+.kp-input:focus {
+  border-color: #f6a61e;
+  box-shadow: 0 0 0 3px rgba(246, 166, 30, 0.18);
+}
+.kp-input-amount {
+  flex: 0 0 150px;
+  min-width: 120px;
+}
+.kp-select {
+  flex: 0 0 160px;
+}
+.kp-add {
+  height: 42px;
+}
+
+.kp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.kp-empty {
+  color: #7b8594;
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.kp-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #fffdf8;
+  border: 1px solid #d9d1c2;
+  border-radius: 10px;
+}
+.kp-row-label {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: #29405f;
+}
+.kp-row-amount {
+  font-size: 14px;
+  font-weight: 700;
+}
+.kp-in {
+  color: #2fa36b;
+}
+.kp-out {
+  color: #29405f;
+}
+.kp-del {
+  border: none;
+  background: transparent;
+  color: #7b8594;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.kp-del:hover {
+  color: #b23b3b;
+}

@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import "./App.css";
-import Dashboard from "./pages/Dashboard.jsx";
+import { useAuth } from "./lib/AuthContext";
+import AuthModal from "./components/AuthModal.jsx";
 
 const tabs = [
   {
@@ -217,6 +219,7 @@ const heroHighlights = [
 const libraryCards = [
   {
     name: "Instagram Analyzer",
+    slug: "instagram-analyzer",
     role: "Analisis profil & konten kompetitor Instagram secara otomatis",
     place: "Engagement, top content & waktu posting",
     team: "Rp15.000/run",
@@ -226,6 +229,7 @@ const libraryCards = [
   },
   {
     name: "CV Reviewer",
+    slug: "cv-reviewer",
     role: "Upload CV kamu, dapat feedback detail dari AI dalam 30 detik",
     place: "Skor, kelemahan & saran perbaikan per section",
     team: "Rp10.000/run",
@@ -235,6 +239,7 @@ const libraryCards = [
   },
   {
     name: "Riset Pasar Instan",
+    slug: "riset-pasar",
     role: "Ringkasan riset pasar untuk ide bisnis atau produk baru kamu",
     place: "Target market, kompetitor & peluang dalam 1 laporan",
     team: "Rp25.000/run",
@@ -244,6 +249,7 @@ const libraryCards = [
   },
   {
     name: "Email Writer",
+    slug: "email-writer",
     role: "Tulis email profesional, pitching, atau follow-up dalam hitungan detik",
     place: "Cold email, proposal, negosiasi & customer support",
     team: "Rp5.000/run",
@@ -253,6 +259,7 @@ const libraryCards = [
   },
   {
     name: "YouTube Summarizer",
+    slug: "youtube-summarizer",
     role: "Rangkum video YouTube panjang jadi poin-poin penting",
     place: "Transkrip, insight utama & takeaway actionable",
     team: "Rp8.000/run",
@@ -262,6 +269,7 @@ const libraryCards = [
   },
   {
     name: "Price Tracker",
+    slug: "price-tracker",
     role: "Pantau harga produk kompetitor di marketplace secara real-time",
     place: "Price range, siapa termurah & tren harga",
     team: "Rp20.000/run",
@@ -271,6 +279,7 @@ const libraryCards = [
   },
   {
     name: "Konten Sosmed",
+    slug: "konten-sosmed",
     role: "Generate caption, thread, atau skrip konten siap posting",
     place: "Instagram, TikTok, Twitter & LinkedIn",
     team: "Rp8.000/run",
@@ -280,6 +289,7 @@ const libraryCards = [
   },
   {
     name: "Lead Scraper",
+    slug: "lead-scraper",
     role: "Temukan prospek potensial berdasarkan kriteria bisnis kamu",
     place: "Nama, jabatan, perusahaan & contact info publik",
     team: "Rp50.000/run",
@@ -523,19 +533,20 @@ function App() {
   const [activeTab, setActiveTab] = useState("business");
   const currentTab = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
 
-  // Pathname-based routing — no react-router
-  const [route, setRoute] = useState(
-    window.location.pathname === "/dashboard" ? "dashboard" : "home",
-  );
-  useEffect(() => {
-    const onPop = () =>
-      setRoute(
-        window.location.pathname === "/dashboard" ? "dashboard" : "home",
-      );
-    window.addEventListener("popstate", onPop);
-    return () => window.removeEventListener("popstate", onPop);
-  }, []);
-  if (route === "dashboard") return <Dashboard />;
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState("login");
+
+  // Existing CTAs/avatar route to dashboard when signed in, else open auth.
+  const openAuth = (mode) => {
+    if (user) {
+      navigate("/dashboard");
+      return;
+    }
+    setAuthMode(mode);
+    setAuthOpen(true);
+  };
 
   return (
     <div className="page-shell">
@@ -565,7 +576,11 @@ function App() {
             </nav>
           </div>
           <div className="topbar-right">
-            <button type="button" className="cta-button topbar-cta">
+            <button
+              type="button"
+              className="cta-button topbar-cta"
+              onClick={() => openAuth("signup")}
+            >
               Start free
             </button>
             <button type="button" className="icon-button" aria-label="Search">
@@ -578,6 +593,7 @@ function App() {
               type="button"
               className="icon-button avatar-button"
               aria-label="Account"
+              onClick={() => openAuth("login")}
             >
               <UserIcon />
             </button>
@@ -610,7 +626,11 @@ function App() {
               </ul>
 
               <div className="hero-actions">
-                <button type="button" className="cta-button">
+                <button
+                  type="button"
+                  className="cta-button"
+                  onClick={() => openAuth("signup")}
+                >
                   Get started - free
                 </button>
                 <button type="button" className="ghost-button">
@@ -768,7 +788,20 @@ function App() {
 
             <div className="library-grid">
               {libraryCards.map((card) => (
-                <article key={card.name} className="library-card">
+                <article
+                  key={card.name}
+                  className="library-card"
+                  role="link"
+                  tabIndex={0}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => navigate(`/product/${card.slug}`)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      navigate(`/product/${card.slug}`);
+                    }
+                  }}
+                >
                   <div className="library-card-hero">
                     <div className="library-card-screenshot-wrap">
                       <img
@@ -803,7 +836,28 @@ function App() {
             </div>
           </section>
         </main>
+
+        <footer className="site-footer">
+          <div className="site-footer-inner">
+            <span className="site-footer-brand">aikit</span>
+            <nav className="site-footer-links" aria-label="Footer">
+              <Link to="/privacy">Kebijakan Privasi</Link>
+              <Link to="/terms">Syarat dan Ketentuan</Link>
+              <a href="mailto:support@aikit.id">Dukungan</a>
+            </nav>
+            <span className="site-footer-copy">
+              © 2026 aikit. Semua hak dilindungi.
+            </span>
+          </div>
+        </footer>
       </div>
+
+      <AuthModal
+        open={authOpen}
+        mode={authMode}
+        onClose={() => setAuthOpen(false)}
+        onModeChange={setAuthMode}
+      />
     </div>
   );
 }

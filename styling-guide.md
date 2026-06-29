@@ -761,3 +761,38 @@ export default function NewPage() {
   );
 }
 ```
+
+---
+
+## Foundation Components (auth + notifications)
+
+Komponen yang ditambahkan saat pemasangan fondasi. Semua memakai token literal
+yang sama dengan platform (tidak ada CSS variable baru, tidak mengubah komponen lama).
+
+### Auth popover — `.ak-auth-*` (`src/components/AuthModal.css`)
+- Overlay: `rgba(13,29,56,0.32)` + `backdrop-filter: blur(2px)`, `z-index: 9000`.
+- Card: `#fffdf8`, border `#d9d1c2`, radius `18px`, shadow `0 24px 60px rgba(13,29,56,0.24)`.
+- Input focus: border `#f6a61e` + ring `rgba(246,166,30,0.18)`.
+- Eyebrow: `11–12px`, `letter-spacing 0.07em`, uppercase — sesuai pengecualian guide.
+- Submit memakai `.cta-button` existing. Link toggle warna `#f6a61e`.
+
+### Toast — `.ak-toast-*` (`src/lib/Toast.css`)
+- Region `position: fixed; top/right 18px; z-index: 9999`, pointer-events none.
+- Toast: `#fffdf8`, border `#d9d1c2`, radius `12px`, shadow `0 14px 26px rgba(18,18,22,0.14)`.
+- Dot status: info `#f6a61e`, success `#2fa36b`, error `#e05656`.
+
+### Sidebar sign-out — `.db-sidebar-signout` (`src/pages/Dashboard.css`)
+- Ikon button `30×30`, border `#d9d1c2`, hover border `#c7820e`, sejajar footer sidebar.
+
+FATAL rules tetap: no extrabold baru, no all-uppercase di luar eyebrow, no italic.
+
+---
+
+## Halaman & komponen tambahan (fase produk + compliance)
+
+- **Product detail** `/product/:slug` (`src/pages/ProductDetail.css`, prefix `.pd-*`): hero, Fitur utama, Cara kerja (langkah bernomor), Kasus penggunaan, kartu harga sticky, Video penjelasan. Accent per-produk via `--pd-accent`.
+- **Legal** `/privacy` & `/terms` (`.legal-*`), **404** (`NotFound`), **footer landing** (`.site-footer*`).
+- **Pengaturan** kini bersection kartu (`.db-settings-card`): Profil, Keamanan (ganti password), Akun.
+
+ATURAN BARU YANG DIPERKUAT: tidak ada teks all-uppercase pada konten/komponen baru.
+`text-transform: uppercase` tidak dipakai di komponen baru (eyebrow auth sudah dinormalkan ke normal case). Heading judul produk/section memakai normal case.

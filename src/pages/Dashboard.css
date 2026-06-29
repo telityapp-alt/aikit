@@ -1304,3 +1304,106 @@
     background: #d9d1c2;
     border-radius: 2px;
 }
+
+/* ── Sidebar sign-out (added with auth foundation) ─────────── */
+.db-sidebar-signout {
+    margin-left: auto;
+    flex: none;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #d9d1c2;
+    border-radius: 8px;
+    background: #fffdf8;
+    color: #55606d;
+    cursor: pointer;
+    transition:
+        color 120ms ease,
+        border-color 120ms ease;
+}
+.db-sidebar-signout:hover {
+    color: #29405f;
+    border-color: #c7820e;
+}
+
+/* ── Settings form (Pengaturan) ────────────────────────────── */
+.db-settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 460px;
+}
+.db-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.db-field > span {
+    font-size: 13px;
+    font-weight: 600;
+    color: #29405f;
+}
+.db-field-input {
+    height: 44px;
+    padding: 0 14px;
+    background: #fff;
+    border: 1px solid #d9d1c2;
+    border-radius: 10px;
+    font-size: 15px;
+    color: #0d1d38;
+    outline: none;
+    transition:
+        border-color 120ms ease,
+        box-shadow 120ms ease;
+}
+.db-field-input:focus {
+    border-color: #f6a61e;
+    box-shadow: 0 0 0 3px rgba(246, 166, 30, 0.18);
+}
+.db-field-input:disabled {
+    background: #f6f4ee;
+    color: #7b8594;
+}
+.db-settings-save {
+    align-self: flex-start;
+    height: 44px;
+    margin-top: 4px;
+}
+
+/* ── Settings cards (Pengaturan sections) ──────────────────── */
+.db-settings-card {
+    background: #fffdf8;
+    border: 1px solid #d9d1c2;
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 18px;
+    max-width: 560px;
+}
+.db-settings-card-title {
+    margin: 0 0 4px;
+    font-size: 17px;
+    font-weight: 700;
+    color: #0d1d38;
+}
+.db-settings-card-sub {
+    margin: 0 0 18px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #55606d;
+}
+.db-settings-links {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.db-settings-links a {
+    font-size: 14px;
+    font-weight: 600;
+    color: #f6a61e;
+    text-decoration: none;
+}
+.db-settings-links a:hover {
+    text-decoration: underline;
+}

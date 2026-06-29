@@ -1,5 +1,11 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import "./Dashboard.css";
+import { useAuth } from "../lib/AuthContext";
+import { useToast } from "../lib/ToastContext";
+import { supabase } from "../lib/supabase";
+import { api } from "../lib/api";
+import { getModuleComponent } from "../modules/registry";
 
 /* ── Inline SVG icons ──────────────────────────────────────── */
 function IconGrid() {
@@ -207,6 +213,26 @@ function IconPlay() {
   );
 }
 
+function IconSignOut() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  );
+}
+
 /* ── Nav items ─────────────────────────────────────────────── */
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: <IconGrid /> },
@@ -363,6 +389,8 @@ function ProductCard({
   ctaLabel,
   image,
   costPerRun,
+  onCta,
+  busy,
 }) {
   return (
     <article className="db-product-card">
@@ -414,8 +442,10 @@ function ProductCard({
           <button
             className="ghost-button"
             style={{ fontSize: "13px", height: "32px", padding: "0 14px" }}
+            onClick={onCta}
+            disabled={busy}
           >
-            <IconPlay /> {ctaLabel}
+            <IconPlay /> {busy ? "Menjalankan..." : ctaLabel}
           </button>
         </div>
       </div>
@@ -423,12 +453,66 @@ function ProductCard({
   );
 }
 
+// Poll a run row until it reaches a terminal status or times out.
+async function pollRun(runId, timeoutMs = 30000) {
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    const { data } = await supabase
+      .from("runs")
+      .select("status")
+      .eq("id", runId)
+      .maybeSingle();
+    if (data && (data.status === "completed" || data.status === "failed")) {
+      return data.status;
+    }
+    await new Promise((r) => setTimeout(r, 1400));
+  }
+  return "running";
+}
+
 /* ── View: Dashboard (home) ────────────────────────────────── */
-function ViewDashboard() {
+function relativeTime(iso) {
+  if (!iso) return "";
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Baru saja";
+  if (mins < 60) return `${mins} menit lalu`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} jam lalu`;
+  return `${Math.floor(hrs / 24)} hari lalu`;
+}
+
+function ViewDashboard({ onNavigate, onTopUp }) {
+  const { profile } = useAuth();
+  const [recent, setRecent] = useState([]);
+  const [usageMonth, setUsageMonth] = useState(0);
+
+  useEffect(() => {
+    supabase
+      .from("runs")
+      .select("id,title,status,created_at")
+      .order("created_at", { ascending: false })
+      .limit(5)
+      .then(({ data }) => setRecent(data || []));
+
+    const startMonth = new Date();
+    startMonth.setDate(1);
+    startMonth.setHours(0, 0, 0, 0);
+    supabase
+      .from("runs")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", startMonth.toISOString())
+      .then(({ count }) => setUsageMonth(count || 0));
+  }, []);
+
+  const balance = profile?.credits_balance ?? 0;
+
   return (
     <>
       <div className="db-welcome">
-        <h1 className="db-welcome-heading">Selamat Datang, Grou App! 👋</h1>
+        <h1 className="db-welcome-heading">
+          Selamat Datang, {profile?.full_name || "Grou App"}! 👋
+        </h1>
         <p className="db-welcome-sub">
           Siap mengotomasi proses bisnis Anda hari ini?
         </p>
@@ -437,7 +521,7 @@ function ViewDashboard() {
       <div className="db-stats-row">
         <div className="db-stat-card">
           <div className="db-stat-top">
-            <span className="db-stat-value">0</span>
+            <span className="db-stat-value">{balance}</span>
             <span className="db-stat-label">Saldo</span>
           </div>
           <button
@@ -448,19 +532,20 @@ function ViewDashboard() {
               height: "34px",
               padding: "0 16px",
             }}
+            onClick={onTopUp}
           >
             Isi Saldo
           </button>
         </div>
         <div className="db-stat-card">
           <div className="db-stat-top">
-            <span className="db-stat-value">0</span>
+            <span className="db-stat-value">{recent.filter((r) => r.status === "running").length}</span>
             <span className="db-stat-label">Automasi Aktif</span>
           </div>
         </div>
         <div className="db-stat-card">
           <div className="db-stat-top">
-            <span className="db-stat-value">0</span>
+            <span className="db-stat-value">{usageMonth}</span>
             <span className="db-stat-label">Total Penggunaan bulan ini</span>
           </div>
         </div>
@@ -471,7 +556,9 @@ function ViewDashboard() {
           <h2 className="db-section-title" id="mulai-cepat-heading">
             Mulai Cepat
           </h2>
-          <button className="db-section-link">Lihat Semua</button>
+          <button className="db-section-link" onClick={() => onNavigate("automasi")}>
+            Lihat Semua
+          </button>
         </div>
         <div className="db-product-grid db-product-grid-1">
           <ProductCard
@@ -481,6 +568,7 @@ function ViewDashboard() {
             pricingBadge="Free"
             users={4}
             ctaLabel="Jalankan"
+            onCta={() => onNavigate("automasi")}
           />
         </div>
       </section>
@@ -490,26 +578,49 @@ function ViewDashboard() {
           <h2 className="db-section-title" id="aktivitas-heading">
             Aktivitas Terbaru
           </h2>
-          <button className="db-section-link">Lihat Semua</button>
+          <button className="db-section-link" onClick={() => onNavigate("automasi")}>
+            Lihat Semua
+          </button>
         </div>
         <div className="db-activity-list">
-          <div className="db-activity-item">
-            <div className="db-activity-icon" aria-hidden="true">
-              <IconActivity />
+          {recent.length === 0 ? (
+            <div className="db-activity-item">
+              <div className="db-activity-icon" aria-hidden="true">
+                <IconActivity />
+              </div>
+              <div className="db-activity-body">
+                <div className="db-activity-row">
+                  <span className="db-activity-title">Belum ada aktivitas</span>
+                </div>
+                <p className="db-activity-snippet">
+                  Jalankan automasi pertama kamu untuk melihatnya di sini.
+                </p>
+              </div>
             </div>
-            <div className="db-activity-body">
-              <div className="db-activity-row">
-                <span className="db-activity-title">
-                  ATS-Friendly CV Converter
-                </span>
-                <div className="db-activity-meta">
-                  <span className="db-chip db-chip-green">Completed</span>
-                  <span className="db-activity-time">2 hours ago</span>
+          ) : (
+            recent.map((r) => (
+              <div className="db-activity-item" key={r.id}>
+                <div className="db-activity-icon" aria-hidden="true">
+                  <IconActivity />
+                </div>
+                <div className="db-activity-body">
+                  <div className="db-activity-row">
+                    <span className="db-activity-title">{r.title}</span>
+                    <div className="db-activity-meta">
+                      <span
+                        className={`db-chip ${r.status === "completed" ? "db-chip-green" : r.status === "failed" ? "db-chip-blue" : "db-chip-amber"}`}
+                      >
+                        {r.status}
+                      </span>
+                      <span className="db-activity-time">
+                        {relativeTime(r.created_at)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <p className="db-activity-snippet">CV telah siap...</p>
-            </div>
-          </div>
+            ))
+          )}
         </div>
       </section>
     </>
@@ -518,6 +629,56 @@ function ViewDashboard() {
 
 /* ── View: Automasi ────────────────────────────────────────── */
 function ViewAutomasi() {
+  const toast = useToast();
+  const [items, setItems] = useState(null);
+  const [busyId, setBusyId] = useState(null);
+
+  useEffect(() => {
+    supabase
+      .from("automations")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order")
+      .then(({ data }) => {
+        setItems(
+          data && data.length
+            ? data.map((d) => ({
+                id: d.slug,
+                title: d.title,
+                desc: d.description,
+                type: d.type,
+                pricing: d.pricing,
+                costPerRun: d.cost_per_run,
+                users: 0,
+                image: d.image,
+              }))
+            : AUTOMASI_CARDS,
+        );
+      });
+  }, []);
+
+  async function run(slug, title) {
+    setBusyId(slug);
+    try {
+      const { run: started } = await api.runAutomation(slug, {});
+      toast.info(`"${title}" sedang diproses...`);
+      // Poll the run row (RLS-scoped) until it finishes.
+      const finalStatus = await pollRun(started.id, 30000);
+      if (finalStatus === "completed") {
+        toast.success(`"${title}" selesai. Lihat hasilnya di menu File.`);
+      } else if (finalStatus === "failed") {
+        toast.error(`"${title}" gagal. Kredit dikembalikan.`);
+      } else {
+        toast.info(`"${title}" masih diproses di latar belakang.`);
+      }
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  const list = items ?? AUTOMASI_CARDS;
   return (
     <>
       <div className="db-view-header">
@@ -530,7 +691,7 @@ function ViewAutomasi() {
         </div>
       </div>
       <div className="db-product-grid">
-        {AUTOMASI_CARDS.map((item) => (
+        {list.map((item) => (
           <ProductCard
             key={item.id}
             title={item.title}
@@ -541,6 +702,8 @@ function ViewAutomasi() {
             ctaLabel="Jalankan"
             image={item.image}
             costPerRun={item.costPerRun}
+            busy={busyId === item.id}
+            onCta={() => run(item.id, item.title)}
           />
         ))}
       </div>
@@ -549,7 +712,33 @@ function ViewAutomasi() {
 }
 
 /* ── View: Module ──────────────────────────────────────────── */
-function ViewModule() {
+function ViewModule({ onOpen }) {
+  const [items, setItems] = useState(null);
+
+  useEffect(() => {
+    supabase
+      .from("modules")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order")
+      .then(({ data }) => {
+        setItems(
+          data && data.length
+            ? data.map((d) => ({
+                id: d.slug,
+                title: d.title,
+                desc: d.description,
+                category: d.category,
+                pricing: d.pricing,
+                users: 0,
+                image: d.image,
+              }))
+            : MODULE_CARDS,
+        );
+      });
+  }, []);
+
+  const list = items ?? MODULE_CARDS;
   return (
     <>
       <div className="db-view-header">
@@ -562,7 +751,7 @@ function ViewModule() {
         </div>
       </div>
       <div className="db-product-grid">
-        {MODULE_CARDS.map((item) => (
+        {list.map((item) => (
           <ProductCard
             key={item.id}
             title={item.title}
@@ -572,11 +761,35 @@ function ViewModule() {
             users={item.users}
             ctaLabel="Buka"
             image={item.image}
+            onCta={() => onOpen(item.id)}
           />
         ))}
       </div>
     </>
   );
+}
+
+/* ── View: Module host (renders a specific mini-app) ───────── */
+function ViewModuleHost({ slug, onBack }) {
+  const Comp = getModuleComponent(slug);
+  if (!Comp) {
+    return (
+      <div className="db-placeholder">
+        <span className="db-placeholder-label">Module belum tersedia</span>
+        <p className="db-placeholder-sub">
+          Mini-app untuk "{slug}" sedang dalam pengembangan.
+        </p>
+        <button
+          className="ghost-button"
+          style={{ marginTop: "14px" }}
+          onClick={onBack}
+        >
+          Kembali ke daftar Module
+        </button>
+      </div>
+    );
+  }
+  return <Comp />;
 }
 
 /* ── AI Agent icons ───────────────────────────────────────── */
@@ -742,6 +955,7 @@ function ViewAIAgentHome({
   setActiveChatId,
   setChatHistory,
   chatHistory,
+  setServerChatId,
 }) {
   const [localInput, setLocalInput] = useState("");
 
@@ -758,6 +972,7 @@ function ViewAIAgentHome({
     setChatHistory((prev) => [newHistoryItem, ...prev]);
     setActiveChatId(newId);
     setMessages([newMsg]);
+    setServerChatId(null);
     setAiChatActive(true);
   }
 
@@ -837,6 +1052,10 @@ function ViewAIAgentChat({
   setAiChatActive,
   setActiveNav,
   setChatHistory,
+  serverChatId,
+  setServerChatId,
+  openChat,
+  reloadChats,
 }) {
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
@@ -853,23 +1072,55 @@ function ViewAIAgentChat({
     ta.style.height = Math.min(ta.scrollHeight, 120) + "px";
   }, [inputValue]);
 
-  // Simulate AI response after user sends
-  function sendMessage() {
+  // If we arrived from the home view with a single seed message, send it.
+  const seededRef = useRef(false);
+  useEffect(() => {
+    if (seededRef.current) return;
+    if (!serverChatId && messages.length === 1 && messages[0].role === "user") {
+      seededRef.current = true;
+      const seed = messages[0].text;
+      api
+        .sendChat(null, seed)
+        .then((res) => {
+          if (res?.chatId) setServerChatId(res.chatId);
+          setMessages((prev) => [
+            ...prev,
+            { id: Date.now() + 1, role: "ai", text: res?.reply || "(tidak ada respons)" },
+          ]);
+          reloadChats?.();
+        })
+        .catch((e) =>
+          setMessages((prev) => [
+            ...prev,
+            { id: Date.now() + 1, role: "ai", text: `⚠️ ${e.message}` },
+          ]),
+        );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Send to the AI Agent backend (/api/chat) and append the real reply.
+  async function sendMessage() {
     const text = inputValue.trim();
     if (!text) return;
     const userMsg = { id: Date.now(), role: "user", text };
     setMessages((prev) => [...prev, userMsg]);
     setInputValue("");
-    setTimeout(() => {
+    try {
+      const wasNew = !serverChatId;
+      const res = await api.sendChat(serverChatId, text);
+      if (res?.chatId) setServerChatId(res.chatId);
       setMessages((prev) => [
         ...prev,
-        {
-          id: Date.now() + 1,
-          role: "ai",
-          text: "Saya sedang memproses permintaan Anda. Ini adalah respons simulasi — integrasi AI nyata bisa ditambahkan nanti.",
-        },
+        { id: Date.now() + 1, role: "ai", text: res?.reply || "(tidak ada respons)" },
       ]);
-    }, 800);
+      if (wasNew) reloadChats?.();
+    } catch (e) {
+      setMessages((prev) => [
+        ...prev,
+        { id: Date.now() + 1, role: "ai", text: `⚠️ ${e.message}` },
+      ]);
+    }
   }
 
   function handleKeyDown(e) {
@@ -891,6 +1142,7 @@ function ViewAIAgentChat({
     setActiveChatId(newId);
     setMessages([]);
     setInputValue("");
+    setServerChatId(null);
   }
 
   return (
@@ -915,10 +1167,7 @@ function ViewAIAgentChat({
               <li key={chat.id}>
                 <button
                   className={`ai-history-item${chat.id === activeChatId ? " ai-history-active" : ""}`}
-                  onClick={() => {
-                    setActiveChatId(chat.id);
-                    setMessages([]);
-                  }}
+                  onClick={() => openChat(chat.id)}
                 >
                   <span className="ai-history-title">{chat.title}</span>
                 </button>
@@ -1023,6 +1272,391 @@ function ViewAIAgentChat({
   );
 }
 
+/* ── View: Pengaturan (profile settings) ───────────────────── */
+function ViewPengaturan() {
+  const { user, profile, refreshProfile } = useAuth();
+  const toast = useToast();
+  const [fullName, setFullName] = useState("");
+  const [workspace, setWorkspace] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setFullName(profile?.full_name || "");
+    setWorkspace(profile?.workspace_name || "");
+  }, [profile]);
+
+  async function save(e) {
+    e.preventDefault();
+    setSaving(true);
+    const initials = (fullName.replace(/[^a-zA-Z]/g, "") + "A")
+      .slice(0, 2)
+      .toUpperCase();
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        full_name: fullName,
+        workspace_name: workspace,
+        avatar_initials: initials,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", user.id);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    await refreshProfile();
+    toast.success("Profil tersimpan.");
+  }
+
+  return (
+    <>
+      <div className="db-view-header">
+        <div>
+          <h1 className="db-view-title">Pengaturan</h1>
+          <p className="db-view-sub">Kelola profil dan workspace kamu.</p>
+        </div>
+      </div>
+      <div className="db-settings-card">
+        <h2 className="db-settings-card-title">Profil</h2>
+        <p className="db-settings-card-sub">Informasi dasar akun kamu.</p>
+        <form className="db-settings-form" onSubmit={save}>
+          <label className="db-field">
+            <span>Nama lengkap</span>
+            <input
+              className="db-field-input"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="Nama kamu"
+            />
+          </label>
+          <label className="db-field">
+            <span>Nama workspace</span>
+            <input
+              className="db-field-input"
+              value={workspace}
+              onChange={(e) => setWorkspace(e.target.value)}
+              placeholder="Workspace"
+            />
+          </label>
+          <label className="db-field">
+            <span>Email</span>
+            <input className="db-field-input" value={user?.email || ""} disabled />
+          </label>
+          <button type="submit" className="cta-button db-settings-save" disabled={saving}>
+            {saving ? "Menyimpan..." : "Simpan perubahan"}
+          </button>
+        </form>
+      </div>
+
+      <ChangePasswordCard />
+
+      <div className="db-settings-card">
+        <h2 className="db-settings-card-title">Akun</h2>
+        <p className="db-settings-card-sub">Dokumen legal dan informasi akun.</p>
+        <div className="db-settings-links">
+          <a href="/privacy" target="_blank" rel="noopener noreferrer">
+            Kebijakan Privasi
+          </a>
+          <a href="/terms" target="_blank" rel="noopener noreferrer">
+            Syarat dan Ketentuan
+          </a>
+          <a href="mailto:support@aikit.id">Hubungi dukungan</a>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ── Change password (Keamanan) ────────────────────────────── */
+function ChangePasswordCard() {
+  const toast = useToast();
+  const [pw, setPw] = useState("");
+  const [pw2, setPw2] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function submit(e) {
+    e.preventDefault();
+    if (pw.length < 6) return toast.error("Password minimal 6 karakter.");
+    if (pw !== pw2) return toast.error("Konfirmasi password tidak cocok.");
+    setSaving(true);
+    const { error } = await supabase.auth.updateUser({ password: pw });
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    setPw("");
+    setPw2("");
+    toast.success("Password berhasil diubah.");
+  }
+
+  return (
+    <div className="db-settings-card">
+      <h2 className="db-settings-card-title">Keamanan</h2>
+      <p className="db-settings-card-sub">Ganti password akun kamu.</p>
+      <form className="db-settings-form" onSubmit={submit}>
+        <label className="db-field">
+          <span>Password baru</span>
+          <input
+            className="db-field-input"
+            type="password"
+            value={pw}
+            onChange={(e) => setPw(e.target.value)}
+            placeholder="Minimal 6 karakter"
+            autoComplete="new-password"
+          />
+        </label>
+        <label className="db-field">
+          <span>Konfirmasi password baru</span>
+          <input
+            className="db-field-input"
+            type="password"
+            value={pw2}
+            onChange={(e) => setPw2(e.target.value)}
+            placeholder="Ulangi password baru"
+            autoComplete="new-password"
+          />
+        </label>
+        <button type="submit" className="cta-button db-settings-save" disabled={saving}>
+          {saving ? "Menyimpan..." : "Ganti password"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+/* ── View: Tagihan (credits + transactions) ────────────────── */
+function ViewTagihan() {
+  const { profile } = useAuth();
+  const toast = useToast();
+  const [tx, setTx] = useState([]);
+  const [busy, setBusy] = useState(false);
+
+  const load = () =>
+    supabase
+      .from("transactions")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(20)
+      .then(({ data }) => setTx(data || []));
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function topUp() {
+    setBusy(true);
+    try {
+      const res = await api.topUp(50000);
+      toast.info(res?.note || "Top-up dibuat (stub).");
+      if (res?.invoiceUrl) window.open(res.invoiceUrl, "_blank", "noopener");
+      load();
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <>
+      <div className="db-view-header">
+        <div>
+          <h1 className="db-view-title">Tagihan</h1>
+          <p className="db-view-sub">Saldo kredit dan riwayat transaksi kamu.</p>
+        </div>
+      </div>
+      <div className="db-stats-row">
+        <div className="db-stat-card">
+          <div className="db-stat-top">
+            <span className="db-stat-value">{profile?.credits_balance ?? 0}</span>
+            <span className="db-stat-label">Saldo kredit</span>
+          </div>
+          <button
+            className="cta-button"
+            style={{ alignSelf: "flex-start", fontSize: "13px", height: "34px", padding: "0 16px" }}
+            onClick={topUp}
+            disabled={busy}
+          >
+            {busy ? "Memproses..." : "Isi Saldo"}
+          </button>
+        </div>
+      </div>
+
+      <section>
+        <div className="db-section-header">
+          <h2 className="db-section-title">Riwayat Transaksi</h2>
+        </div>
+        <div className="db-activity-list">
+          {tx.length === 0 ? (
+            <div className="db-activity-item">
+              <div className="db-activity-icon" aria-hidden="true">
+                <IconReceipt />
+              </div>
+              <div className="db-activity-body">
+                <div className="db-activity-row">
+                  <span className="db-activity-title">Belum ada transaksi</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            tx.map((t) => (
+              <div className="db-activity-item" key={t.id}>
+                <div className="db-activity-icon" aria-hidden="true">
+                  <IconReceipt />
+                </div>
+                <div className="db-activity-body">
+                  <div className="db-activity-row">
+                    <span className="db-activity-title">
+                      {t.kind === "topup" ? "Isi Saldo" : t.kind === "spend" ? "Penggunaan" : "Penyesuaian"}{" "}
+                      · {t.amount} kredit
+                    </span>
+                    <div className="db-activity-meta">
+                      <span
+                        className={`db-chip ${t.status === "completed" ? "db-chip-green" : t.status === "failed" ? "db-chip-blue" : "db-chip-amber"}`}
+                      >
+                        {t.status}
+                      </span>
+                      <span className="db-activity-time">{relativeTime(t.created_at)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
+    </>
+  );
+}
+
+/* ── View: File (run outputs) ──────────────────────────────── */
+function ViewFile() {
+  const toast = useToast();
+  const [runs, setRuns] = useState([]);
+
+  useEffect(() => {
+    supabase
+      .from("runs")
+      .select("id,title,output,status,created_at")
+      .not("output", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(30)
+      .then(({ data }) => setRuns(data || []));
+  }, []);
+
+  function download(run) {
+    const blob = new Blob([JSON.stringify(run.output, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${run.title || "hasil"}-${run.id.slice(0, 8)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("File diunduh.");
+  }
+
+  return (
+    <>
+      <div className="db-view-header">
+        <div>
+          <h1 className="db-view-title">File</h1>
+          <p className="db-view-sub">Hasil dari automasi yang sudah kamu jalankan.</p>
+        </div>
+      </div>
+      <div className="db-activity-list">
+        {runs.length === 0 ? (
+          <div className="db-activity-item">
+            <div className="db-activity-icon" aria-hidden="true">
+              <IconFile />
+            </div>
+            <div className="db-activity-body">
+              <div className="db-activity-row">
+                <span className="db-activity-title">Belum ada file</span>
+              </div>
+              <p className="db-activity-snippet">
+                Jalankan automasi untuk menghasilkan file di sini.
+              </p>
+            </div>
+          </div>
+        ) : (
+          runs.map((r) => (
+            <div className="db-activity-item" key={r.id}>
+              <div className="db-activity-icon" aria-hidden="true">
+                <IconFile />
+              </div>
+              <div className="db-activity-body">
+                <div className="db-activity-row">
+                  <span className="db-activity-title">{r.title}</span>
+                  <div className="db-activity-meta">
+                    <span className="db-activity-time">{relativeTime(r.created_at)}</span>
+                    <button
+                      className="ghost-button"
+                      style={{ fontSize: "12px", height: "28px", padding: "0 12px" }}
+                      onClick={() => download(r)}
+                    >
+                      Unduh
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </>
+  );
+}
+
+/* ── View: Dukungan (support) ──────────────────────────────── */
+function ViewDukungan() {
+  return (
+    <>
+      <div className="db-view-header">
+        <div>
+          <h1 className="db-view-title">Dukungan</h1>
+          <p className="db-view-sub">Butuh bantuan? Tim kami siap membantu.</p>
+        </div>
+      </div>
+      <div className="db-product-grid">
+        <article className="db-product-card">
+          <div className="db-product-card-body">
+            <h3 className="db-product-card-title">Email</h3>
+            <p className="db-product-card-desc">
+              Kirim pertanyaan kamu, kami balas secepatnya.
+            </p>
+            <div className="db-product-card-footer">
+              <a
+                className="ghost-button"
+                style={{ fontSize: "13px", height: "32px", padding: "0 14px", textDecoration: "none" }}
+                href="mailto:support@aikit.id"
+              >
+                support@aikit.id
+              </a>
+            </div>
+          </div>
+        </article>
+        <article className="db-product-card">
+          <div className="db-product-card-body">
+            <h3 className="db-product-card-title">WhatsApp</h3>
+            <p className="db-product-card-desc">
+              Chat langsung untuk respons lebih cepat di jam kerja.
+            </p>
+            <div className="db-product-card-footer">
+              <a
+                className="ghost-button"
+                style={{ fontSize: "13px", height: "32px", padding: "0 14px", textDecoration: "none" }}
+                href="https://wa.me/6281234567890"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Buka WhatsApp
+              </a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </>
+  );
+}
+
 /* ── View: placeholder for other nav items ─────────────────── */
 function ViewPlaceholder({ label }) {
   return (
@@ -1037,46 +1671,91 @@ function ViewPlaceholder({ label }) {
 
 /* ── Main Dashboard component ──────────────────────────────── */
 export default function Dashboard() {
-  const [activeNav, setActiveNav] = useState("dashboard");
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { profile, signOut } = useAuth();
+
+  // Active nav + module slug are derived from the URL (deep-linkable).
+  const segments = location.pathname
+    .replace(/^\/dashboard\/?/, "")
+    .split("/")
+    .filter(Boolean);
+  const activeNav = segments[0] || "dashboard";
+  const moduleSlug = activeNav === "module" ? segments[1] : null;
+
   const [aiChatActive, setAiChatActive] = useState(false);
-  const [chatHistory, setChatHistory] = useState([
-    {
-      id: 1,
-      title: "Analisis CV untuk posisi PM",
-      time: "2 hours ago",
-      preview: "Bantu saya...",
-    },
-    {
-      id: 2,
-      title: "Buat email follow-up klien",
-      time: "Yesterday",
-      preview: "Tulis email...",
-    },
-    {
-      id: 3,
-      title: "Ringkas dokumen proposal",
-      time: "3 days ago",
-      preview: "Rangkum...",
-    },
-  ]);
+  const setActiveNav = (id) =>
+    navigate(id === "dashboard" ? "/dashboard" : `/dashboard/${id}`);
+  const [chatHistory, setChatHistory] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState("");
+  const [serverChatId, setServerChatId] = useState(null);
+
+  // Load the user's real chat history from Supabase.
+  const loadChats = () =>
+    supabase
+      .from("chats")
+      .select("id,title,updated_at")
+      .order("updated_at", { ascending: false })
+      .then(({ data }) =>
+        setChatHistory(
+          (data || []).map((c) => ({
+            id: c.id,
+            title: c.title,
+            time: c.updated_at,
+          })),
+        ),
+      );
+  useEffect(() => {
+    loadChats();
+  }, []);
+
+  // Open an existing conversation: load its messages from the DB.
+  async function openChat(chatId) {
+    setActiveChatId(chatId);
+    setServerChatId(chatId);
+    const { data } = await supabase
+      .from("messages")
+      .select("id,role,content")
+      .eq("chat_id", chatId)
+      .order("created_at", { ascending: true });
+    setMessages(
+      (data || []).map((m) => ({ id: m.id, role: m.role, text: m.content })),
+    );
+  }
 
   function handleNavClick(id) {
-    setActiveNav(id);
     if (id !== "ai-agent") setAiChatActive(false);
-    window.history.pushState({}, "", "/dashboard");
+    setActiveNav(id);
+  }
+
+  async function handleTopUp() {
+    try {
+      const res = await api.topUp(50000);
+      if (res?.invoiceUrl) window.open(res.invoiceUrl, "_blank", "noopener");
+    } catch {
+      /* toast handled where available; top-up is a stub */
+    }
   }
 
   function renderView() {
     switch (activeNav) {
       case "dashboard":
-        return <ViewDashboard />;
+        return (
+          <ViewDashboard onNavigate={handleNavClick} onTopUp={handleTopUp} />
+        );
       case "automasi":
         return <ViewAutomasi />;
       case "module":
-        return <ViewModule />;
+        return moduleSlug ? (
+          <ViewModuleHost
+            slug={moduleSlug}
+            onBack={() => navigate("/dashboard/module")}
+          />
+        ) : (
+          <ViewModule onOpen={(slug) => navigate(`/dashboard/module/${slug}`)} />
+        );
       case "ai-agent":
         return (
           <ViewAIAgentHome
@@ -1085,8 +1764,17 @@ export default function Dashboard() {
             setActiveChatId={setActiveChatId}
             setChatHistory={setChatHistory}
             chatHistory={chatHistory}
+            setServerChatId={setServerChatId}
           />
         );
+      case "file":
+        return <ViewFile />;
+      case "tagihan":
+        return <ViewTagihan />;
+      case "pengaturan":
+        return <ViewPengaturan />;
+      case "dukungan":
+        return <ViewDukungan />;
       default:
         return (
           <ViewPlaceholder
@@ -1112,6 +1800,10 @@ export default function Dashboard() {
         setAiChatActive={setAiChatActive}
         setActiveNav={setActiveNav}
         setChatHistory={setChatHistory}
+        serverChatId={serverChatId}
+        setServerChatId={setServerChatId}
+        openChat={openChat}
+        reloadChats={loadChats}
       />
     );
   }
@@ -1142,12 +1834,28 @@ export default function Dashboard() {
 
         <div className="db-sidebar-footer">
           <div className="db-avatar" aria-hidden="true">
-            GA
+            {profile?.avatar_initials || "GA"}
           </div>
           <div>
-            <div className="db-sidebar-user-name">Grou App</div>
-            <div className="db-sidebar-user-role">Workspace</div>
+            <div className="db-sidebar-user-name">
+              {profile?.full_name || "Grou App"}
+            </div>
+            <div className="db-sidebar-user-role">
+              {profile?.workspace_name || "Workspace"}
+            </div>
           </div>
+          <button
+            type="button"
+            className="db-sidebar-signout"
+            aria-label="Keluar"
+            title="Keluar"
+            onClick={async () => {
+              await signOut();
+              navigate("/");
+            }}
+          >
+            <IconSignOut />
+          </button>
         </div>
       </aside>
 
