@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "./lib/AuthContext";
+import { useTheme } from "./lib/ThemeContext";
 import AuthModal from "./components/AuthModal.jsx";
 import { MASCOTS } from "./lib/mascots";
 
@@ -400,6 +401,37 @@ function CheckIcon() {
   );
 }
 
+function ThemeToggle() {
+  const { dark, toggle } = useTheme();
+  return (
+    <button
+      type="button"
+      className="theme-toggle"
+      onClick={toggle}
+      aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+      title={dark ? "Light mode" : "Dark mode"}
+    >
+      {dark ? (
+        <svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <circle cx="9" cy="9" r="4" />
+          <line x1="9" y1="1" x2="9" y2="3" />
+          <line x1="9" y1="15" x2="9" y2="17" />
+          <line x1="1" y1="9" x2="3" y2="9" />
+          <line x1="15" y1="9" x2="17" y2="9" />
+          <line x1="3.05" y1="3.05" x2="4.46" y2="4.46" />
+          <line x1="13.54" y1="13.54" x2="14.95" y2="14.95" />
+          <line x1="3.05" y1="14.95" x2="4.46" y2="13.54" />
+          <line x1="13.54" y1="4.46" x2="14.95" y2="3.05" />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M15.5 10.5A7 7 0 0 1 7.5 2.5a7 7 0 1 0 8 8z" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
 function HeaderLogo() {
   return <span className="header-logo-text">aikit</span>;
 }
@@ -576,6 +608,7 @@ function App() {
             </nav>
           </div>
           <div className="topbar-right">
+            <ThemeToggle />
             <button
               type="button"
               className="cta-button topbar-cta"

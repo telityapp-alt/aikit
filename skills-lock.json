@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "skills": {
+    "ad-library-teardown": {
+      "source": "ScrapeCreators/social-media-research-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ad-library-teardown/SKILL.md",
+      "computedHash": "a45b0791cc8e84618fcbca8afd3c4b3a8d9c1d33d808422b7d78006de89f033e"
+    },
+    "audience-research": {
+      "source": "ScrapeCreators/social-media-research-skills",
+      "sourceType": "github",
+      "skillPath": "skills/audience-research/SKILL.md",
+      "computedHash": "b273e6f05bc455e41206c5d9ba73cf3b3c78f14ba9cec9e96c0399b26fd57b96"
+    },
+    "comment-mining": {
+      "source": "ScrapeCreators/social-media-research-skills",
+      "sourceType": "github",
+      "skillPath": "skills/comment-mining/SKILL.md",
+      "computedHash": "1944b1bc6db1dba9888a6505f116954b2718180db450f3cee92340901c41bc44"
+    },
+    "competitor-social-research": {
+      "source": "ScrapeCreators/social-media-research-skills",
+      "sourceType": "github",
+      "skillPath": "skills/competitor-social-research/SKILL.md",
+      "computedHash": "4bb0df96dab3e980f9c36b106fec67c6ab4f2e1511b3677ed5fff58c5199f71d"
+    },
+    "content-repurposing": {
+      "source": "ScrapeCreators/social-media-research-skills",
+      "sourceType": "github",
+      "skillPath": "skills/content-repurposing/SKILL.md",
+      "computedHash": "2971bbd6392ef69d964bc9bbd63e5c50bcaeb7df7b046b0948ab1a242cf0f020"
+    },
+    "creator-profile-teardown": {
+      "source": "ScrapeCreators/social-media-research-skills",
+      "sourceType": "github",
+      "skillPath": "skills/creator-profile-teardown/SKILL.md",
+      "computedHash": "598f57348d7b055b2b365321a4ea218d31c8113406e13d51642eeab50e75dcd5"
+    },
+    "influencer-prospecting": {
+      "source": "ScrapeCreators/social-media-research-skills",
+      "sourceType": "github",
+      "skillPath": "skills/influencer-prospecting/SKILL.md",
+      "computedHash": "fc1823a962f675091c20c783267ee6af8c64cd60f2d89f694a3a6468d69954ed"
+    },
+    "outlier-post-finder": {
+      "source": "ScrapeCreators/social-media-research-skills",
+      "sourceType": "github",
+      "skillPath": "skills/outlier-post-finder/SKILL.md",
+      "computedHash": "a430b50a8d0dd880ecacd4024aac58fad3fcdacddb535732487b10181dab8c1f"
+    },
+    "product-demand-research": {
+      "source": "ScrapeCreators/social-media-research-skills",
+      "sourceType": "github",
+      "skillPath": "skills/product-demand-research/SKILL.md",
+      "computedHash": "dc9ecbfc25dcb9277b8b3c4095c0c23e1f8d28d116b6d2b4b5165294aaa7f56a"
+    },
+    "scrapecreators-api": {
+      "source": "ScrapeCreators/social-media-research-skills",
+      "sourceType": "github",
+      "skillPath": "skills/scrapecreators-api/SKILL.md",
+      "computedHash": "e629feb3fd5b7975e99278d5fa0c7368b1f17eb258b851a02716862d81d0213d"
+    },
+    "social-listening-brief": {
+      "source": "ScrapeCreators/social-media-research-skills",
+      "sourceType": "github",
+      "skillPath": "skills/social-listening-brief/SKILL.md",
+      "computedHash": "c4a9f226971d527f5332f25100c974c9dc9bffce93d49dbb7b6acd857d8fc899"
+    },
+    "transcript-intelligence": {
+      "source": "ScrapeCreators/social-media-research-skills",
+      "sourceType": "github",
+      "skillPath": "skills/transcript-intelligence/SKILL.md",
+      "computedHash": "19479e07c262d8aa683891130fd500c7ab46467ffb9d5abcdbf1135789b11884"
+    },
+    "trend-discovery": {
+      "source": "ScrapeCreators/social-media-research-skills",
+      "sourceType": "github",
+      "skillPath": "skills/trend-discovery/SKILL.md",
+      "computedHash": "134c5f67c083e1937d38d0846e6c7386bdb11526574edb3af5121c1169c11838"
+    }
+  }
+}

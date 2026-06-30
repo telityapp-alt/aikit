@@ -6,6 +6,7 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import { AuthProvider } from "./lib/AuthContext.jsx";
 import { ToastProvider } from "./lib/ToastContext.jsx";
+import { ThemeProvider } from "./lib/ThemeContext";
 
 // Route-level code splitting — each page loads its own chunk on demand.
 const App = lazy(() => import("./App.jsx"));
@@ -37,7 +38,8 @@ function PageLoader() {
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
-      <ToastProvider>
+      <ThemeProvider>
+        <ToastProvider>
         <AuthProvider>
           <ErrorBoundary>
             <Suspense fallback={<PageLoader />}>
@@ -60,7 +62,8 @@ createRoot(document.getElementById("root")).render(
             </Suspense>
           </ErrorBoundary>
         </AuthProvider>
-      </ToastProvider>
+        </ToastProvider>
+      </ThemeProvider>
     </BrowserRouter>
   </StrictMode>,
 );

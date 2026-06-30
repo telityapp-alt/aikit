@@ -1,6 +1,6 @@
-import { db, json } from "../_supabase.js";
+import { db, json, rpc } from "../_supabase.js";
 
-// POST /api/chat  { chatId, message }
+// POST /api/chat  { chatId, message, moduleSlug }
 // Persists the user's message, calls Anthropic for a reply, persists the reply.
 // Falls back to a clear placeholder when ANTHROPIC_API_KEY is not set.
 export async function onRequestPost(context) {
@@ -13,9 +13,36 @@ export async function onRequestPost(context) {
   } catch {
     return json({ error: "Body tidak valid." }, 400);
   }
-  let { chatId, message } = payload || {};
+  let { chatId, message, moduleSlug } = payload || {};
   if (!message || !message.trim()) {
     return json({ error: "Pesan kosong." }, 400);
+  }
+
+  // Fetch module config if moduleSlug is provided
+  let systemPrompt = "Kamu adalah aikit AI Agent, asisten berbahasa Indonesia yang membantu produktivitas, bisnis, dan konten. Jawab ringkas dan jelas.";
+  let modelName = "claude-sonnet-4-6";
+  let cost = 1;
+
+  if (moduleSlug) {
+    const modules = await db(env, `modules?slug=eq.${encodeURIComponent(moduleSlug)}&select=system_prompt,model,cost_per_chat_msg`);
+    if (modules && modules.length > 0) {
+      const mod = modules[0];
+      if (mod.system_prompt) systemPrompt = mod.system_prompt;
+      if (mod.model) modelName = mod.model;
+      if (mod.cost_per_chat_msg !== undefined) cost = mod.cost_per_chat_msg;
+    }
+  }
+
+  // Deduct credits
+  if (cost > 0) {
+    try {
+      await rpc(env, "spend_credits", { p_user: user.id, p_amount: cost });
+    } catch (e) {
+      if (String(e.message).includes("INSUFFICIENT_CREDITS")) {
+        return json({ error: "Saldo kredit tidak cukup." }, 402);
+      }
+      return json({ error: "Gagal memotong kredit: " + e.message }, 500);
+    }
   }
 
   // Create a chat if none supplied.
@@ -48,30 +75,42 @@ export async function onRequestPost(context) {
       role: m.role === "ai" ? "assistant" : "user",
       content: m.content,
     }));
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": env.ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1024,
-        system:
-          "Kamu adalah aikit AI Agent, asisten berbahasa Indonesia yang membantu produktivitas, bisnis, dan konten. Jawab ringkas dan jelas.",
-        messages: anthropicMessages,
-      }),
-    });
-    if (!res.ok) {
-      const errText = await res.text();
-      return json({ error: `AI error: ${errText.slice(0, 200)}` }, 502);
+    
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": env.ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: modelName,
+          max_tokens: 1024,
+          system: systemPrompt,
+          messages: anthropicMessages,
+        }),
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText);
+      }
+      const result = await res.json();
+      reply = result?.content?.[0]?.text || "(tidak ada respons)";
+    } catch (apiErr) {
+      // Refund credits on failure
+      if (cost > 0) {
+        await rpc(env, "add_credits", { p_user: user.id, p_amount: cost }).catch(console.error);
+      }
+      return json({ error: `AI error: ${String(apiErr.message).slice(0, 200)}` }, 502);
     }
-    const result = await res.json();
-    reply = result?.content?.[0]?.text || "(tidak ada respons)";
   } else {
     reply =
       "AI Agent siap, tapi ANTHROPIC_API_KEY belum dipasang di environment. Tambahkan key-nya untuk mengaktifkan jawaban nyata.";
+    // Refund credits since it's a dry run
+    if (cost > 0) {
+      await rpc(env, "add_credits", { p_user: user.id, p_amount: cost }).catch(console.error);
+    }
   }
 
   // Store AI reply.

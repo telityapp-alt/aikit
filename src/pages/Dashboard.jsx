@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 import { useToast } from "../lib/ToastContext";
@@ -249,8 +249,8 @@ const NAV_ITEMS = [
 const AUTOMASI_CARDS = [
   {
     id: "competitor-analyzer",
-    title: "Competitor Analyzer",
-    desc: "Pantau kompetitor kamu secara real-time — traffic, SEO, media sosial, tech stack, dan perubahan terbaru dalam satu dashboard.",
+    title: "Generator Laporan Kompetitor Instagram",
+    desc: "Ambil data Posts atau Reels kompetitor, analisis top content dan komentar, lalu download report Excel yang siap dipakai tim.",
     type: "App",
     pricing: "Pro",
     costPerRun: 0,
@@ -743,6 +743,8 @@ function ViewAutomasi({ onOpenApp }) {
 /* ── View: Module ──────────────────────────────────────────── */
 function ViewModule({ onOpen }) {
   const [items, setItems] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState("All");
 
   useEffect(() => {
     supabase
@@ -768,6 +770,15 @@ function ViewModule({ onOpen }) {
   }, []);
 
   const list = items ?? MODULE_CARDS;
+  const categories = ["All", ...new Set(list.map(i => i.category).filter(Boolean))];
+
+  const filteredList = list.filter(item => {
+    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          (item.desc && item.desc.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesCategory = activeCategory === "All" || item.category === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
+
   return (
     <>
       <div className="db-view-header">
@@ -779,8 +790,32 @@ function ViewModule({ onOpen }) {
           </p>
         </div>
       </div>
+
+      <div className="db-filters" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+        <input 
+          type="text" 
+          placeholder="Cari module..." 
+          className="text-input"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{ maxWidth: '400px' }}
+        />
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {categories.map(cat => (
+            <button 
+              key={cat} 
+              className={activeCategory === cat ? "cta-button" : "ghost-button"}
+              style={{ fontSize: '12px', padding: '6px 12px', height: 'auto', borderRadius: '16px' }}
+              onClick={() => setActiveCategory(cat)}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="db-product-grid">
-        {list.map((item) => (
+        {filteredList.map((item) => (
           <ProductCard
             key={item.id}
             title={item.title}
@@ -818,7 +853,15 @@ function ViewModuleHost({ slug, onBack }) {
       </div>
     );
   }
-  return <Comp />;
+  return (
+    <Suspense fallback={
+      <div className="db-placeholder">
+        <span className="db-placeholder-label">Memuat module...</span>
+      </div>
+    }>
+      <Comp />
+    </Suspense>
+  );
 }
 
 /* ── AI Agent icons ───────────────────────────────────────── */
@@ -1909,7 +1952,7 @@ export default function Dashboard() {
     <div className="db-shell">
       <aside className="db-sidebar">
         <div className="db-sidebar-logo">
-          <span className="db-wordmark">SiapPakai</span>
+          <span className="db-wordmark">aikit</span>
         </div>
 
         <nav aria-label="Main navigation">

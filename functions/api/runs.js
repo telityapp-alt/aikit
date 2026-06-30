@@ -64,7 +64,11 @@ export async function onRequestPost(context) {
 async function processRun(env, run, automation, input, userId, cost, ip) {
   try {
     // ── Provider call (stub) ──────────────────────────────────
-    // TODO: call ScrapeCreators + Anthropic using env keys (server-only).
+    // In a real implementation, we would use automation.system_prompt and automation.model
+    // to call Anthropic or another provider here.
+    const systemPrompt = automation.system_prompt || "Default automation prompt.";
+    const modelName = automation.model || "claude-sonnet-4-6";
+    
     // Simulated latency so the async/polling flow is exercised end-to-end.
     await new Promise((r) => setTimeout(r, 1200));
 
@@ -72,6 +76,8 @@ async function processRun(env, run, automation, input, userId, cost, ip) {
       note:
         "Run selesai. Integrasi provider (ScrapeCreators/Claude) belum aktif — output ini placeholder.",
       automation: automation.slug,
+      used_prompt: systemPrompt.substring(0, 50) + "...",
+      used_model: modelName,
       echo: input,
     };
 

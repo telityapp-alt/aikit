@@ -1,0 +1,41 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "aikit-blue",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-06-30",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "vars": {
+    "ANTHROPIC_MODEL": "claude-sonnet-4-5"
+  },
+  "queues": {
+    "producers": [
+      {
+        "binding": "RUN_QUEUE",
+        "queue": "aikit-run-queue"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "aikit-run-queue",
+        "max_batch_size": 4,
+        "max_batch_timeout": 10,
+        "max_retries": 3
+      }
+    ]
+  },
+  "r2_buckets": [
+    {
+      "binding": "REPORTS_BUCKET",
+      "bucket_name": "aikit-reports"
+    }
+  ]
+}

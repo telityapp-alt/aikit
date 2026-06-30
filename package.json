@@ -5,15 +5,19 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:worker": "wrangler dev",
     "build": "vite build",
+    "deploy": "wrangler deploy",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "types": "wrangler types"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "react-router-dom": "^7.18.0"
+    "react-router-dom": "^7.18.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/react": "^19.2.17",
