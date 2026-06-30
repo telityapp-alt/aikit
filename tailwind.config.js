@@ -6,15 +6,15 @@ export default {
       // ── Brand colors (dari styling-guide.md / token yang ada di CSS) ──
       colors: {
         // Backgrounds
-        sand: "#f5ecd9", // page background
-        "sand-light": "#f6eddc", // root bg
-        cream: "#fffdf8", // card / sidebar bg
-        "frame-bg": "#fffdf8",
+        sand: "#ffffff", // page background
+        "sand-light": "#ffffff", // root bg
+        cream: "#ffffff", // card / sidebar bg
+        "frame-bg": "#ffffff",
 
         // Borders
-        "border-warm": "#d9d1c2",
-        "border-sand": "#ddd4c4",
-        "border-muted": "#e3dccc",
+        "border-warm": "#dce8f8",
+        "border-sand": "#dce8f8",
+        "border-muted": "#dce8f8",
 
         // Text
         ink: "#111318", // default text
@@ -25,10 +25,10 @@ export default {
         "ink-faint": "#b8b0a0", // disabled / dividers
 
         // Brand accents
-        amber: "#f6a61e", // primary CTA color
-        "amber-dark": "#cf860d",
-        "amber-border": "#c7820e",
-        "amber-border2": "#c48a28",
+        amber: "#1cb0f6", // primary CTA color
+        "amber-dark": "#0e8fd4",
+        "amber-border": "#0e8fd4",
+        "amber-border2": "#0e8fd4",
 
         // Blue accents (tabs, links)
         "blue-brand": "#377cf6",
@@ -40,9 +40,9 @@ export default {
         "teal-brand": "#37d7c8",
 
         // Topbar
-        "topbar-from": "#f6f4ee",
-        "topbar-to": "#f0ede6",
-        "topbar-border": "#d9d1c2",
+        "topbar-from": "#f0f6ff",
+        "topbar-to": "#e8f2ff",
+        "topbar-border": "#dce8f8",
 
         // Nav text
         "nav-text": "#2e3137",
@@ -84,7 +84,7 @@ export default {
         "cta-active": "inset 0 -1px 0 #cf860d, 0 0 0 rgba(129,79,2,0.16)",
         // Ghost button shadow
         ghost: "inset 0 -2px 0 rgba(196,138,40,0.24)",
-        "ghost-active": "inset 0 -1px 0 rgba(196,138,40,0.2)",
+        "ghost-active": "inset 0 -1px 0 rgba(14,143,212,0.2)",
         // Frame
         frame: "inset 0 1px 0 rgba(255,255,255,0.9)",
         // Auth modal

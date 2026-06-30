@@ -1,4 +1,4 @@
-import { Component } from "react";
+﻿import { Component } from "react";
 
 // Catches render-time errors anywhere in the tree and shows a recoverable
 // fallback instead of a blank white screen.
@@ -22,7 +22,7 @@ export default class ErrorBoundary extends Component {
         <div
           style={{
             minHeight: "100vh",
-            background: "#f5ecd9",
+            background: "#ffffff",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
