@@ -1,4 +1,4 @@
-﻿import { Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext";
 
 /**
@@ -13,7 +13,7 @@ export default function ProtectedRoute({ children }) {
     return (
       <div
         aria-busy="true"
-        style={{ minHeight: "100vh", background: "#ffffff" }}
+        style={{ minHeight: "100vh", background: "#f5ecd9" }}
       />
     );
   }

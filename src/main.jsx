@@ -1,4 +1,4 @@
-﻿import { StrictMode, lazy, Suspense } from "react";
+import { StrictMode, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./index.css";
@@ -24,7 +24,7 @@ function PageLoader() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "#ffffff",
+        background: "#f5ecd9",
         fontSize: 14,
         color: "#a07850",
       }}

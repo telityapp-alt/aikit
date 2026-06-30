@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useToast } from "../lib/ToastContext";
@@ -62,7 +62,7 @@ export default function ResetPassword() {
               placeholder="Minimal 6 karakter"
               autoComplete="new-password"
               disabled={!ready}
-              className="h-11 rounded-[10px] border border-border-warm bg-white px-[14px] text-[15px] text-ink-dark outline-none transition-[border-color,box-shadow] duration-120 placeholder:text-ink-muted focus:border-amber focus:shadow-[0_0_0_3px_rgba(28, 176, 246,0.18)] disabled:bg-[#f0f6ff] disabled:text-ink-muted"
+              className="h-11 rounded-[10px] border border-border-warm bg-white px-[14px] text-[15px] text-ink-dark outline-none transition-[border-color,box-shadow] duration-120 placeholder:text-ink-muted focus:border-amber focus:shadow-[0_0_0_3px_rgba(246,166,30,0.18)] disabled:bg-[#f6f4ee] disabled:text-ink-muted"
             />
           </label>
 
@@ -77,7 +77,7 @@ export default function ResetPassword() {
               placeholder="Ulangi password baru"
               autoComplete="new-password"
               disabled={!ready}
-              className="h-11 rounded-[10px] border border-border-warm bg-white px-[14px] text-[15px] text-ink-dark outline-none transition-[border-color,box-shadow] duration-120 placeholder:text-ink-muted focus:border-amber focus:shadow-[0_0_0_3px_rgba(28, 176, 246,0.18)] disabled:bg-[#f0f6ff] disabled:text-ink-muted"
+              className="h-11 rounded-[10px] border border-border-warm bg-white px-[14px] text-[15px] text-ink-dark outline-none transition-[border-color,box-shadow] duration-120 placeholder:text-ink-muted focus:border-amber focus:shadow-[0_0_0_3px_rgba(246,166,30,0.18)] disabled:bg-[#f6f4ee] disabled:text-ink-muted"
             />
           </label>
 

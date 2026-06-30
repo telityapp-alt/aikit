@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    Competitor Analyzer — ca- prefix
    ============================================================ */
 
@@ -21,8 +21,8 @@
 }
 
 .ca-empty-card {
-    background: #ffffff;
-    border: 1px solid #dce8f8;
+    background: #fffdf8;
+    border: 1px solid #d9d1c2;
     border-radius: 20px;
     padding: 36px 40px;
     width: 100%;
@@ -66,9 +66,9 @@
     flex: 1;
     height: 40px;
     padding: 0 14px;
-    border: 1px solid #dce8f8;
+    border: 1px solid #d9d1c2;
     border-radius: 10px;
-    background: #ffffff;
+    background: #f5ecd9;
     font-size: 14px;
     font-weight: 600;
     color: #0d1d38;
@@ -84,8 +84,8 @@
 }
 
 .ca-domain-input:focus {
-    border-color: #0e8fd4;
-    box-shadow: 0 0 0 3px rgba(28, 176, 246, 0.15);
+    border-color: #c7820e;
+    box-shadow: 0 0 0 3px rgba(246, 166, 30, 0.15);
 }
 
 .ca-suggestions-label {
@@ -104,9 +104,9 @@
 .ca-suggestion-chip {
     height: 30px;
     padding: 0 12px;
-    border: 1px solid #dce8f8;
+    border: 1px solid #d9d1c2;
     border-radius: 999px;
-    background: #e8f2ff;
+    background: #f0ede6;
     color: #29405f;
     font-size: 13px;
     font-weight: 600;
@@ -118,7 +118,7 @@
 }
 
 .ca-suggestion-chip:hover {
-    border-color: #0e8fd4;
+    border-color: #c7820e;
     background: #fdf8f0;
     transform: translateY(-1px);
 }
@@ -143,8 +143,8 @@
 }
 
 .ca-tracked-item {
-    background: #ffffff;
-    border: 1px solid #dce8f8;
+    background: #fffdf8;
+    border: 1px solid #d9d1c2;
     border-radius: 12px;
     padding: 12px 16px;
     display: flex;
@@ -218,7 +218,7 @@
 
 .ca-progress-bar {
     height: 100%;
-    background: linear-gradient(90deg, #1cb0f6, #e8920a);
+    background: linear-gradient(90deg, #f6a61e, #e8920a);
     border-radius: 999px;
     animation: ca-fill 3.5s linear forwards;
 }
@@ -268,12 +268,12 @@
 }
 
 .ca-milestone-dot.ca-dot-active {
-    background: #1cb0f6;
+    background: #f6a61e;
     animation: ca-pulse 900ms ease-in-out infinite;
 }
 
 .ca-milestone-dot.ca-dot-pending {
-    background: #dce8f8;
+    background: #d9d1c2;
 }
 
 @keyframes ca-pulse {
@@ -318,8 +318,8 @@
 }
 
 .ca-stat-card {
-    background: #ffffff;
-    border: 1px solid #dce8f8;
+    background: #fffdf8;
+    border: 1px solid #d9d1c2;
     box-shadow: inset 0 -2px 0 #e8dfd0;
     border-radius: 12px;
     padding: 14px 16px;
@@ -350,8 +350,8 @@
 }
 
 .ca-competitor-card {
-    background: #ffffff;
-    border: 1px solid #dce8f8;
+    background: #fffdf8;
+    border: 1px solid #d9d1c2;
     box-shadow: inset 0 -2px 0 #e8dfd0;
     border-radius: 14px;
     padding: 16px 20px;
@@ -414,8 +414,8 @@
     display: inline-flex;
     flex-direction: column;
     padding: 5px 10px;
-    background: #e8f2ff;
-    border: 1px solid #dce8f8;
+    background: #f0ede6;
+    border: 1px solid #d9d1c2;
     border-radius: 8px;
     gap: 1px;
 }
@@ -452,15 +452,15 @@
 }
 
 .ca-threat-high {
-    background: #1cb0f6;
+    background: #f6a61e;
     color: #111;
-    border: 1px solid #0e8fd4;
+    border: 1px solid #c7820e;
 }
 
 .ca-threat-mid {
-    background: #e8f2ff;
+    background: #f0ede6;
     color: #55606d;
-    border: 1px solid #dce8f8;
+    border: 1px solid #d9d1c2;
 }
 
 .ca-threat-low {
@@ -471,8 +471,8 @@
 
 /* ── Phase 3: Profile ──────────────────────────────────────── */
 .ca-profile-header {
-    background: #ffffff;
-    border: 1px solid #dce8f8;
+    background: #fffdf8;
+    border: 1px solid #d9d1c2;
     box-shadow: inset 0 -2px 0 #e8dfd0;
     border-radius: 14px;
     padding: 16px 20px;
@@ -488,9 +488,9 @@
     gap: 6px;
     height: 34px;
     padding: 0 14px;
-    border: 1px solid #dce8f8;
+    border: 1px solid #d9d1c2;
     border-radius: 9px;
-    background: #e8f2ff;
+    background: #f0ede6;
     color: #29405f;
     font-size: 13px;
     font-weight: 700;
@@ -503,7 +503,7 @@
 }
 
 .ca-back-btn:hover {
-    border-color: #0e8fd4;
+    border-color: #c7820e;
     background: #fdf8f0;
     transform: translateY(-1px);
 }
@@ -538,8 +538,8 @@
     flex-direction: column;
     align-items: center;
     padding: 6px 14px;
-    background: #1cb0f6;
-    border: 1px solid #0e8fd4;
+    background: #f6a61e;
+    border: 1px solid #c7820e;
     border-radius: 10px;
     flex-shrink: 0;
 }
@@ -562,8 +562,8 @@
 .ca-tabs {
     display: flex;
     gap: 6px;
-    background: #e8f2ff;
-    border: 1px solid #dce8f8;
+    background: #f0ede6;
+    border: 1px solid #d9d1c2;
     border-radius: 12px;
     padding: 4px;
 }
@@ -586,15 +586,15 @@
 }
 
 .ca-tab:hover {
-    background: rgba(28, 176, 246, 0.12);
+    background: rgba(246, 166, 30, 0.12);
     color: #0d1d38;
 }
 
 .ca-tab.ca-tab-active {
-    background: #1cb0f6;
+    background: #f6a61e;
     color: #111;
     box-shadow:
-        inset 0 -2px 0 #0e8fd4,
+        inset 0 -2px 0 #cf860d,
         0 1px 0 rgba(129, 79, 2, 0.2);
 }
 
@@ -606,7 +606,7 @@
 }
 
 .ca-insight-callout {
-    border-left: 3px solid #1cb0f6;
+    border-left: 3px solid #f6a61e;
     background: #fdf8f0;
     border-radius: 0 12px 12px 0;
     padding: 14px 18px;
@@ -625,8 +625,8 @@
 }
 
 .ca-card {
-    background: #ffffff;
-    border: 1px solid #dce8f8;
+    background: #fffdf8;
+    border: 1px solid #d9d1c2;
     box-shadow: inset 0 -2px 0 #e8dfd0;
     border-radius: 12px;
     padding: 16px 18px;
@@ -724,7 +724,7 @@
     width: 8px;
     height: 8px;
     border-radius: 999px;
-    background: #1cb0f6;
+    background: #f6a61e;
     margin-top: 5px;
     flex-shrink: 0;
 }
@@ -790,14 +790,14 @@
 }
 
 .ca-kw-pos-top {
-    background: #1cb0f6;
+    background: #f6a61e;
     color: #111;
 }
 
 .ca-kw-pos-mid {
-    background: #e8f2ff;
+    background: #f0ede6;
     color: #55606d;
-    border: 1px solid #dce8f8;
+    border: 1px solid #d9d1c2;
 }
 
 .ca-kw-diff-bar {
@@ -818,7 +818,7 @@
     background: #3a9e6e;
 }
 .ca-diff-medium {
-    background: #1cb0f6;
+    background: #f6a61e;
 }
 .ca-diff-hard {
     background: #d95a3b;
@@ -834,7 +834,7 @@
 .ca-gap-chip {
     padding: 5px 12px;
     background: #fdf8f0;
-    border: 1px solid #0e8fd4;
+    border: 1px solid #c7820e;
     border-radius: 999px;
     font-size: 13px;
     font-weight: 600;
@@ -849,8 +849,8 @@
 }
 
 .ca-social-card {
-    background: #ffffff;
-    border: 1px solid #dce8f8;
+    background: #fffdf8;
+    border: 1px solid #d9d1c2;
     border-radius: 14px;
     padding: 16px 18px;
     border-left-width: 3px;
@@ -890,13 +890,13 @@
 .ca-mini-bar {
     flex: 1;
     border-radius: 3px 3px 0 0;
-    background: rgba(28, 176, 246, 0.35);
+    background: rgba(246, 166, 30, 0.35);
     min-height: 4px;
     transition: background 120ms;
 }
 
 .ca-mini-bar:last-child {
-    background: #1cb0f6;
+    background: #f6a61e;
 }
 
 /* ── Technology stack ──────────────────────────────────────── */
@@ -954,9 +954,9 @@
     border-color: #cdb4e8;
 }
 .ca-tech-gray {
-    background: #e8f2ff;
+    background: #f0ede6;
     color: #374352;
-    border-color: #dce8f8;
+    border-color: #d9d1c2;
 }
 .ca-tech-red {
     background: #fdf0ee;
@@ -995,7 +995,7 @@
 
 .ca-country-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #1cb0f6, #e8920a);
+    background: linear-gradient(90deg, #f6a61e, #e8920a);
     border-radius: 999px;
 }
 
@@ -1068,7 +1068,7 @@
 }
 
 .ca-threat-fill-high {
-    background: #1cb0f6;
+    background: #f6a61e;
 }
 .ca-threat-fill-mid {
     background: #a09480;
@@ -1095,8 +1095,8 @@
 
 /* ── Roster table ─────────────────────────────────────────── */
 .ca-table-wrap {
-    background: #ffffff;
-    border: 1px solid #dce8f8;
+    background: #fffdf8;
+    border: 1px solid #d9d1c2;
     border-bottom-width: 2px;
     border-radius: 12px;
     overflow: hidden;
@@ -1110,8 +1110,8 @@
     display: flex;
     align-items: center;
     padding: 8px 16px;
-    background: #e8f2ff;
-    border-bottom: 1px solid #dce8f8;
+    background: #f0ede6;
+    border-bottom: 1px solid #d9d1c2;
     font-family: "Source Sans 3", "Segoe UI", sans-serif;
     font-size: 11px;
     font-weight: 700;

@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { getProduct } from "../data/products";
 import { useAuth } from "../lib/AuthContext";
@@ -112,7 +112,7 @@ export default function ProductDetail() {
             <ol className="m-0 grid list-none gap-[18px] p-0">
               {product.steps.map((step, index) => (
                 <li key={step.title} className="flex items-start gap-4">
-                  <span className="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--pd-accent,#1cb0f6)_40%,#dce8f8)] bg-[color-mix(in_srgb,var(--pd-accent,#1cb0f6)_16%,#fff)] text-sm font-bold text-ink-dark">
+                  <span className="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--pd-accent,#f6a61e)_40%,#d9d1c2)] bg-[color-mix(in_srgb,var(--pd-accent,#f6a61e)_16%,#fff)] text-sm font-bold text-ink-dark">
                     {index + 1}
                   </span>
                   <div>

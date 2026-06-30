@@ -1,4 +1,4 @@
-﻿/* Manajer Keuangan Pribadi — token-aligned with the dashboard. */
+/* Manajer Keuangan Pribadi — token-aligned with the dashboard. */
 
 .kp-wrap {
   display: flex;
@@ -17,7 +17,7 @@
   height: 42px;
   padding: 0 14px;
   background: #fff;
-  border: 1px solid #dce8f8;
+  border: 1px solid #d9d1c2;
   border-radius: 10px;
   font-size: 14px;
   color: #0d1d38;
@@ -26,8 +26,8 @@
   min-width: 160px;
 }
 .kp-input:focus {
-  border-color: #1cb0f6;
-  box-shadow: 0 0 0 3px rgba(28, 176, 246, 0.18);
+  border-color: #f6a61e;
+  box-shadow: 0 0 0 3px rgba(246, 166, 30, 0.18);
 }
 .kp-input-amount {
   flex: 0 0 150px;
@@ -57,8 +57,8 @@
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  background: #ffffff;
-  border: 1px solid #dce8f8;
+  background: #fffdf8;
+  border: 1px solid #d9d1c2;
   border-radius: 10px;
 }
 .kp-row-label {

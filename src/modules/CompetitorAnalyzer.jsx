@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import "./CompetitorAnalyzer.css";
 
 // ── Mock data ──────────────────────────────────────────────────
@@ -17,7 +17,7 @@ const MOCK_COMPETITORS = [
     analyzed: "2 jam lalu",
     trafficTrend: [28, 31, 29, 34, 38, 41, 39, 44, 46, 43, 48, 45],
     sources: [
-      { name: "Search", pct: 42, color: "#1cb0f6" },
+      { name: "Search", pct: 42, color: "#f6a61e" },
       { name: "Direct", pct: 35, color: "#3a9e6e" },
       { name: "Social", pct: 12, color: "#5a8fd4" },
       { name: "Referral", pct: 11, color: "#a07cd4" },
@@ -145,7 +145,7 @@ const MOCK_COMPETITORS = [
     analyzed: "3 jam lalu",
     trafficTrend: [42, 46, 44, 50, 54, 58, 55, 62, 66, 60, 70, 65],
     sources: [
-      { name: "Search", pct: 38, color: "#1cb0f6" },
+      { name: "Search", pct: 38, color: "#f6a61e" },
       { name: "Direct", pct: 40, color: "#3a9e6e" },
       { name: "Social", pct: 14, color: "#5a8fd4" },
       { name: "Referral", pct: 8, color: "#a07cd4" },
@@ -273,7 +273,7 @@ const MOCK_COMPETITORS = [
     analyzed: "5 jam lalu",
     trafficTrend: [22, 20, 24, 22, 26, 24, 28, 26, 24, 28, 26, 30],
     sources: [
-      { name: "Search", pct: 48, color: "#1cb0f6" },
+      { name: "Search", pct: 48, color: "#f6a61e" },
       { name: "Direct", pct: 28, color: "#3a9e6e" },
       { name: "Social", pct: 10, color: "#5a8fd4" },
       { name: "Referral", pct: 14, color: "#a07cd4" },
@@ -433,15 +433,15 @@ function Sparkline({ values, width = 400, height = 80, months }) {
     >
       <defs>
         <linearGradient id="ca-grad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#1cb0f6" stopOpacity="0.22" />
-          <stop offset="100%" stopColor="#1cb0f6" stopOpacity="0" />
+          <stop offset="0%" stopColor="#f6a61e" stopOpacity="0.22" />
+          <stop offset="100%" stopColor="#f6a61e" stopOpacity="0" />
         </linearGradient>
       </defs>
       <path d={areaPath} fill="url(#ca-grad)" />
       <path
         d={linePath}
         fill="none"
-        stroke="#1cb0f6"
+        stroke="#f6a61e"
         strokeWidth="2"
         strokeLinejoin="round"
         strokeLinecap="round"
@@ -468,8 +468,8 @@ function Sparkline({ values, width = 400, height = 80, months }) {
               cx={x}
               cy={y}
               r={4}
-              fill="#1cb0f6"
-              stroke="#ffffff"
+              fill="#f6a61e"
+              stroke="#fffdf8"
               strokeWidth="2"
             />
           ),
@@ -479,7 +479,7 @@ function Sparkline({ values, width = 400, height = 80, months }) {
 }
 
 // Mini sparkline for roster cards (no axis labels, just the line)
-function MiniSparkline({ values, color = "#1cb0f6" }) {
+function MiniSparkline({ values, color = "#f6a61e" }) {
   const w = 80,
     h = 36;
   const min = Math.min(...values);
