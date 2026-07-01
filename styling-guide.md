@@ -796,3 +796,208 @@ FATAL rules tetap: no extrabold baru, no all-uppercase di luar eyebrow, no itali
 
 ATURAN BARU YANG DIPERKUAT: tidak ada teks all-uppercase pada konten/komponen baru.
 `text-transform: uppercase` tidak dipakai di komponen baru (eyebrow auth sudah dinormalkan ke normal case). Heading judul produk/section memakai normal case.
+
+---
+
+## 14. Dark Mode
+
+Dark mode diaktifkan via `data-theme="dark"` pada `<html>`. ThemeContext (`src/lib/ThemeContext.jsx`) handle toggle + persist ke `localStorage`.
+
+### Cara pakai
+```jsx
+import { useTheme } from "../lib/ThemeContext";
+const { dark, toggle } = useTheme();
+```
+
+### CSS Custom Properties — Dark Palette
+
+Semua token dark didefinisikan di `[data-theme="dark"]` root. **Jangan hardcode hex** di komponen baru — pakai token ini.
+
+| Token | Value | Kegunaan |
+|---|---|---|
+| `--dk-bg-page` | `#18191c` | Background luar `.page-shell` |
+| `--dk-bg-frame` | `#1e1f23` | Background `.site-frame` |
+| `--dk-bg-raise` | `#25272c` | Card, panel, sidebar |
+| `--dk-bg-lift` | `#2c2e34` | Input, chip, nested surface |
+| `--dk-bg-hover` | `#31343b` | Hover state surface |
+| `--dk-border` | `#383b43` | Border default semua komponen |
+| `--dk-border-lo` | `#2c2e34` | Border subtle / divider |
+| `--dk-text-hi` | `#e8ecf0` | Heading, label penting |
+| `--dk-text-md` | `#a3aab5` | Body text, secondary |
+| `--dk-text-lo` | `#636b78` | Muted, placeholder, faint |
+| `--dk-accent` | `#f6a61e` | Amber accent — sama dengan light |
+| `--dk-accent-lo` | `rgba(246,166,30,.14)` | Accent background subtle |
+| `--dk-accent-border` | `rgba(246,166,30,.32)` | Accent border |
+| `--dk-scroll` | `#383b43` | Scrollbar track |
+
+### Mapping light → dark tokens
+
+| Light token | Dark equivalent |
+|---|---|
+| `--bg-page` (`#f5ecd9`) | `--dk-bg-page` |
+| `--bg-surface` (`#fffdf8`) | `--dk-bg-raise` |
+| `--border` (`#d9d1c2`) | `--dk-border` |
+| `--text-heading` (`#0d1d38`) | `--dk-text-hi` |
+| `--text-body` (`#29405f`) | `--dk-text-md` |
+| `--text-muted` (`#55606d`) | `--dk-text-md` |
+| `--text-faint` (`#7b8594`) | `--dk-text-lo` |
+| `--amber` (`#f6a61e`) | `--dk-accent` (sama) |
+
+### Component overrides
+
+**Layout**
+```css
+[data-theme="dark"] .page-shell       { background: var(--dk-bg-page); }
+[data-theme="dark"] .site-frame        { background: var(--dk-bg-frame); border-color: var(--dk-border); box-shadow: inset 0 1px 0 rgba(255,255,255,.03); }
+```
+
+**Topbar**
+```css
+[data-theme="dark"] .topbar            { background: linear-gradient(180deg, #25272c 0%, #212328 100%); border-bottom-color: var(--dk-border); }
+[data-theme="dark"] .header-logo-text  { color: var(--dk-text-hi); }
+[data-theme="dark"] .topnav a          { color: var(--dk-text-md); }
+[data-theme="dark"] .topnav a:hover    { color: var(--dk-text-hi); }
+[data-theme="dark"] .caret-icon        { color: var(--dk-text-lo); }
+[data-theme="dark"] .icon-button       { color: var(--dk-text-md); }
+[data-theme="dark"] .icon-button:hover { color: var(--dk-text-hi); }
+```
+
+**Ghost button** (CTA button tidak berubah — amber tetap sama)
+```css
+[data-theme="dark"] .ghost-button        { color: var(--dk-text-md); border-color: var(--dk-border); background: var(--dk-bg-raise); box-shadow: inset 0 -2px 0 rgba(0,0,0,.3); }
+[data-theme="dark"] .ghost-button:hover  { color: var(--dk-text-hi); filter: brightness(1.08); }
+[data-theme="dark"] .ghost-button:active { box-shadow: inset 0 -1px 0 rgba(0,0,0,.2); }
+```
+Ghost button di dark banner (inline override): `color: #fffdf8`, `borderColor: rgba(255,255,255,.2)`, `background: rgba(255,255,255,.08)`
+
+**Cards**
+```css
+[data-theme="dark"] .library-card       { background: var(--dk-bg-raise); border-color: var(--dk-border); box-shadow: inset 0 -3px 0 rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.2), 0 4px 12px rgba(0,0,0,.15); }
+[data-theme="dark"] .library-card:hover { box-shadow: inset 0 2px 4px rgba(0,0,0,.18), 0 1px 2px rgba(0,0,0,.15); }
+[data-theme="dark"] .library-card-ribbon         { background: var(--dk-bg-lift); border-color: var(--dk-border); }
+[data-theme="dark"] .library-card-ribbon strong  { color: var(--dk-text-hi); }
+[data-theme="dark"] .library-card-ribbon span    { color: var(--dk-text-lo); }
+[data-theme="dark"] .library-card-meta p         { color: var(--dk-text-md); }
+[data-theme="dark"] .library-card-chip           { color: var(--dk-text-md); border-color: var(--dk-border); background: var(--dk-bg-lift); }
+[data-theme="dark"] .library-glyphs span         { background: var(--dk-bg-lift); border-color: var(--dk-border); color: var(--dk-text-md); }
+```
+
+**App list item (row view)**
+```css
+[data-theme="dark"] .app-list-item.library-card-style { background: var(--dk-bg-raise); border-color: var(--dk-border); }
+```
+
+**Hero landing**
+```css
+[data-theme="dark"] .wordmark-text              { color: var(--dk-text-hi); }
+[data-theme="dark"] .hero h1                    { color: var(--dk-text-hi); }
+[data-theme="dark"] .hero p                     { color: var(--dk-text-md); }
+[data-theme="dark"] .hero-highlights span       { color: var(--dk-text-md); }
+[data-theme="dark"] .bullet-icon                { color: #3ecfbc; }
+[data-theme="dark"] .bullet-icon circle         { fill: rgba(62,207,188,.12); }
+[data-theme="dark"] .trust-strip                { border-color: var(--dk-border); }
+[data-theme="dark"] .trust-label                { color: var(--dk-text-lo); }
+[data-theme="dark"] .trust-logo-pill            { color: var(--dk-text-md); border-color: var(--dk-border); background: var(--dk-bg-raise); }
+```
+
+**Tabs**
+```css
+[data-theme="dark"] .tab-button                   { color: var(--dk-text-md); border-color: var(--dk-border); background: var(--dk-bg-raise); box-shadow: inset 0 -2px 0 rgba(0,0,0,.3); }
+[data-theme="dark"] .tab-button[aria-selected="true"] { color: var(--dk-text-hi); background: var(--dk-bg-lift); border-color: var(--dk-border); }
+[data-theme="dark"] .tab-button:hover             { color: var(--dk-text-hi); filter: brightness(1.08); }
+```
+
+**Panel card (tabs content)**
+```css
+[data-theme="dark"] .panel-card      { background: var(--dk-bg-raise); border-color: var(--dk-border); box-shadow: inset 0 -3px 0 rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.25), 0 4px 12px rgba(0,0,0,.18); }
+[data-theme="dark"] .panel-eyebrow   { color: #3ecfbc; }
+[data-theme="dark"] .panel-copy h2   { color: var(--dk-text-hi); }
+[data-theme="dark"] .panel-copy p    { color: var(--dk-text-md); }
+[data-theme="dark"] .panel-chip      { color: var(--dk-text-md); border-color: var(--dk-border); background: var(--dk-bg-lift); }
+[data-theme="dark"] .panel-pause     { background: var(--dk-bg-lift); border-color: var(--dk-border); color: var(--dk-text-md); box-shadow: inset 0 -2px 0 rgba(0,0,0,.3); }
+[data-theme="dark"] .link-column     { border-top-color: var(--dk-border); }
+[data-theme="dark"] .link-column h3  { color: var(--dk-text-lo); }
+[data-theme="dark"] .panel-footer-links a       { color: var(--dk-text-md); }
+[data-theme="dark"] .panel-footer-links a:hover { color: var(--dk-text-hi); }
+```
+
+**Footer**
+```css
+[data-theme="dark"] .site-footer           { background: var(--dk-bg-raise); border-top-color: var(--dk-border); }
+[data-theme="dark"] .site-footer-brand     { color: var(--dk-text-hi); }
+[data-theme="dark"] .site-footer-links a   { color: var(--dk-text-md); }
+[data-theme="dark"] .site-footer-links a:hover { color: var(--dk-text-hi); }
+[data-theme="dark"] .site-footer-copy      { color: var(--dk-text-lo); }
+```
+
+**Dashboard shell**
+```css
+[data-theme="dark"] .db-shell     { background: var(--dk-bg-page); }
+[data-theme="dark"] .db-sidebar   { background: var(--dk-bg-frame); border-right-color: var(--dk-border); }
+[data-theme="dark"] .db-main      { background: var(--dk-bg-page); }
+[data-theme="dark"] .db-topbar    { background: var(--dk-bg-frame); border-bottom-color: var(--dk-border); }
+[data-theme="dark"] .db-topbar-title   { color: var(--dk-text-hi); }
+[data-theme="dark"] .db-nav-item       { color: var(--dk-text-md); }
+[data-theme="dark"] .db-nav-item:hover,
+[data-theme="dark"] .db-nav-item.active { background: var(--dk-bg-raise); color: var(--dk-text-hi); }
+[data-theme="dark"] .db-nav-label      { color: var(--dk-text-lo); }
+[data-theme="dark"] .db-sidebar-signout { color: var(--dk-text-lo); border-color: var(--dk-border); }
+[data-theme="dark"] .db-sidebar-signout:hover { color: var(--dk-text-md); border-color: var(--dk-border); }
+```
+
+**Dashboard cards**
+```css
+[data-theme="dark"] .db-stat-card,
+[data-theme="dark"] .db-auto-card,
+[data-theme="dark"] .db-activity-list,
+[data-theme="dark"] .db-settings-card {
+  background: var(--dk-bg-raise); border-color: var(--dk-border);
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.2), 0 4px 12px rgba(0,0,0,.15);
+}
+[data-theme="dark"] .db-auto-card:hover      { box-shadow: inset 0 2px 4px rgba(0,0,0,.18), 0 1px 2px rgba(0,0,0,.15); }
+[data-theme="dark"] .db-stat-label,
+[data-theme="dark"] .db-auto-card-desc       { color: var(--dk-text-lo); }
+[data-theme="dark"] .db-stat-value,
+[data-theme="dark"] .db-auto-card-title      { color: var(--dk-text-hi); }
+[data-theme="dark"] .db-settings-card-sub    { color: var(--dk-text-md); }
+[data-theme="dark"] .db-activity-item        { border-bottom-color: var(--dk-border-lo); }
+[data-theme="dark"] .db-activity-time        { color: var(--dk-text-lo); }
+[data-theme="dark"] .db-activity-icon        { background: var(--dk-accent-lo); border-color: var(--dk-accent-border); color: var(--dk-accent); }
+```
+
+**Dashboard chips**
+```css
+[data-theme="dark"] .db-chip-amber { color: #fbbf24; border-color: rgba(251,191,36,.35); background: rgba(251,191,36,.1); box-shadow: inset 0 -2px 0 rgba(251,191,36,.18); }
+[data-theme="dark"] .db-chip-green { color: #34d399; border-color: rgba(52,211,153,.35);  background: rgba(52,211,153,.1);  box-shadow: inset 0 -2px 0 rgba(52,211,153,.18); }
+```
+
+**Settings form inputs**
+```css
+[data-theme="dark"] .db-field > span          { color: var(--dk-text-md); }
+[data-theme="dark"] .db-field-input           { background: var(--dk-bg-lift); border-color: var(--dk-border); color: var(--dk-text-hi); }
+[data-theme="dark"] .db-field-input:focus     { border-color: var(--dk-accent); box-shadow: 0 0 0 3px var(--dk-accent-lo); }
+[data-theme="dark"] .db-field-input:disabled  { background: var(--dk-bg-raise); color: var(--dk-text-lo); }
+[data-theme="dark"] .db-settings-links a      { color: var(--dk-accent); }
+```
+
+**Automasi list**
+```css
+[data-theme="dark"] .db-auto-list           { background: var(--dk-bg-raise); border-color: var(--dk-text-md); box-shadow: 3px 3px 0 var(--dk-border); }
+[data-theme="dark"] .db-auto-list-row       { border-bottom-color: var(--dk-border-lo); }
+[data-theme="dark"] .db-auto-list-row:hover { background: var(--dk-bg-hover); }
+[data-theme="dark"] .db-auto-list-name      { color: var(--dk-text-hi); }
+[data-theme="dark"] .db-auto-list-sub       { color: var(--dk-text-lo); }
+[data-theme="dark"] .db-auto-list-thumb     { border-color: var(--dk-border); }
+```
+
+**Auth modal & toast (dark)**
+- Auth modal: `background: var(--dk-bg-raise)`, border `var(--dk-border)`, input `var(--dk-bg-lift)`
+- Toast: border `var(--dk-border)`, background `var(--dk-bg-raise)` — dot warna tetap sama (info amber, success green, error red)
+
+### Rules dark mode
+- Semua komponen baru **wajib** tambah `[data-theme="dark"]` overrides di `src/index.css` — jangan inline
+- Jangan hardcode hex di komponen baru; pakai `var(--dk-*)` tokens
+- CTA button (amber) tidak berubah di dark mode
+- Accent teal (`#3ecfbc`) hanya untuk bullet icon dan panel eyebrow
+- Accent biru (`#6fa3ff`) hanya untuk library section kicker
+- Surface hierarchy: `page-shell` → `--dk-bg-page`, `site-frame` → `--dk-bg-frame`, card → `--dk-bg-raise`, nested/input → `--dk-bg-lift`, hover → `--dk-bg-hover`
