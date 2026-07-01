@@ -1,15 +1,12 @@
-import { useEffect, useEffectEvent, useMemo, useState } from "react";
-import { api } from "../lib/api";
+import { useMemo, useState } from "react";
 import { useToast } from "../lib/ToastContext";
 import "./CompetitorAnalyzer.css";
 
 const DEFAULT_FORM = {
-  instagramHandle: "",
+  instagramHandle: "somethincbeauty",
   sourceTab: "posts",
-  dateFrom: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30)
-    .toISOString()
-    .slice(0, 10),
-  dateTo: new Date().toISOString().slice(0, 10),
+  dateFrom: "2023-01-01",
+  dateTo: "2023-01-31",
   region: "ID",
   includeTranscripts: true,
 };
@@ -57,70 +54,114 @@ function metricFromComment(comment, key, fallback = "") {
   return comment?.metrics?.[key] ?? fallback;
 }
 
-export default function CompetitorAnalyzer() {
+const DEMO_REPORT = {
+  report: {
+    id: "demo-123",
+    instagram_handle: "somethincbeauty",
+    source_tab: "posts",
+    date_from: "2023-01-01T00:00:00.000Z",
+    date_to: "2023-01-31T00:00:00.000Z",
+    status: "completed",
+    excel_artifact_id: "excel-123",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    summary: {
+      totalMediaAnalyzed: 45,
+      averageEngagementRate: 4.52,
+      strongestCommentTheme: "Product Pricing & Promos",
+      executiveSummary: "Overall, Somethinc has built a massive engagement spike in late January due to their anniversary sale. Content featuring clear before-and-after results performed 3x better than static product shots.",
+      winningPatterns: [
+        "Before & After format",
+        "Giveaway with tag 3 friends",
+        "Fast-paced TikTok style reels"
+      ],
+      audienceSignals: [
+        "Price sensitivity is high",
+        "Questions about acne-prone skin",
+        "Love the new packaging"
+      ],
+      recommendations: [
+        "Double down on before-and-after reels",
+        "Create more educational content on ingredients",
+        "Address pricing concerns with bundle offers"
+      ]
+    }
+  },
+  items: [
+    {
+      id: "item-1",
+      rank_position: 1,
+      is_top_content: true,
+      media_type: "VIDEO",
+      published_at: "2023-01-15T00:00:00.000Z",
+      caption: "Pecahkan rekor! Serum terbaru kita terjual 10.000 pcs dalam 1 jam! 😱🔥",
+      like_count: 25400,
+      comment_count: 1205,
+      engagement_rate: 8.5,
+      ai_enrichment: {
+        summary: "Launch Announcement",
+        hookStyle: "Social Proof",
+        contentFormat: "Fast-paced Reel",
+        ctaStyle: "Buy Now",
+        reasonsItWorked: [
+          "Creates FOMO with sold out numbers",
+          "High energy music",
+          "Clear visual of the product texture"
+        ]
+      }
+    },
+    {
+      id: "item-2",
+      rank_position: 2,
+      is_top_content: true,
+      media_type: "CAROUSEL_ALBUM",
+      published_at: "2023-01-20T00:00:00.000Z",
+      caption: "Cara pakai retinol buat pemula. Save post ini biar ga lupa! 📌",
+      like_count: 18200,
+      comment_count: 890,
+      engagement_rate: 6.2,
+      ai_enrichment: {
+        summary: "Educational Guide",
+        hookStyle: "Direct Value",
+        contentFormat: "Infographic Carousel",
+        ctaStyle: "Save for later",
+        reasonsItWorked: [
+          "Highly savable content",
+          "Addresses a common pain point",
+          "Easy to read format"
+        ]
+      }
+    }
+  ],
+  comments: [
+    { metrics: { theme: "Product Pricing & Promos" } },
+    { metrics: { theme: "Product Pricing & Promos" } },
+    { metrics: { theme: "Product Pricing & Promos" } },
+    { metrics: { theme: "Acne Concerns" } },
+    { metrics: { theme: "Acne Concerns" } },
+    { metrics: { theme: "Shipping Issues" } }
+  ],
+  events: [
+    { stage: "fetching_profile", status: "completed", message: "Fetched profile for somethincbeauty" },
+    { stage: "fetching_media_index", status: "completed", message: "Indexed 45 posts" },
+    { stage: "normalizing_metrics", status: "completed", message: "Calculated ER and benchmarks" },
+    { stage: "ranking_top_content", status: "completed", message: "Identified top 5 outliers" },
+    { stage: "fetching_comments", status: "completed", message: "Analyzed 500+ comments" },
+    { stage: "building_workbook", status: "completed", message: "Generated Excel report" }
+  ]
+};
+
+export default function CompetitorAnalyzerDemo() {
   const toast = useToast();
   const [form, setForm] = useState(DEFAULT_FORM);
-  const [reports, setReports] = useState([]);
-  const [activeReportId, setActiveReportId] = useState(null);
-  const [reportDetail, setReportDetail] = useState(null);
-  const [loadingReports, setLoadingReports] = useState(true);
-  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [reports] = useState([DEMO_REPORT.report]);
+  const [activeReportId, setActiveReportId] = useState(DEMO_REPORT.report.id);
+  
+  // Since it's demo, the active report detail is ALWAYS the DEMO_REPORT
+  const reportDetail = activeReportId === DEMO_REPORT.report.id ? DEMO_REPORT : null;
+  const loadingReports = false;
+  const loadingDetail = false;
   const [submitting, setSubmitting] = useState(false);
-
-  const loadReports = useEffectEvent(async (selectFirst = false) => {
-    setLoadingReports(true);
-    try {
-      const data = await api.getInstagramCompetitorReports();
-      const nextReports = data.reports || [];
-      setReports(nextReports);
-      if (selectFirst) {
-        const nextActiveId = activeReportId || nextReports[0]?.id || null;
-        if (nextActiveId) {
-          setActiveReportId(nextActiveId);
-        }
-      }
-    } catch (error) {
-      toast.error(error.message);
-    } finally {
-      setLoadingReports(false);
-    }
-  });
-
-  const loadReportDetail = useEffectEvent(async (reportId, silent = false) => {
-    if (!reportId) return;
-    if (!silent) setLoadingDetail(true);
-    try {
-      const data = await api.getInstagramCompetitorReport(reportId);
-      setReportDetail(data);
-    } catch (error) {
-      toast.error(error.message);
-    } finally {
-      if (!silent) setLoadingDetail(false);
-    }
-  });
-
-  useEffect(() => {
-    loadReports(true);
-  }, []);
-
-  useEffect(() => {
-    if (!activeReportId) return;
-    loadReportDetail(activeReportId);
-  }, [activeReportId]);
-
-  useEffect(() => {
-    const status = reportDetail?.report?.status;
-    if (!activeReportId || !status || !["queued", "running"].includes(status)) {
-      return undefined;
-    }
-
-    const timer = setInterval(() => {
-      loadReportDetail(activeReportId, true);
-      loadReports(false);
-    }, 3500);
-
-    return () => clearInterval(timer);
-  }, [activeReportId, reportDetail?.report?.status]);
 
   const topItems = useMemo(
     () =>
@@ -142,30 +183,14 @@ export default function CompetitorAnalyzer() {
   async function submitRun(event) {
     event.preventDefault();
     setSubmitting(true);
-    try {
-      const data = await api.runAutomation("competitor-analyzer", form);
-      setActiveReportId(data.report.id);
-      toast.success("Run dimulai. Progress report akan muncul otomatis.");
-      await loadReports();
-      await loadReportDetail(data.report.id);
-    } catch (error) {
-      toast.error(error.message);
-    } finally {
+    setTimeout(() => {
       setSubmitting(false);
-    }
+      toast.success("Run dimulai. Ini hanya demo page.");
+    }, 1000);
   }
 
-  async function downloadReport() {
-    if (!reportDetail?.report?.id) return;
-    try {
-      await api.downloadInstagramCompetitorReport(
-        reportDetail.report.id,
-        reportDetail.report.instagram_handle,
-      );
-      toast.success("File Excel berhasil diunduh.");
-    } catch (error) {
-      toast.error(error.message);
-    }
+  function downloadReport() {
+    toast.success("File Excel berhasil diunduh (Simulasi Demo).");
   }
 
   const summary = reportDetail?.report?.summary || {};
@@ -273,7 +298,7 @@ export default function CompetitorAnalyzer() {
           </label>
 
           <button className="cta-button" type="submit" disabled={submitting} style={{ width: "100%", height: 40, marginTop: 10 }}>
-            {submitting ? "Menjalankan..." : "Jalankan report"}
+            {submitting ? "Menjalankan..." : "Jalankan report (Demo)"}
           </button>
         </form>
 

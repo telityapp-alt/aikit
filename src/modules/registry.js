@@ -5,6 +5,7 @@ import { lazy } from "react";
 export const MODULE_REGISTRY = {
   "keuangan-pribadi": lazy(() => import("./KeuanganPribadi.jsx")),
   "competitor-analyzer": lazy(() => import("./CompetitorAnalyzer.jsx")),
+  "competitor-analyzer-demo": lazy(() => import("./CompetitorAnalyzerDemo.jsx")),
 };
 
 export function getModuleComponent(slug) {
