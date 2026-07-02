@@ -26,9 +26,9 @@ export default function ContactManager() {
   const stats = useMemo(() => {
     const total = contacts.length;
     const active = contacts.filter((c) => c.status === "active").length;
-    const leads = contacts.filter((c) => c.type === "lead").length;
-    const customers = contacts.filter((c) => c.type === "customer").length;
-    return { total, active, leads, customers };
+    const followUps = contacts.filter((c) => c.next_follow_up_at).length;
+    const creators = contacts.filter((c) => c.type === "creator").length;
+    return { total, active, followUps, creators };
   }, [contacts]);
 
   function handleSelect(contact) {
@@ -101,14 +101,14 @@ export default function ContactManager() {
         </div>
         <div className="db-stat-card">
           <div className="db-stat-top">
-            <span className="db-stat-value">{stats.leads}</span>
-            <span className="db-stat-label">Lead</span>
+            <span className="db-stat-value">{stats.followUps}</span>
+            <span className="db-stat-label">Perlu Follow-up</span>
           </div>
         </div>
         <div className="db-stat-card">
           <div className="db-stat-top">
-            <span className="db-stat-value">{stats.customers}</span>
-            <span className="db-stat-label">Pelanggan</span>
+            <span className="db-stat-value">{stats.creators}</span>
+            <span className="db-stat-label">Kreator</span>
           </div>
         </div>
       </div>

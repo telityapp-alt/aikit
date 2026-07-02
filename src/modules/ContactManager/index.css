@@ -642,6 +642,131 @@
     border-top: 1px solid #e8e3d9;
 }
 
+.cm-assoc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.cm-assoc-action {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+}
+
+.cm-assoc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cm-assoc-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid #d9d1c2;
+    border-radius: 12px;
+}
+
+.cm-assoc-main {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.cm-assoc-main strong {
+    font-size: 14px;
+    color: #0d1d38;
+}
+
+.cm-assoc-main span,
+.cm-assoc-empty {
+    font-size: 12px;
+    color: #55606d;
+}
+
+.cm-assoc-remove {
+    background: transparent;
+    border: 1px solid #d9d1c2;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #55606d;
+    cursor: pointer;
+}
+
+.cm-assoc-remove:hover {
+    border-color: #f6a61e;
+    color: #0d1d38;
+}
+
+.cm-assoc-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(13, 29, 56, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 220;
+}
+
+.cm-assoc-modal {
+    width: min(560px, 100%);
+    max-height: 80vh;
+    overflow-y: auto;
+    background: #fffdf8;
+    border: 1px solid #d9d1c2;
+    border-radius: 16px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.cm-assoc-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.cm-assoc-modal-head h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #0d1d38;
+}
+
+.cm-assoc-picker-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cm-assoc-picker-item {
+    width: 100%;
+    text-align: left;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid #d9d1c2;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    cursor: pointer;
+}
+
+.cm-assoc-picker-item:hover {
+    border-color: #f6a61e;
+    background: #fffbf4;
+}
+
 /* Edit header inside detail panel */
 .cm-detail-edit-header {
     display: flex;
