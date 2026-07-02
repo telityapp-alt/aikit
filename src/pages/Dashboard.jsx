@@ -240,7 +240,7 @@ function IconSignOut() {
 /* ── Nav items ─────────────────────────────────────────────── */
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: <IconGrid /> },
-  { id: "ai-agent", label: "AI agents", icon: <IconSparkle /> },
+  { id: "ai-agent", label: "AI Agents", icon: <IconSparkle /> },
   { id: "automasi", label: "Automasi", icon: <IconZap /> },
   { id: "module", label: "Module", icon: <IconLayers /> },
   { id: "file", label: "File", icon: <IconFile /> },

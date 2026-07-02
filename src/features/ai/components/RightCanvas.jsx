@@ -3,7 +3,7 @@ import { useState } from "react";
 const CANVAS_MODES = [
   { id: "collapsed", label: "Min" },
   { id: "preview", label: "Preview" },
-  { id: "full", label: "Canvas" },
+  { id: "full", label: "Lebar" },
 ];
 
 export default function RightCanvas({
@@ -24,7 +24,7 @@ export default function RightCanvas({
     return (
       <aside className="aiw-canvas aiw-canvas--collapsed">
         <button type="button" className="ghost-button" onClick={() => onModeChange("preview")}>
-          Buka Canvas
+          Buka canvas
         </button>
       </aside>
     );
@@ -35,7 +35,7 @@ export default function RightCanvas({
       <div className="aiw-canvas-top">
         <div>
           <span className="aiw-canvas-eyebrow">Canvas</span>
-          <h3 className="aiw-canvas-title">Output Workspace</h3>
+          <h3 className="aiw-canvas-title">Output workspace</h3>
         </div>
         <div className="aiw-canvas-modes">
           {CANVAS_MODES.map((entry) => (
@@ -62,7 +62,7 @@ export default function RightCanvas({
         </div>
 
         <div className="aiw-canvas-panel">
-          <h4 className="aiw-canvas-panel-title">Artifact Queue</h4>
+          <h4 className="aiw-canvas-panel-title">Artifact queue</h4>
           {artifacts.length === 0 ? (
             <p className="aiw-canvas-panel-copy">
               Belum ada artifact tersimpan. Balasan assistant berikutnya akan otomatis masuk ke canvas ini sebagai output pertama.

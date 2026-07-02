@@ -281,9 +281,11 @@ export default function ModulLanding() {
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
-                            user
-                              ? navigate(`/dashboard/module/${card.id}`)
-                              : openAuth("signup");
+                            if (user) {
+                              navigate(`/dashboard/module/${card.id}`);
+                              return;
+                            }
+                            openAuth("signup");
                           }}
                         >
                           Buka

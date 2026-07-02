@@ -23,8 +23,7 @@ export default function AgentCard({ agent, onOpen }) {
           />
         </div>
         <span
-          className="library-card-chip"
-          style={{ position: "absolute", top: 10, left: 10, fontSize: 11, padding: "2px 8px" }}
+          className="library-card-chip ai-agent-library-chip"
         >
           Business agent
         </span>
@@ -33,28 +32,24 @@ export default function AgentCard({ agent, onOpen }) {
         <strong>{agent.name}</strong>
         <span>{agent.tagline}</span>
       </div>
-      <div
-        className="library-card-meta ai-agent-library-meta"
-        style={{ display: "flex", flexDirection: "column", flex: 1, padding: "10px 12px 12px" }}
-      >
+      <div className="library-card-meta ai-agent-library-meta">
         <p>{agent.description}</p>
         <div className="ai-agent-library-chip-row">
           <span className="db-chip db-chip-amber">{agent.modelLabel}</span>
           <span className="db-chip db-chip-green">Siap dipakai</span>
         </div>
         <ul className="ai-agent-library-capabilities">
-          {agent.capabilities.slice(0, 3).map((capability) => (
+          {agent.capabilities.slice(0, 2).map((capability) => (
             <li key={capability}>{capability}</li>
           ))}
         </ul>
-        <div style={{ marginTop: "auto" }}>
+        <div className="ai-agent-library-cta">
           <button
             type="button"
             className="cta-button"
-            style={{ width: "100%", fontSize: 13, height: 34 }}
             onClick={onOpen}
           >
-            Buka agent
+            Buka workspace
           </button>
         </div>
       </div>

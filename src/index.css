@@ -3734,9 +3734,13 @@
    ============================================================ */
 
 .aihub-shell {
+    width: 100%;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0 18px 10px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
 }
 
 .aihub-eyebrow,
@@ -3745,12 +3749,12 @@
 .aiw-empty-eyebrow,
 .aiw-canvas-eyebrow {
     display: block;
-    margin: 0 0 8px;
+    margin: 0 0 6px;
     color: #7b8594;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
+    letter-spacing: 0;
+    text-transform: none;
 }
 
 .aihub-top-tags {
@@ -3759,10 +3763,20 @@
     gap: 6px;
 }
 
+.aihub-header {
+    padding: 0 2px;
+}
+
+.aihub-section-header {
+    align-items: flex-end;
+    gap: 12px;
+    padding: 0 2px;
+}
+
 .aihub-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 20px;
+    gap: 16px;
 }
 
 .ai-agent-library-card {
@@ -3774,6 +3788,14 @@
     box-shadow:
         inset 0 2px 4px rgba(21, 19, 16, 0.05),
         0 1px 2px rgba(21, 19, 16, 0.04);
+}
+
+.ai-agent-library-chip {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 11px;
+    padding: 2px 8px;
 }
 
 .ai-agent-library-hero {
@@ -3810,33 +3832,54 @@
 }
 
 .ai-agent-library-meta p {
-    min-height: 54px;
-    margin-bottom: 10px;
+    min-height: 42px;
+    margin-bottom: 8px;
     color: #55606d;
     font-size: 13px;
     line-height: 1.5;
     font-weight: 500;
 }
 
+.ai-agent-library-meta {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding: 10px 12px 12px;
+}
+
 .ai-agent-library-chip-row {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .ai-agent-library-capabilities {
-    margin: 0 0 14px;
+    margin: 0 0 10px;
     padding-left: 18px;
     color: #29405f;
-    font-size: 13px;
+    font-size: 12px;
     line-height: 1.45;
 }
 
+.ai-agent-library-cta {
+    margin-top: auto;
+}
+
+.ai-agent-library-cta .cta-button {
+    width: 100%;
+    height: 34px;
+    font-size: 13px;
+}
+
 .aiw-shell {
+    width: 100%;
+    max-width: 1420px;
+    margin: 0 auto;
+    padding: 0 14px 12px;
     display: grid;
-    grid-template-columns: 260px minmax(0, 1fr) 320px;
-    gap: 16px;
+    grid-template-columns: 228px minmax(0, 1fr) 286px;
+    gap: 14px;
     min-height: calc(100vh - 112px);
 }
 
@@ -3846,7 +3889,7 @@
     min-height: 0;
     border: 1px solid #d9d1c2;
     border-bottom-width: 2px;
-    border-radius: 12px;
+    border-radius: 10px;
     background: #fffdf8;
     box-shadow:
         inset 0 -3px 0 rgba(21, 19, 16, 0.09),
@@ -3861,10 +3904,10 @@
 }
 
 .aiw-sidebar-top {
-    padding: 16px 14px;
+    padding: 14px 12px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     height: 100%;
 }
 
@@ -3878,7 +3921,7 @@
 }
 
 .aiw-sidebar-title {
-    font-size: 18px;
+    font-size: 17px;
 }
 
 .aiw-sidebar-sub,
@@ -3899,7 +3942,7 @@
     display: flex;
     flex: 1;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     overflow: auto;
     padding-right: 2px;
 }
@@ -3921,7 +3964,7 @@
     border: 1px solid transparent;
     border-radius: 10px;
     background: transparent;
-    padding: 10px 12px;
+    padding: 9px 10px;
     text-align: left;
     cursor: pointer;
     transition:
@@ -3953,7 +3996,7 @@
 }
 
 .aiw-thread-item-title {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     color: #0d1d38;
 }
@@ -3966,13 +4009,14 @@
 
 .aiw-thread-actions {
     display: flex;
-    gap: 8px;
-    padding-top: 8px;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-top: 6px;
 }
 
 .aiw-thread-actions .ghost-button {
-    height: 28px;
-    padding: 0 10px;
+    height: 26px;
+    padding: 0 8px;
     font-size: 12px;
 }
 
@@ -3986,8 +4030,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    padding: 16px 18px;
+    gap: 12px;
+    padding: 14px 16px;
     border-bottom: 1px solid #d9d1c2;
     background: linear-gradient(180deg, #f6f4ee 0%, #f0ede6 100%);
 }
@@ -3997,7 +4041,7 @@
     background: none;
     cursor: pointer;
     color: #55606d;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
 }
 
@@ -4007,13 +4051,14 @@
 }
 
 .aiw-topbar-title {
-    font-size: 18px;
+    font-size: 17px;
+    line-height: 1.25;
 }
 
 .aiw-topbar-chip {
     flex: none;
-    padding: 6px 10px;
-    border-radius: 8px;
+    padding: 5px 9px;
+    border-radius: 6px;
     background: #f5f2ec;
     border: 1px solid #ddd4c4;
     color: #29405f;
@@ -4032,7 +4077,7 @@
     flex: 1;
     min-height: 0;
     overflow: auto;
-    padding: 18px;
+    padding: 14px 16px;
 }
 
 .aiw-empty-state {
@@ -4043,14 +4088,14 @@
 }
 
 .aiw-empty-card {
-    width: min(100%, 760px);
+    width: min(100%, 700px);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    text-align: center;
-    padding: 22px;
-    border-radius: 12px;
+    align-items: flex-start;
+    gap: 10px;
+    text-align: left;
+    padding: 18px;
+    border-radius: 10px;
     background: #fffdf8;
     border: 1px solid #d9d1c2;
     box-shadow:
@@ -4060,20 +4105,20 @@
 }
 
 .aiw-empty-mascot {
-    width: 120px;
+    width: 92px;
     height: auto;
     filter: drop-shadow(0 12px 18px rgba(13, 29, 56, 0.12));
 }
 
 .aiw-empty-title {
-    font-size: clamp(22px, 3vw, 30px);
+    font-size: clamp(20px, 2.4vw, 26px);
 }
 
 .aiw-starter-grid {
     width: 100%;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
 }
 
 .aiw-starter-card {
@@ -4081,7 +4126,7 @@
     border-bottom-width: 2px;
     border-radius: 10px;
     background: #fffdf8;
-    padding: 14px;
+    padding: 12px;
     cursor: pointer;
     color: #29405f;
     font-size: 13px;
@@ -4101,11 +4146,11 @@
 }
 
 .aiw-messages-inner {
-    width: min(100%, 820px);
+    width: min(100%, 760px);
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 14px;
 }
 
 .aiw-message-row {
@@ -4119,8 +4164,8 @@
 }
 
 .aiw-avatar {
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -4130,12 +4175,19 @@
     color: #8a5a00;
     font-size: 10px;
     font-weight: 700;
+    overflow: hidden;
+}
+
+.aiw-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .aiw-message-bubble {
-    max-width: min(78%, 760px);
-    padding: 11px 16px;
-    border-radius: 16px 16px 16px 4px;
+    max-width: min(80%, 720px);
+    padding: 10px 14px;
+    border-radius: 14px 14px 14px 4px;
     border: 1px solid #d9d1c2;
     background: #fffdf8;
     color: #29405f;
@@ -4144,7 +4196,7 @@
 }
 
 .aiw-message-bubble--user {
-    border-radius: 16px 16px 4px 16px;
+    border-radius: 14px 14px 4px 14px;
     background: #0d1d38;
     color: #fffdf8;
     border-color: #0d1d38;
@@ -4156,22 +4208,22 @@
 }
 
 .aiw-composer-shell {
-    padding: 12px 18px 18px;
+    padding: 10px 16px 16px;
     border-top: 1px solid #d9d1c2;
     background: #f5ecd9;
 }
 
 .aiw-composer {
-    width: min(100%, 820px);
+    width: min(100%, 760px);
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     border: 1px solid #d9d1c2;
     border-bottom-width: 2px;
-    border-radius: 14px;
+    border-radius: 10px;
     background: #fffdf8;
-    padding: 10px 10px 10px 16px;
+    padding: 10px 10px 10px 12px;
     box-shadow:
         inset 0 -3px 0 rgba(21, 19, 16, 0.09),
         0 1px 3px rgba(21, 19, 16, 0.07),
@@ -4182,7 +4234,7 @@
     display: flex;
     width: 100%;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
 }
 
 .aiw-attachment-chip {
@@ -4192,7 +4244,7 @@
     border: 1px solid #ddd4c4;
     border-radius: 999px;
     background: #f5f2ec;
-    padding: 4px 6px 4px 10px;
+    padding: 3px 6px 3px 8px;
     color: #29405f;
     font-size: 12px;
 }
@@ -4214,14 +4266,14 @@
     flex: 1;
     min-width: 0;
     resize: none;
-    max-height: 180px;
+    max-height: 160px;
     border: none;
     outline: none;
     background: transparent;
     color: #29405f;
     font-family: "Source Sans 3", "Segoe UI", sans-serif;
-    font-size: 14px;
-    line-height: 1.6;
+    font-size: 13px;
+    line-height: 1.5;
 }
 
 .aiw-composer-send {
@@ -4235,7 +4287,7 @@
 }
 
 .aiw-canvas--collapsed {
-    width: 92px;
+    width: 86px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -4246,8 +4298,8 @@
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 12px;
-    padding: 16px 16px 12px;
+    gap: 10px;
+    padding: 14px 14px 10px;
     border-bottom: 1px solid #d9d1c2;
 }
 
@@ -4280,13 +4332,13 @@
     display: flex;
     flex: 1;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     overflow: auto;
-    padding: 18px;
+    padding: 14px;
 }
 
 .aiw-canvas-panel {
-    padding: 14px;
+    padding: 12px;
     border-radius: 10px;
     border: 1px solid #d9d1c2;
     background: #fffdf8;
@@ -4308,13 +4360,13 @@
     padding-left: 18px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     color: #29405f;
-    font-size: 13px;
+    font-size: 12px;
 }
 
 .aiw-canvas-artifact-item {
-    padding: 10px 0;
+    padding: 8px 0;
     border-bottom: 1px solid #e8e2d8;
 }
 
@@ -4336,7 +4388,7 @@
 .aiw-knowledge-form {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
 .aiw-knowledge-input,
@@ -4345,7 +4397,7 @@
     border: 1px solid #d9d1c2;
     border-radius: 10px;
     background: #fff;
-    padding: 10px 12px;
+    padding: 9px 10px;
     color: #29405f;
     font: inherit;
 }
@@ -4361,7 +4413,7 @@
     }
 
     .aiw-shell {
-        grid-template-columns: 240px minmax(0, 1fr) 280px;
+        grid-template-columns: 212px minmax(0, 1fr) 268px;
     }
 
     .aiw-starter-grid {

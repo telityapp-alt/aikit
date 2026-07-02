@@ -178,7 +178,7 @@ export default function AgentWorkspace({
   }
 
   async function handleRenameThread(thread) {
-    const nextTitle = window.prompt("Rename thread", thread.title);
+    const nextTitle = window.prompt("Ganti judul thread", thread.title);
     if (!nextTitle || nextTitle.trim() === thread.title) return;
     try {
       await aiApi.updateThread(thread.id, { title: nextTitle.trim() });
@@ -327,7 +327,7 @@ export default function AgentWorkspace({
       <div className="aiw-main">
         <div className="aiw-topbar">
           <button type="button" className="aiw-home-link" onClick={onBackHome}>
-            Semua agents
+            AI Agents
           </button>
           <div className="aiw-topbar-copy">
             <span className="aiw-topbar-eyebrow">{agent.name}</span>

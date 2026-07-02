@@ -9,7 +9,7 @@ export default function AIAgentsHome({ onOpenAgent }) {
     <section className="aihub-shell">
       <div className="db-view-header aihub-header">
         <div>
-          <span className="aihub-eyebrow">AI agents</span>
+          <span className="aihub-eyebrow">AI Agents</span>
           <h1 className="db-view-title">
             Enam specialist agents untuk {profile?.workspace_name || "workspace"}.
           </h1>
@@ -19,12 +19,12 @@ export default function AIAgentsHome({ onOpenAgent }) {
         </div>
       </div>
 
-      <div className="db-section-header">
-        <h2 className="db-section-title">Agent workspace</h2>
+      <div className="db-section-header aihub-section-header">
+        <h2 className="db-section-title">Pilih workspace agent</h2>
         <div className="aihub-top-tags">
-          <span className="db-chip db-chip-amber">Persistent threads</span>
-          <span className="db-chip db-chip-green">Agent-bound context</span>
-          <span className="db-chip db-chip-blue">Canvas ready</span>
+          <span className="db-chip db-chip-amber">Thread persisten</span>
+          <span className="db-chip db-chip-green">Context per agent</span>
+          <span className="db-chip db-chip-blue">Canvas siap pakai</span>
         </div>
       </div>
 

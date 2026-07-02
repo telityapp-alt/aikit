@@ -55,7 +55,7 @@ export default function ThreadList({
                 {thread.id === activeThreadId ? (
                   <div className="aiw-thread-actions">
                     <button type="button" className="ghost-button" onClick={() => onRename?.(thread)}>
-                      Rename
+                      Ganti judul
                     </button>
                     <button type="button" className="ghost-button" onClick={() => onTogglePin?.(thread)}>
                       {thread.pinned ? "Unpin" : "Pin"}
