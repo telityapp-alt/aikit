@@ -65,9 +65,17 @@ export function validateTikTokInput(input) {
     throw new HttpError(400, "Tanggal mulai tidak boleh lebih besar dari tanggal akhir.");
   }
 
+  const sorting = ["latest", "popular", "oldest"].includes(input?.sorting)
+    ? input.sorting
+    : "latest";
+  const minLikes = Math.max(0, Number(input?.minLikes || 0)) || 0;
+
   return {
     handle,
     maxItems,
+    sorting,
+    excludePinned: input?.excludePinned === true,
+    minLikes,
     dateFrom: dateFrom ? dateFrom.toISOString() : null,
     dateTo: dateTo ? dateTo.toISOString() : null,
     includeComments: input?.includeComments === true,

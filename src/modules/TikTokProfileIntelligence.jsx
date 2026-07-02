@@ -6,6 +6,9 @@ import "./TikTokProfileIntelligence.css";
 const DEFAULT_FORM = {
   handle: "",
   maxItems: 30,
+  sorting: "latest",
+  excludePinned: false,
+  minLikes: 0,
   dateFrom: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30)
     .toISOString()
     .slice(0, 10),
@@ -248,6 +251,49 @@ export default function TikTokProfileIntelligence() {
               </span>
             </div>
           </div>
+
+          <div className="tpi-grid-two">
+            <label className="tpi-field">
+              <span>Urutkan video</span>
+              <select
+                className="tpi-select"
+                value={form.sorting}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, sorting: event.target.value }))
+                }
+              >
+                <option value="latest">Terbaru</option>
+                <option value="popular">Terpopuler</option>
+                <option value="oldest">Terlama</option>
+              </select>
+            </label>
+            <label className="tpi-field">
+              <span>Min. likes (opsional)</span>
+              <input
+                type="number"
+                min="0"
+                value={form.minLikes}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    minLikes: Number(event.target.value || 0),
+                  }))
+                }
+                placeholder="0 = semua"
+              />
+            </label>
+          </div>
+
+          <label className="tpi-check">
+            <input
+              type="checkbox"
+              checked={form.excludePinned}
+              onChange={(event) =>
+                setForm((current) => ({ ...current, excludePinned: event.target.checked }))
+              }
+            />
+            <span>Kecualikan pinned posts</span>
+          </label>
 
           <div className="tpi-grid-two">
             <label className="tpi-field">

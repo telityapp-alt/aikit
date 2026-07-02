@@ -9,6 +9,9 @@ const DEFAULT_FORM = {
   query: "",
   country: "ID",
   activeStatus: "all",
+  mediaType: "all",
+  adType: "all",
+  searchType: "keyword_unordered",
   count: 50,
   mode: "full",
   startUrl: "",
@@ -213,18 +216,58 @@ export default function MetaAdsSpy() {
             </label>
           </div>
 
-          <label className="tpi-field">
-            <span>Status iklan</span>
-            <select
-              className="mas-select"
-              value={form.activeStatus}
-              onChange={(e) => setForm((c) => ({ ...c, activeStatus: e.target.value }))}
-            >
-              <option value="all">Semua</option>
-              <option value="active">Aktif saja</option>
-              <option value="inactive">Nonaktif saja</option>
-            </select>
-          </label>
+          <div className="tpi-grid-two">
+            <label className="tpi-field">
+              <span>Status iklan</span>
+              <select
+                className="mas-select"
+                value={form.activeStatus}
+                onChange={(e) => setForm((c) => ({ ...c, activeStatus: e.target.value }))}
+              >
+                <option value="all">Semua</option>
+                <option value="active">Aktif saja</option>
+                <option value="inactive">Nonaktif saja</option>
+              </select>
+            </label>
+            <label className="tpi-field">
+              <span>Tipe media</span>
+              <select
+                className="mas-select"
+                value={form.mediaType}
+                onChange={(e) => setForm((c) => ({ ...c, mediaType: e.target.value }))}
+              >
+                <option value="all">Semua</option>
+                <option value="video">Video</option>
+                <option value="image">Gambar</option>
+                <option value="meme">Meme</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="tpi-grid-two">
+            <label className="tpi-field">
+              <span>Tipe iklan</span>
+              <select
+                className="mas-select"
+                value={form.adType}
+                onChange={(e) => setForm((c) => ({ ...c, adType: e.target.value }))}
+              >
+                <option value="all">Semua kategori</option>
+                <option value="political_and_issue_ads">Politik / isu sosial (ada spend)</option>
+              </select>
+            </label>
+            <label className="tpi-field">
+              <span>Presisi keyword</span>
+              <select
+                className="mas-select"
+                value={form.searchType}
+                onChange={(e) => setForm((c) => ({ ...c, searchType: e.target.value }))}
+              >
+                <option value="keyword_unordered">Longgar (unordered)</option>
+                <option value="keyword_exact_phrase">Frasa persis</option>
+              </select>
+            </label>
+          </div>
 
           <div className="tpi-field">
             <span>Mode scrape</span>

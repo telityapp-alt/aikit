@@ -50,6 +50,15 @@ export function validateMetaAdsInput(input) {
   const activeStatus = ["all", "active", "inactive"].includes(input?.activeStatus)
     ? input.activeStatus
     : "all";
+  const mediaType = ["all", "image", "video", "meme"].includes(input?.mediaType)
+    ? input.mediaType
+    : "all";
+  const adType = ["all", "political_and_issue_ads"].includes(input?.adType)
+    ? input.adType
+    : "all";
+  const searchType = ["keyword_unordered", "keyword_exact_phrase"].includes(input?.searchType)
+    ? input.searchType
+    : "keyword_unordered";
   // Actor requires a minimum of 10 "maximum charged results" to run.
   const count = Math.min(500, Math.max(10, Number(input?.count || input?.maxItems || 50)));
   const dateFrom = input?.dateFrom ? new Date(input.dateFrom) : null;
@@ -67,6 +76,9 @@ export function validateMetaAdsInput(input) {
     startUrl,
     country,
     activeStatus,
+    mediaType,
+    adType,
+    searchType,
     count,
     dateFrom: dateFrom ? dateFrom.toISOString() : null,
     dateTo: dateTo ? dateTo.toISOString() : null,
@@ -79,11 +91,11 @@ export function buildMetaAdsUrl(input) {
   if (input.startUrl) return input.startUrl;
   const params = new URLSearchParams({
     active_status: input.activeStatus || "all",
-    ad_type: "all",
+    ad_type: input.adType || "all",
     country: input.country || "ID",
     q: input.query,
-    search_type: "keyword_unordered",
-    media_type: "all",
+    search_type: input.searchType || "keyword_unordered",
+    media_type: input.mediaType || "all",
   });
   return `https://www.facebook.com/ads/library/?${params.toString()}`;
 }

@@ -489,6 +489,9 @@ export async function createTikTokProfileRun(env, { user, run, input }) {
       date_to: input.dateTo,
       filters: {
         maxItems: input.maxItems,
+        sorting: input.sorting,
+        excludePinned: input.excludePinned,
+        minLikes: input.minLikes,
         includeComments: input.includeComments,
       },
       summary: {},
@@ -524,6 +527,9 @@ export async function processTikTokProfileRun(env, payload) {
   const input = {
     handle: report.tiktok_handle,
     maxItems: report.filters?.maxItems || 20,
+    sorting: report.filters?.sorting || "latest",
+    excludePinned: report.filters?.excludePinned === true,
+    minLikes: report.filters?.minLikes || 0,
     dateFrom: report.date_from,
     dateTo: report.date_to,
     includeComments: report.filters?.includeComments === true,

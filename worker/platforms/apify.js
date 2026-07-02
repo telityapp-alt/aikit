@@ -124,8 +124,8 @@ export function buildTikTokActorInput(env, input) {
     profiles: [handle],
     resultsPerPage: input.maxItems,
     profileScrapeSections: ["videos"],
-    profileSorting: "latest",
-    excludePinnedPosts: false,
+    profileSorting: input.sorting || "latest",
+    excludePinnedPosts: input.excludePinned === true,
     shouldDownloadVideos: false,
     shouldDownloadCovers: false,
     shouldDownloadSubtitles: false,
@@ -135,6 +135,7 @@ export function buildTikTokActorInput(env, input) {
   };
   if (tokens.dateFrom) actorInput.oldestPostDateUnified = tokens.dateFrom;
   if (tokens.dateTo) actorInput.newestPostDate = tokens.dateTo;
+  if (input.minLikes > 0) actorInput.leastDiggs = input.minLikes;
   return actorInput;
 }
 
