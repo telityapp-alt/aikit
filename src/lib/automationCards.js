@@ -31,7 +31,7 @@ export const AUTOMATION_CARDS = [
   {
     id: "tiktok-profile-intelligence",
     title: "TikTok Profile Intelligence",
-    desc: "Tarik video TikTok via Apify, hitung KPI virality dan intent, lalu baca dashboard insight yang siap dipakai tim growth.",
+    desc: "Tarik video TikTok, hitung KPI virality dan intent, lalu baca dashboard insight yang siap dipakai tim growth.",
     type: "App",
     pricing: "Pay per run",
     costPerRun: 125,
@@ -43,7 +43,7 @@ export const AUTOMATION_CARDS = [
         "Dashboard interaktif dengan KPI virality, engagement rate, top video, topic clusters, dan opportunity queue konten.",
       howItWorks: [
         "Input username TikTok yang ingin dianalisis",
-        "Sistem tarik data video via Apify scraper",
+        "Sistem tarik data video via aikit API",
         "AI hitung KPI: virality score, engagement rate, view-to-follower ratio",
         "Clustering otomatis berdasarkan topik konten",
         "Baca hasil di dashboard insight langsung di browser",
@@ -60,7 +60,7 @@ export const AUTOMATION_CARDS = [
   {
     id: "instagram-profile-intelligence",
     title: "Instagram Profile Intelligence",
-    desc: "Scrape profil Instagram via Apify, hitung KPI engagement & format, lalu baca dashboard insight siap pakai tim growth.",
+    desc: "Tarik data profil Instagram, hitung KPI engagement & format, lalu baca dashboard insight siap pakai tim growth.",
     type: "App",
     pricing: "Pay per run",
     costPerRun: 125,
@@ -72,7 +72,7 @@ export const AUTOMATION_CARDS = [
         "Dashboard dengan KPI engagement, format breakdown (Reels vs statis), audience sentiment, top movers, dan rekomendasi konten.",
       howItWorks: [
         "Input username Instagram yang ingin dianalisis",
-        "Scraper tarik data posts dan reels via Apify",
+        "Sistem tarik data posts dan reels via aikit API",
         "AI analisis engagement rate, format distribution, dan sentimen komentar",
         "Identifikasi top movers — konten yang overperform",
         "Baca hasil di dashboard interaktif",

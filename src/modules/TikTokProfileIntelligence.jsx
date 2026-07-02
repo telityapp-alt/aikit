@@ -291,12 +291,12 @@ export default function TikTokProfileIntelligence() {
     <div className="tpi-shell">
       <aside className="tpi-sidebar">
         <div className="tpi-sidebar-head">
-          <span className="tpi-kicker">Apify Intelligence Stack</span>
+          <span className="tpi-kicker">aikit Intelligence</span>
           <h1 className="tpi-title">TikTok Profile Intelligence</h1>
           <p className="tpi-subtitle">
-            Production workspace untuk menarik video TikTok via Apify,
-            menghitung KPI virality dan intent, lalu menyusun dashboard yang
-            siap dipakai tim growth.
+            Production workspace untuk menarik video TikTok, menghitung KPI
+            virality dan intent, lalu menyusun dashboard yang siap dipakai tim
+            growth.
           </p>
         </div>
 

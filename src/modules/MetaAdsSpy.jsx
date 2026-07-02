@@ -252,7 +252,7 @@ export default function MetaAdsSpy() {
     <div className="tpi-shell">
       <aside className="tpi-sidebar">
         <div className="tpi-sidebar-head">
-          <span className="tpi-kicker">Apify Intelligence Stack</span>
+          <span className="tpi-kicker">aikit Intelligence</span>
           <h1 className="tpi-title">Meta Ads Spy</h1>
           <p className="tpi-subtitle">
             Bedah iklan kompetitor di Meta Ads Library (Facebook + Instagram) —

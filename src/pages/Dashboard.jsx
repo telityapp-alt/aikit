@@ -261,7 +261,7 @@ const AUTOMASI_CARDS = [
   {
     id: "tiktok-profile-intelligence",
     title: "TikTok Profile Intelligence",
-    desc: "Tarik video TikTok via Apify, hitung KPI virality dan intent, lalu baca dashboard insight yang siap dipakai tim growth.",
+    desc: "Tarik video TikTok, hitung KPI virality dan intent, lalu baca dashboard insight yang siap dipakai tim growth.",
     type: "App",
     pricing: "Pay per run",
     costPerRun: 125,
@@ -271,7 +271,7 @@ const AUTOMASI_CARDS = [
   {
     id: "instagram-profile-intelligence",
     title: "Instagram Profile Intelligence",
-    desc: "Scrape profil Instagram via Apify, hitung KPI engagement & format, lalu baca dashboard insight siap pakai tim growth.",
+    desc: "Tarik data profil Instagram, hitung KPI engagement & format, lalu baca dashboard insight siap pakai tim growth.",
     type: "App",
     pricing: "Pay per run",
     costPerRun: 125,

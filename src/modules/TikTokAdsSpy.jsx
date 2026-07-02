@@ -249,7 +249,7 @@ export default function TikTokAdsSpy() {
     <div className="tpi-shell">
       <aside className="tpi-sidebar">
         <div className="tpi-sidebar-head">
-          <span className="tpi-kicker">Apify Intelligence Stack</span>
+          <span className="tpi-kicker">aikit Intelligence</span>
           <h1 className="tpi-title">TikTok Ads Spy</h1>
           <p className="tpi-subtitle">
             Bedah iklan kompetitor di TikTok Ads Library — creative gallery,

@@ -267,10 +267,10 @@ export default function InstagramProfileIntelligence() {
     <div className="tpi-shell">
       <aside className="tpi-sidebar">
         <div className="tpi-sidebar-head">
-          <span className="tpi-kicker">Apify Intelligence Stack</span>
+          <span className="tpi-kicker">aikit Intelligence</span>
           <h1 className="tpi-title">Instagram Profile Intelligence</h1>
           <p className="tpi-subtitle">
-            Tarik post Instagram via Apify, hitung KPI engagement, format, dan
+            Tarik data post Instagram, hitung KPI engagement, format, dan
             audience sentiment, lalu susun dashboard siap dipakai tim growth.
           </p>
         </div>
