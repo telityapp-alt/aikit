@@ -5,12 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:worker": "wrangler dev",
+    "dev:worker": "npx wrangler dev",
     "build": "vite build",
-    "deploy": "wrangler deploy",
+    "deploy:dry-run": "npm run build && npx wrangler deploy --dry-run",
+    "deploy": "npm run build && npx wrangler deploy",
     "lint": "oxlint",
     "preview": "vite preview",
-    "types": "wrangler types"
+    "types": "npx wrangler types"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
@@ -20,6 +21,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@types/node": "^24.0.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.4.1",
