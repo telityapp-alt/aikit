@@ -10,6 +10,21 @@ import {
   processTikTokProfileRun,
   validateTikTokInput,
 } from "./modules/tiktok-profile-intelligence.js";
+import {
+  createInstagramProfileRun,
+  processInstagramProfileRun,
+  validateInstagramInput,
+} from "./modules/instagram-profile-intelligence.js";
+import {
+  createTikTokAdsRun,
+  processTikTokAdsRun,
+  validateTikTokAdsInput,
+} from "./modules/tiktok-ads-spy.js";
+import {
+  createMetaAdsRun,
+  processMetaAdsRun,
+  validateMetaAdsInput,
+} from "./modules/meta-ads-spy.js";
 
 const API_RATE_LIMIT = {
   bucket: "api",
@@ -110,6 +125,51 @@ async function handleRunRequest(request, env) {
 
     await env.RUN_QUEUE.send({
       kind: "tiktok-profile-intelligence",
+      runId: run.id,
+      reportId: report.id,
+      userId: user.id,
+    });
+
+    return json({ run, report }, 202, corsHeaders());
+  }
+
+  if (slug === "instagram-profile-intelligence") {
+    const input = validateInstagramInput(payload.input);
+    const run = await createRun(env, user, slug, input, ip);
+    const report = await createInstagramProfileRun(env, { user, run, input });
+
+    await env.RUN_QUEUE.send({
+      kind: "instagram-profile-intelligence",
+      runId: run.id,
+      reportId: report.id,
+      userId: user.id,
+    });
+
+    return json({ run, report }, 202, corsHeaders());
+  }
+
+  if (slug === "tiktok-ads-spy") {
+    const input = validateTikTokAdsInput(payload.input);
+    const run = await createRun(env, user, slug, input, ip);
+    const report = await createTikTokAdsRun(env, { user, run, input });
+
+    await env.RUN_QUEUE.send({
+      kind: "tiktok-ads-spy",
+      runId: run.id,
+      reportId: report.id,
+      userId: user.id,
+    });
+
+    return json({ run, report }, 202, corsHeaders());
+  }
+
+  if (slug === "meta-ads-spy") {
+    const input = validateMetaAdsInput(payload.input);
+    const run = await createRun(env, user, slug, input, ip);
+    const report = await createMetaAdsRun(env, { user, run, input });
+
+    await env.RUN_QUEUE.send({
+      kind: "meta-ads-spy",
       runId: run.id,
       reportId: report.id,
       userId: user.id,
@@ -535,6 +595,207 @@ async function downloadTikTokReport(request, env, reportId) {
   return new Response(object.body, { headers });
 }
 
+async function listInstagramReports(request, env) {
+  const user = await getUser(env, request);
+  await rateLimit(env, user.id);
+
+  const reports = await db(
+    env,
+    `instagram_profile_reports?user_id=eq.${user.id}&select=id,run_id,instagram_handle,status,date_from,date_to,filters,summary,created_at,completed_at,updated_at,artifact_id&order=created_at.desc&limit=25`,
+  );
+
+  return json({ reports }, 200, corsHeaders());
+}
+
+async function getInstagramReportDetail(request, env, reportId) {
+  const user = await getUser(env, request);
+  await rateLimit(env, user.id);
+
+  const [report] = await db(
+    env,
+    `instagram_profile_reports?id=eq.${reportId}&user_id=eq.${user.id}&select=*`,
+  );
+  if (!report) {
+    throw new HttpError(404, "Report Instagram tidak ditemukan.");
+  }
+
+  const items = await db(
+    env,
+    `instagram_profile_report_items?report_id=eq.${reportId}&select=*&order=rank_position.asc`,
+  );
+  const events = await db(
+    env,
+    `instagram_pi_events?report_id=eq.${reportId}&select=stage,status,message,payload,created_at&order=created_at.asc`,
+  );
+
+  return json({ report, items, events }, 200, corsHeaders());
+}
+
+async function downloadInstagramReport(request, env, reportId) {
+  const user = await getUser(env, request);
+  await rateLimit(env, user.id);
+
+  const [report] = await db(
+    env,
+    `instagram_profile_reports?id=eq.${reportId}&user_id=eq.${user.id}&select=id,instagram_handle,artifact_id`,
+  );
+  if (!report?.artifact_id) {
+    throw new HttpError(404, "File Instagram report belum tersedia.");
+  }
+
+  const [artifact] = await db(
+    env,
+    `generated_artifacts?id=eq.${report.artifact_id}&select=*`,
+  );
+  if (!artifact?.path) {
+    throw new HttpError(404, "Artifact Instagram tidak ditemukan.");
+  }
+
+  const object = await env.REPORTS_BUCKET.get(artifact.path);
+  if (!object) {
+    throw new HttpError(404, "File Instagram report tidak ditemukan di storage.");
+  }
+
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set("etag", object.httpEtag);
+  headers.set("cache-control", "private, no-store");
+
+  return new Response(object.body, { headers });
+}
+
+async function listTikTokAdsReports(request, env) {
+  const user = await getUser(env, request);
+  await rateLimit(env, user.id);
+
+  const reports = await db(
+    env,
+    `tiktok_ads_reports?user_id=eq.${user.id}&select=id,run_id,query,region,status,date_from,date_to,filters,summary,created_at,completed_at,updated_at,artifact_id&order=created_at.desc&limit=25`,
+  );
+
+  return json({ reports }, 200, corsHeaders());
+}
+
+async function getTikTokAdsReportDetail(request, env, reportId) {
+  const user = await getUser(env, request);
+  await rateLimit(env, user.id);
+
+  const [report] = await db(
+    env,
+    `tiktok_ads_reports?id=eq.${reportId}&user_id=eq.${user.id}&select=*`,
+  );
+  if (!report) {
+    throw new HttpError(404, "Report TikTok Ads tidak ditemukan.");
+  }
+
+  const items = await db(
+    env,
+    `tiktok_ads_report_items?report_id=eq.${reportId}&select=*&order=rank_position.asc`,
+  );
+  const events = await db(
+    env,
+    `tiktok_ads_events?report_id=eq.${reportId}&select=stage,status,message,payload,created_at&order=created_at.asc`,
+  );
+
+  return json({ report, items, events }, 200, corsHeaders());
+}
+
+async function downloadTikTokAdsReport(request, env, reportId) {
+  const user = await getUser(env, request);
+  await rateLimit(env, user.id);
+
+  const [report] = await db(
+    env,
+    `tiktok_ads_reports?id=eq.${reportId}&user_id=eq.${user.id}&select=id,query,artifact_id`,
+  );
+  if (!report?.artifact_id) {
+    throw new HttpError(404, "File TikTok Ads report belum tersedia.");
+  }
+
+  const [artifact] = await db(env, `generated_artifacts?id=eq.${report.artifact_id}&select=*`);
+  if (!artifact?.path) {
+    throw new HttpError(404, "Artifact TikTok Ads tidak ditemukan.");
+  }
+
+  const object = await env.REPORTS_BUCKET.get(artifact.path);
+  if (!object) {
+    throw new HttpError(404, "File TikTok Ads report tidak ditemukan di storage.");
+  }
+
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set("etag", object.httpEtag);
+  headers.set("cache-control", "private, no-store");
+
+  return new Response(object.body, { headers });
+}
+
+async function listMetaAdsReports(request, env) {
+  const user = await getUser(env, request);
+  await rateLimit(env, user.id);
+
+  const reports = await db(
+    env,
+    `meta_ads_reports?user_id=eq.${user.id}&select=id,run_id,query,country,status,date_from,date_to,filters,summary,created_at,completed_at,updated_at,artifact_id&order=created_at.desc&limit=25`,
+  );
+
+  return json({ reports }, 200, corsHeaders());
+}
+
+async function getMetaAdsReportDetail(request, env, reportId) {
+  const user = await getUser(env, request);
+  await rateLimit(env, user.id);
+
+  const [report] = await db(
+    env,
+    `meta_ads_reports?id=eq.${reportId}&user_id=eq.${user.id}&select=*`,
+  );
+  if (!report) {
+    throw new HttpError(404, "Report Meta Ads tidak ditemukan.");
+  }
+
+  const items = await db(
+    env,
+    `meta_ads_report_items?report_id=eq.${reportId}&select=*&order=rank_position.asc`,
+  );
+  const events = await db(
+    env,
+    `meta_ads_events?report_id=eq.${reportId}&select=stage,status,message,payload,created_at&order=created_at.asc`,
+  );
+
+  return json({ report, items, events }, 200, corsHeaders());
+}
+
+async function downloadMetaAdsReport(request, env, reportId) {
+  const user = await getUser(env, request);
+  await rateLimit(env, user.id);
+
+  const [report] = await db(
+    env,
+    `meta_ads_reports?id=eq.${reportId}&user_id=eq.${user.id}&select=id,query,artifact_id`,
+  );
+  if (!report?.artifact_id) {
+    throw new HttpError(404, "File Meta Ads report belum tersedia.");
+  }
+
+  const [artifact] = await db(env, `generated_artifacts?id=eq.${report.artifact_id}&select=*`);
+  if (!artifact?.path) {
+    throw new HttpError(404, "Artifact Meta Ads tidak ditemukan.");
+  }
+
+  const object = await env.REPORTS_BUCKET.get(artifact.path);
+  if (!object) {
+    throw new HttpError(404, "File Meta Ads report tidak ditemukan di storage.");
+  }
+
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set("etag", object.httpEtag);
+  headers.set("cache-control", "private, no-store");
+
+  return new Response(object.body, { headers });
+}
+
 function isApiPath(pathname) {
   return pathname.startsWith("/api/");
 }
@@ -568,6 +829,54 @@ async function handleApi(request, env) {
 
   if (url.pathname === "/api/tiktok-profile-reports" && request.method === "GET") {
     return listTikTokReports(request, env);
+  }
+
+  if (url.pathname === "/api/instagram-profile-reports" && request.method === "GET") {
+    return listInstagramReports(request, env);
+  }
+
+  const igReportDetailMatch = url.pathname.match(
+    /^\/api\/instagram-profile-reports\/([^/]+)$/,
+  );
+  if (igReportDetailMatch && request.method === "GET") {
+    return getInstagramReportDetail(request, env, igReportDetailMatch[1]);
+  }
+
+  const igReportDownloadMatch = url.pathname.match(
+    /^\/api\/instagram-profile-reports\/([^/]+)\/download$/,
+  );
+  if (igReportDownloadMatch && request.method === "GET") {
+    return downloadInstagramReport(request, env, igReportDownloadMatch[1]);
+  }
+
+  if (url.pathname === "/api/tiktok-ads-reports" && request.method === "GET") {
+    return listTikTokAdsReports(request, env);
+  }
+
+  const adsReportDetailMatch = url.pathname.match(/^\/api\/tiktok-ads-reports\/([^/]+)$/);
+  if (adsReportDetailMatch && request.method === "GET") {
+    return getTikTokAdsReportDetail(request, env, adsReportDetailMatch[1]);
+  }
+
+  const adsReportDownloadMatch = url.pathname.match(
+    /^\/api\/tiktok-ads-reports\/([^/]+)\/download$/,
+  );
+  if (adsReportDownloadMatch && request.method === "GET") {
+    return downloadTikTokAdsReport(request, env, adsReportDownloadMatch[1]);
+  }
+
+  if (url.pathname === "/api/meta-ads-reports" && request.method === "GET") {
+    return listMetaAdsReports(request, env);
+  }
+
+  const metaAdsDetailMatch = url.pathname.match(/^\/api\/meta-ads-reports\/([^/]+)$/);
+  if (metaAdsDetailMatch && request.method === "GET") {
+    return getMetaAdsReportDetail(request, env, metaAdsDetailMatch[1]);
+  }
+
+  const metaAdsDownloadMatch = url.pathname.match(/^\/api\/meta-ads-reports\/([^/]+)\/download$/);
+  if (metaAdsDownloadMatch && request.method === "GET") {
+    return downloadMetaAdsReport(request, env, metaAdsDownloadMatch[1]);
   }
 
   const reportDetailMatch = url.pathname.match(
@@ -630,6 +939,15 @@ export default {
         }
         if (message.body?.kind === "tiktok-profile-intelligence") {
           await processTikTokProfileRun(env, message.body);
+        }
+        if (message.body?.kind === "instagram-profile-intelligence") {
+          await processInstagramProfileRun(env, message.body);
+        }
+        if (message.body?.kind === "tiktok-ads-spy") {
+          await processTikTokAdsRun(env, message.body);
+        }
+        if (message.body?.kind === "meta-ads-spy") {
+          await processMetaAdsRun(env, message.body);
         }
         message.ack();
       } catch (error) {

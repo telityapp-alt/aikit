@@ -270,6 +270,39 @@ const AUTOMASI_CARDS = [
       "https://images.unsplash.com/photo-1611605698335-8b1569810432?w=400&h=200&fit=crop&auto=format",
   },
   {
+    id: "instagram-profile-intelligence",
+    title: "Instagram Profile Intelligence",
+    desc: "Scrape profil Instagram via Apify, hitung KPI engagement & format, lalu baca dashboard insight siap pakai tim growth.",
+    type: "App",
+    pricing: "Pro",
+    costPerRun: 125,
+    users: 8,
+    image:
+      "https://images.unsplash.com/photo-1611262588024-d12430b98920?w=400&h=200&fit=crop&auto=format",
+  },
+  {
+    id: "tiktok-ads-spy",
+    title: "TikTok Ads Spy",
+    desc: "Spy iklan kompetitor di TikTok Ads Library — creative gallery, share-of-voice, targeting & region intelligence.",
+    type: "App",
+    pricing: "Pro",
+    costPerRun: 150,
+    users: 5,
+    image:
+      "https://images.unsplash.com/photo-1533750516457-a7f992034fec?w=400&h=200&fit=crop&auto=format",
+  },
+  {
+    id: "meta-ads-spy",
+    title: "Meta Ads Spy",
+    desc: "Spy iklan kompetitor di Meta Ads Library (Facebook + Instagram) — creative gallery, ad copy, format & platform mix, longevity & influencer partnerships.",
+    type: "App",
+    pricing: "Pro",
+    costPerRun: 150,
+    users: 4,
+    image:
+      "https://images.unsplash.com/photo-1633675254053-d96c7668c3b8?w=400&h=200&fit=crop&auto=format",
+  },
+  {
     title: "ATS-Friendly CV Converter",
     desc: "Ubah CV lama berbasis teks menjadi format ATS-Friendly secara instan.",
     type: "Automation",
@@ -347,6 +380,36 @@ const MODULE_CARDS = [
     users: 19,
     image:
       "https://images.unsplash.com/photo-1611605698335-8b1569810432?w=400&h=200&fit=crop&auto=format",
+  },
+  {
+    id: "instagram-profile-intelligence",
+    title: "Instagram Profile Intelligence",
+    desc: "Bedah performa satu profil Instagram: engagement KPI, format breakdown, reels vs statis, audience sentiment, dan top movers.",
+    category: "Marketing",
+    pricing: "Pro",
+    users: 8,
+    image:
+      "https://images.unsplash.com/photo-1611262588024-d12430b98920?w=400&h=200&fit=crop&auto=format",
+  },
+  {
+    id: "tiktok-ads-spy",
+    title: "TikTok Ads Spy",
+    desc: "Competitive ad intelligence TikTok: bedah kreatif, CTA, targeting usia/gender, dan share-of-voice kompetitor.",
+    category: "Marketing",
+    pricing: "Pro",
+    users: 5,
+    image:
+      "https://images.unsplash.com/photo-1533750516457-a7f992034fec?w=400&h=200&fit=crop&auto=format",
+  },
+  {
+    id: "meta-ads-spy",
+    title: "Meta Ads Spy",
+    desc: "Competitive ad intelligence Facebook & Instagram: swipe creative, ad copy, format mix, longevity, dan influencer partnerships kompetitor.",
+    category: "Marketing",
+    pricing: "Pro",
+    users: 4,
+    image:
+      "https://images.unsplash.com/photo-1633675254053-d96c7668c3b8?w=400&h=200&fit=crop&auto=format",
   },
   {
     id: "keuangan-pribadi",

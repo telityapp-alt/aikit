@@ -165,7 +165,23 @@ export function normalizeTikTokVideoItem(raw, profile) {
     contentType: "video",
     caption: pickFirst(raw, ["text", "desc", "caption"], ""),
     publishedAt,
-    thumbnailUrl: pickFirst(raw, ["covers.default", "thumbnail", "cover"], ""),
+    thumbnailUrl: pickFirst(
+      raw,
+      [
+        "videoMeta.coverUrl",
+        "videoMeta.originalCoverUrl",
+        "videoMeta.cover",
+        "covers.default",
+        "thumbnail",
+        "cover",
+      ],
+      "",
+    ),
+    hashtags: Array.isArray(raw?.hashtags)
+      ? raw.hashtags
+          .map((tag) => (typeof tag === "string" ? tag : tag?.name))
+          .filter(Boolean)
+      : [],
     durationSeconds,
     musicName: pickFirst(raw, ["musicMeta.musicName", "music.title"], ""),
     musicAuthor: pickFirst(raw, ["musicMeta.musicAuthor", "music.authorName"], ""),

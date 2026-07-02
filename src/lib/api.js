@@ -90,6 +90,29 @@ export const api = {
       `/api/tiktok-profile-reports/${reportId}/download`,
       `tiktok-profile-intelligence-${handle}.xlsx`,
     ),
+  getInstagramProfileReports: () =>
+    apiFetch("/api/instagram-profile-reports", { method: "GET" }),
+  getInstagramProfileReport: (reportId) =>
+    apiFetch(`/api/instagram-profile-reports/${reportId}`, { method: "GET" }),
+  downloadInstagramProfileReport: (reportId, handle = "report") =>
+    downloadFile(
+      `/api/instagram-profile-reports/${reportId}/download`,
+      `instagram-profile-intelligence-${handle}.xlsx`,
+    ),
+  getTikTokAdsReports: () =>
+    apiFetch("/api/tiktok-ads-reports", { method: "GET" }),
+  getTikTokAdsReport: (reportId) =>
+    apiFetch(`/api/tiktok-ads-reports/${reportId}`, { method: "GET" }),
+  downloadTikTokAdsReport: (reportId, label = "report") =>
+    downloadFile(
+      `/api/tiktok-ads-reports/${reportId}/download`,
+      `tiktok-ads-spy-${label}.xlsx`,
+    ),
+  getMetaAdsReports: () => apiFetch("/api/meta-ads-reports", { method: "GET" }),
+  getMetaAdsReport: (reportId) =>
+    apiFetch(`/api/meta-ads-reports/${reportId}`, { method: "GET" }),
+  downloadMetaAdsReport: (reportId, label = "report") =>
+    downloadFile(`/api/meta-ads-reports/${reportId}/download`, `meta-ads-spy-${label}.xlsx`),
   sendChat: (chatId, message, moduleSlug) =>
     apiFetch("/api/chat", { body: { chatId, message, moduleSlug } }),
   topUp: (amount) => apiFetch("/api/topup", { body: { amount } }),

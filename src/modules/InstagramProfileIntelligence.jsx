@@ -2,21 +2,21 @@ import { useEffect, useEffectEvent, useMemo, useState } from "react";
 import { api } from "../lib/api";
 import { useToast } from "../lib/ToastContext";
 import "./TikTokProfileIntelligence.css";
+import "./InstagramProfileIntelligence.css";
 
 const DEFAULT_FORM = {
   handle: "",
   maxItems: 30,
-  dateFrom: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30)
-    .toISOString()
-    .slice(0, 10),
+  mode: "full",
+  dateFrom: new Date(Date.now() - 1000 * 60 * 60 * 24 * 90).toISOString().slice(0, 10),
   dateTo: new Date().toISOString().slice(0, 10),
 };
 
 const STAGE_LABELS = {
   starting_actor: "Actor",
   normalizing_profile: "Profile",
-  normalizing_videos: "Normalize",
-  scoring_videos: "KPI Engine",
+  normalizing_posts: "Normalize",
+  scoring_posts: "KPI Engine",
   building_summary: "Signal Deck",
   building_workbook: "Workbook",
   completed: "Done",
@@ -25,18 +25,15 @@ const STAGE_LABELS = {
 function numberFormat(value) {
   return Number(value || 0).toLocaleString("id-ID");
 }
-
 function compactNumber(value) {
   const n = Number(value || 0);
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}K`;
   return String(n);
 }
-
 function percentFormat(value) {
   return `${Number(value || 0).toFixed(2)}%`;
 }
-
 function compactTime(value) {
   if (!value) return "";
   const diff = Date.now() - new Date(value).getTime();
@@ -47,21 +44,16 @@ function compactTime(value) {
   if (hours < 24) return `${hours} jam lalu`;
   return `${Math.floor(hours / 24)} hari lalu`;
 }
-
 function dateFormat(value) {
   if (!value) return "-";
-  return new Intl.DateTimeFormat("id-ID", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(value));
+  return new Intl.DateTimeFormat("id-ID", { day: "2-digit", month: "short", year: "numeric" }).format(
+    new Date(value),
+  );
 }
 
 function BarChart({ data = [], formatValue = (v) => v, emptyLabel = "Belum ada data." }) {
   const max = Math.max(1, ...data.map((d) => Number(d.value) || 0));
-  if (!data.length) {
-    return <div className="tpi-chart-empty">{emptyLabel}</div>;
-  }
+  if (!data.length) return <div className="tpi-chart-empty">{emptyLabel}</div>;
   return (
     <div className="tpi-chart">
       {data.map((d, index) => (
@@ -80,7 +72,7 @@ function BarChart({ data = [], formatValue = (v) => v, emptyLabel = "Belum ada d
   );
 }
 
-export default function TikTokProfileIntelligence() {
+export default function InstagramProfileIntelligence() {
   const toast = useToast();
   const [form, setForm] = useState(DEFAULT_FORM);
   const [reports, setReports] = useState([]);
@@ -93,7 +85,7 @@ export default function TikTokProfileIntelligence() {
   const loadReports = useEffectEvent(async (selectFirst = false) => {
     setLoadingReports(true);
     try {
-      const data = await api.getTikTokProfileReports();
+      const data = await api.getInstagramProfileReports();
       const nextReports = data.reports || [];
       setReports(nextReports);
       if (selectFirst) {
@@ -111,7 +103,7 @@ export default function TikTokProfileIntelligence() {
     if (!reportId) return;
     if (!silent) setLoadingDetail(true);
     try {
-      const data = await api.getTikTokProfileReport(reportId);
+      const data = await api.getInstagramProfileReport(reportId);
       setReportDetail(data);
     } catch (error) {
       toast.error(error.message);
@@ -131,9 +123,7 @@ export default function TikTokProfileIntelligence() {
 
   useEffect(() => {
     const status = reportDetail?.report?.status;
-    if (!activeReportId || !status || !["queued", "running"].includes(status)) {
-      return undefined;
-    }
+    if (!activeReportId || !status || !["queued", "running"].includes(status)) return undefined;
     const timer = setInterval(() => {
       loadReportDetail(activeReportId, true);
       loadReports(false);
@@ -141,40 +131,15 @@ export default function TikTokProfileIntelligence() {
     return () => clearInterval(timer);
   }, [activeReportId, reportDetail?.report?.status]);
 
-  const topItems = useMemo(
-    () => (reportDetail?.items || []).slice(0, 5),
-    [reportDetail],
-  );
-
-  const patternClusters = useMemo(() => {
-    const format = new Map();
-    const topic = new Map();
-    const music = new Map();
-    for (const item of reportDetail?.items || []) {
-      const ai = item.ai_enrichment || {};
-      format.set(ai.contentFormat, (format.get(ai.contentFormat) || 0) + 1);
-      topic.set(ai.topicCluster, (topic.get(ai.topicCluster) || 0) + 1);
-      music.set(ai.musicCluster, (music.get(ai.musicCluster) || 0) + 1);
-    }
-    const toSorted = (map) =>
-      [...map.entries()]
-        .filter(([key]) => Boolean(key))
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 4);
-    return {
-      formats: toSorted(format),
-      topics: toSorted(topic),
-      music: toSorted(music),
-    };
-  }, [reportDetail]);
+  const topItems = useMemo(() => (reportDetail?.items || []).slice(0, 5), [reportDetail]);
 
   async function submitRun(event) {
     event.preventDefault();
     setSubmitting(true);
     try {
-      const data = await api.runAutomation("tiktok-profile-intelligence", form);
+      const data = await api.runAutomation("instagram-profile-intelligence", form);
       setActiveReportId(data.report.id);
-      toast.success("Run TikTok dimulai. Dashboard akan terisi otomatis.");
+      toast.success("Run Instagram dimulai. Dashboard akan terisi otomatis.");
       await loadReports();
       await loadReportDetail(data.report.id);
     } catch (error) {
@@ -187,11 +152,11 @@ export default function TikTokProfileIntelligence() {
   async function downloadReport() {
     if (!reportDetail?.report?.id) return;
     try {
-      await api.downloadTikTokProfileReport(
+      await api.downloadInstagramProfileReport(
         reportDetail.report.id,
-        reportDetail.report.tiktok_handle,
+        reportDetail.report.instagram_handle,
       );
-      toast.success("Workbook TikTok berhasil diunduh.");
+      toast.success("Workbook Instagram berhasil diunduh.");
     } catch (error) {
       toast.error(error.message);
     }
@@ -199,53 +164,66 @@ export default function TikTokProfileIntelligence() {
 
   const report = reportDetail?.report;
   const summary = report?.summary || {};
+  const sentimentPct = Math.round(((Number(summary.audienceSignals?.avgSentiment || 0) + 1) / 2) * 100);
 
   return (
     <div className="tpi-shell">
       <aside className="tpi-sidebar">
         <div className="tpi-sidebar-head">
           <span className="tpi-kicker">Apify Intelligence Stack</span>
-          <h1 className="tpi-title">TikTok Profile Intelligence</h1>
+          <h1 className="tpi-title">Instagram Profile Intelligence</h1>
           <p className="tpi-subtitle">
-            Production workspace untuk menarik video TikTok via Apify, menghitung KPI
-            virality dan intent, lalu menyusun dashboard yang siap dipakai tim growth.
+            Tarik post Instagram via Apify, hitung KPI engagement, format, dan audience
+            sentiment, lalu susun dashboard siap dipakai tim growth.
           </p>
         </div>
 
         <form className="tpi-launcher" onSubmit={submitRun}>
           <label className="tpi-field">
-            <span>Handle TikTok</span>
+            <span>Username Instagram</span>
             <input
               value={form.handle}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, handle: event.target.value }))
-              }
-              placeholder="contoh: dr.giovanniabraham"
+              onChange={(e) => setForm((c) => ({ ...c, handle: e.target.value }))}
+              placeholder="contoh: humansofny"
             />
           </label>
 
           <div className="tpi-grid-two">
             <label className="tpi-field">
-              <span>Max items</span>
+              <span>Max posts</span>
               <input
                 type="number"
                 min="1"
-                max="100"
+                max="200"
                 value={form.maxItems}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    maxItems: Number(event.target.value || 1),
-                  }))
-                }
+                onChange={(e) => setForm((c) => ({ ...c, maxItems: Number(e.target.value || 1) }))}
               />
             </label>
             <div className="tpi-mini-note">
               <strong>Signal logic</strong>
-              <span>
-                Skor memprioritaskan share rate, save rate, engagement density,
-                dan scale views.
-              </span>
+              <span>Skor prioritaskan engagement rate, conversation, reach, dan bonus Reels.</span>
+            </div>
+          </div>
+
+          <div className="tpi-field">
+            <span>Mode scrape</span>
+            <div className="ipi-mode-toggle">
+              <button
+                type="button"
+                className={`ipi-mode-btn ${form.mode === "lite" ? "ipi-mode-active" : ""}`}
+                onClick={() => setForm((c) => ({ ...c, mode: "lite" }))}
+              >
+                <strong>Hemat</strong>
+                <em>1 run · ~½ biaya · tanpa sentiment komentar</em>
+              </button>
+              <button
+                type="button"
+                className={`ipi-mode-btn ${form.mode === "full" ? "ipi-mode-active" : ""}`}
+                onClick={() => setForm((c) => ({ ...c, mode: "full" }))}
+              >
+                <strong>Lengkap</strong>
+                <em>2 run · views penuh + audience sentiment</em>
+              </button>
             </div>
           </div>
 
@@ -255,9 +233,7 @@ export default function TikTokProfileIntelligence() {
               <input
                 type="date"
                 value={form.dateFrom}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, dateFrom: event.target.value }))
-                }
+                onChange={(e) => setForm((c) => ({ ...c, dateFrom: e.target.value }))}
               />
             </label>
             <label className="tpi-field">
@@ -265,15 +241,13 @@ export default function TikTokProfileIntelligence() {
               <input
                 type="date"
                 value={form.dateTo}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, dateTo: event.target.value }))
-                }
+                onChange={(e) => setForm((c) => ({ ...c, dateTo: e.target.value }))}
               />
             </label>
           </div>
 
           <button className="cta-button tpi-submit" type="submit" disabled={submitting}>
-            {submitting ? "Menjalankan..." : "Run TikTok Intelligence"}
+            {submitting ? "Menjalankan..." : "Run Instagram Intelligence"}
           </button>
         </form>
 
@@ -291,19 +265,17 @@ export default function TikTokProfileIntelligence() {
                 onClick={() => setActiveReportId(entry.id)}
               >
                 <div className="tpi-history-top">
-                  <strong>@{entry.tiktok_handle}</strong>
+                  <strong>@{entry.instagram_handle}</strong>
                   <span className={`tpi-badge tpi-badge-${entry.status}`}>{entry.status}</span>
                 </div>
                 <div className="tpi-history-meta">
-                  <span>{entry.filters?.maxItems || 0} videos</span>
+                  <span>{entry.filters?.maxItems || 0} posts</span>
                   <span>{compactTime(entry.created_at)}</span>
                 </div>
               </button>
             ))}
             {!loadingReports && reports.length === 0 && (
-              <div className="tpi-empty-history">
-                Report pertama yang kamu jalankan akan muncul di sini.
-              </div>
+              <div className="tpi-empty-history">Report pertama yang kamu jalankan akan muncul di sini.</div>
             )}
           </div>
         </div>
@@ -313,10 +285,10 @@ export default function TikTokProfileIntelligence() {
         {!reportDetail && (
           <div className="tpi-empty-stage">
             <span className="tpi-kicker">Production vertical ready</span>
-            <h2>Run pertama akan membuat signal deck TikTok secara otomatis</h2>
+            <h2>Run pertama akan membuat signal deck Instagram secara otomatis</h2>
             <p>
-              Begitu run berjalan, workspace ini akan mengisi progress actor, KPI turunan,
-              top movers, pattern clusters, dan workbook export dari satu profil TikTok.
+              Begitu run berjalan, workspace ini mengisi progress actor, KPI engagement, format
+              breakdown, reels vs statis, audience sentiment, top movers, dan workbook export.
             </p>
           </div>
         )}
@@ -326,28 +298,23 @@ export default function TikTokProfileIntelligence() {
             <section className="tpi-command">
               <div className="tpi-command-identity">
                 {summary.profilePicUrl ? (
-                  <img
-                    className="tpi-avatar"
-                    src={summary.profilePicUrl}
-                    alt={report.tiktok_handle}
-                    referrerPolicy="no-referrer"
-                  />
+                  <img className="tpi-avatar" src={summary.profilePicUrl} alt={report.instagram_handle} referrerPolicy="no-referrer" />
                 ) : (
                   <div className="tpi-avatar tpi-avatar-fallback">
-                    {report.tiktok_handle?.[0]?.toUpperCase() || "T"}
+                    {report.instagram_handle?.[0]?.toUpperCase() || "I"}
                   </div>
                 )}
                 <div>
-                  <span className="tpi-kicker">Signal Deck</span>
-                  <h2>@{report.tiktok_handle}</h2>
+                  <span className="tpi-kicker">Signal Deck{summary.verified ? " · ✔ verified" : ""}</span>
+                  <h2>@{report.instagram_handle}</h2>
                   <p>
                     {dateFormat(report.date_from)} — {dateFormat(report.date_to)} ·{" "}
-                    {(report.filters?.maxItems || reportDetail.items?.length || 0)} target videos
+                    {(report.filters?.maxItems || reportDetail.items?.length || 0)} target posts
                   </p>
                   {summary.followerCount ? (
                     <div className="tpi-identity-stats">
                       <span><strong>{compactNumber(summary.followerCount)}</strong> followers</span>
-                      <span><strong>{compactNumber(summary.profileLikes)}</strong> likes</span>
+                      <span><strong>{compactNumber(summary.postsCount)}</strong> posts</span>
                       <span><strong>{compactNumber(summary.followingCount)}</strong> following</span>
                     </div>
                   ) : null}
@@ -369,46 +336,51 @@ export default function TikTokProfileIntelligence() {
 
             <section className="tpi-signal-strip">
               <article className="tpi-signal-card">
-                <span>Total videos</span>
-                <strong>{numberFormat(summary.totalVideosAnalyzed || reportDetail.items?.length)}</strong>
+                <span>Total posts</span>
+                <strong>{numberFormat(summary.totalPostsAnalyzed || reportDetail.items?.length)}</strong>
               </article>
               <article className="tpi-signal-card">
-                <span>Total views</span>
-                <strong>{numberFormat(summary.totalViews)}</strong>
+                <span>Total engagement</span>
+                <strong>{compactNumber(summary.totalEngagement)}</strong>
               </article>
               <article className="tpi-signal-card">
-                <span>Avg engagement density</span>
-                <strong>{percentFormat(summary.averageViewToEngagementRate)}</strong>
+                <span>Avg engagement rate</span>
+                <strong>{percentFormat(summary.averageEngagementRate)}</strong>
               </article>
               <article className="tpi-signal-card">
-                <span>Virality score</span>
-                <strong>{Number(summary.viralityScore || 0).toFixed(1)}</strong>
-              </article>
-              <article className="tpi-signal-card">
-                <span>Intent score</span>
-                <strong>{Number(summary.intentScore || 0).toFixed(1)}</strong>
+                <span>Engagement score</span>
+                <strong>{Number(summary.engagementScore || 0).toFixed(1)}</strong>
               </article>
               <article className="tpi-signal-card">
                 <span>Conversation score</span>
                 <strong>{Number(summary.conversationScore || 0).toFixed(1)}</strong>
               </article>
+              <article className="tpi-signal-card">
+                <span>Reach score</span>
+                <strong>{Number(summary.reachScore || 0).toFixed(1)}</strong>
+              </article>
             </section>
 
             <section className="tpi-kpi-strip">
               <article className="tpi-kpi-card">
+                <span>Median engagement</span>
+                <strong>{compactNumber(summary.medianEngagement)}</strong>
+                <em>benchmark per post</em>
+              </article>
+              <article className="tpi-kpi-card">
                 <span>Median views</span>
                 <strong>{compactNumber(summary.medianViews)}</strong>
-                <em>benchmark per video</em>
+                <em>video / reels</em>
               </article>
               <article className="tpi-kpi-card">
                 <span>Posting cadence</span>
                 <strong>{Number(summary.postingCadencePerWeek || 0).toFixed(1)}</strong>
-                <em>video / minggu</em>
+                <em>post / minggu</em>
               </article>
               <article className="tpi-kpi-card">
                 <span>Breakout rate</span>
                 <strong>{Number(summary.breakoutRate || 0).toFixed(0)}%</strong>
-                <em>{summary.breakoutCount || 0} video &gt; 2× median</em>
+                <em>{summary.breakoutCount || 0} post &gt; 2× median</em>
               </article>
               <article className="tpi-kpi-card">
                 <span>Consistency</span>
@@ -416,48 +388,33 @@ export default function TikTokProfileIntelligence() {
                 <em>stabilitas performa</em>
               </article>
               <article className="tpi-kpi-card">
-                <span>Duration sweet spot</span>
-                <strong className="tpi-kpi-text">{summary.durationSweetSpot || "-"}</strong>
-                <em>durasi paling perform</em>
-              </article>
-              <article className="tpi-kpi-card">
                 <span>Best posting window</span>
                 <strong className="tpi-kpi-text">{summary.bestPostingWindow || "-"}</strong>
-                <em>rata-rata views tertinggi</em>
+                <em>rata-rata engagement tertinggi</em>
               </article>
             </section>
 
-            {(summary.viewsSeries || []).length > 0 && (
-              <section className="tpi-grid-main">
-                <div className="tpi-panel">
-                  <div className="tpi-panel-head">
-                    <h3>Views per video</h3>
-                    <span>rank order</span>
-                  </div>
-                  <BarChart
-                    data={summary.viewsSeries.map((d) => ({
-                      label: `#${d.rank}`,
-                      value: d.views,
-                    }))}
-                    formatValue={compactNumber}
-                  />
+            <section className="tpi-grid-main">
+              <div className="tpi-panel">
+                <div className="tpi-panel-head">
+                  <h3>Engagement per post</h3>
+                  <span>rank order</span>
                 </div>
-                <div className="tpi-panel">
-                  <div className="tpi-panel-head">
-                    <h3>Views by posting window</h3>
-                    <span>UTC hour</span>
-                  </div>
-                  <BarChart
-                    data={(summary.hourPerformance || []).map((d) => ({
-                      label: d.label,
-                      value: d.avgViews,
-                    }))}
-                    formatValue={compactNumber}
-                    emptyLabel="Belum cukup data waktu posting."
-                  />
+                <BarChart
+                  data={(summary.engagementSeries || []).map((d) => ({ label: `#${d.rank}`, value: d.engagement }))}
+                  formatValue={compactNumber}
+                />
+              </div>
+              <div className="tpi-panel">
+                <div className="tpi-panel-head">
+                  <h3>Avg engagement by format</h3>
                 </div>
-              </section>
-            )}
+                <BarChart
+                  data={(summary.formatPerformance || []).map((d) => ({ label: d.format, value: d.avgEngagement }))}
+                  formatValue={compactNumber}
+                />
+              </div>
+            </section>
 
             <section className="tpi-grid-main">
               <div className="tpi-panel">
@@ -486,17 +443,36 @@ export default function TikTokProfileIntelligence() {
                 <p className="tpi-summary-callout">
                   {summary.executiveSummary || "Summary akan muncul setelah report selesai."}
                 </p>
-                <div className="tpi-chip-group">
-                  {(summary.winningPatterns || []).map((chip) => (
-                    <span className="tpi-chip" key={chip}>
-                      {chip}
-                    </span>
-                  ))}
-                  {(summary.topicClusters || []).map((chip) => (
-                    <span className="tpi-chip tpi-chip-muted" key={chip}>
-                      {chip}
-                    </span>
-                  ))}
+                <div className="ipi-vs">
+                  <div>
+                    <span>Reels avg engagement</span>
+                    <strong>{compactNumber(summary.reelsVsStatic?.reelAvgEngagement)}</strong>
+                    <em>{summary.reelsVsStatic?.reelCount || 0} reels</em>
+                  </div>
+                  <div>
+                    <span>Static avg engagement</span>
+                    <strong>{compactNumber(summary.reelsVsStatic?.staticAvgEngagement)}</strong>
+                    <em>{summary.reelsVsStatic?.staticCount || 0} posts</em>
+                  </div>
+                </div>
+                <div className="ipi-sentiment">
+                  <div className="ipi-sentiment-head">
+                    <span>Audience sentiment</span>
+                    <strong>
+                      {Number(summary.audienceSignals?.avgSentiment || 0) > 0.15
+                        ? "Positif"
+                        : Number(summary.audienceSignals?.avgSentiment || 0) < -0.15
+                          ? "Negatif"
+                          : "Netral"}
+                    </strong>
+                  </div>
+                  <div className="ipi-sentiment-bar">
+                    <div className="ipi-sentiment-fill" style={{ width: `${sentimentPct}%` }} />
+                  </div>
+                  <div className="ipi-sentiment-meta">
+                    <span>{numberFormat(summary.audienceSignals?.commentsSampled)} komentar disampel</span>
+                    <span>{Math.round((summary.audienceSignals?.verifiedCommenterRatio || 0) * 100)}% verified</span>
+                  </div>
                 </div>
               </div>
             </section>
@@ -511,12 +487,7 @@ export default function TikTokProfileIntelligence() {
                   <article className="tpi-top-card" key={item.id}>
                     {item.thumbnail_url ? (
                       <div className="tpi-top-thumb">
-                        <img
-                          src={item.thumbnail_url}
-                          alt={`Video #${item.rank_position}`}
-                          referrerPolicy="no-referrer"
-                          loading="lazy"
-                        />
+                        <img src={item.thumbnail_url} alt={`Post #${item.rank_position}`} referrerPolicy="no-referrer" loading="lazy" />
                         <span className="tpi-top-rank tpi-top-rank-overlay">#{item.rank_position}</span>
                       </div>
                     ) : (
@@ -526,29 +497,21 @@ export default function TikTokProfileIntelligence() {
                       <span>{dateFormat(item.published_at)}</span>
                       <span>Score {Number(item.top_score || 0).toFixed(1)}</span>
                     </div>
-                    <h4>{item.ai_enrichment?.summary || "Top TikTok video"}</h4>
-                    <p>{item.caption || "Caption tidak tersedia."}</p>
+                    <h4>{item.ai_enrichment?.summary || "Top Instagram post"}</h4>
                     <div className="tpi-stat-row">
-                      <span>{numberFormat(item.view_count)} views</span>
-                      <span>{numberFormat(item.share_count)} shares</span>
-                      <span>{percentFormat(item.save_rate)}</span>
+                      <span>{compactNumber(item.like_count)} likes</span>
+                      <span>{compactNumber(item.comment_count)} comments</span>
+                      <span>{percentFormat(item.engagement_rate)}</span>
                     </div>
                     <div className="tpi-chip-group">
-                      {[item.ai_enrichment?.hookStyle, item.ai_enrichment?.contentFormat, item.ai_enrichment?.topicCluster]
+                      {[item.post_type, item.ai_enrichment?.hookStyle, item.ai_enrichment?.topicCluster]
                         .filter(Boolean)
                         .map((chip) => (
-                          <span className="tpi-chip" key={chip}>
-                            {chip}
-                          </span>
+                          <span className="tpi-chip" key={chip}>{chip}</span>
                         ))}
                     </div>
-                    <ul className="tpi-reasons">
-                      {(item.ai_enrichment?.reasonsItWorked || []).map((reason) => (
-                        <li key={reason}>{reason}</li>
-                      ))}
-                    </ul>
                     <a href={item.url} target="_blank" rel="noopener noreferrer" className="tpi-link">
-                      Open source video
+                      Open source post
                     </a>
                   </article>
                 ))}
@@ -558,68 +521,34 @@ export default function TikTokProfileIntelligence() {
             <section className="tpi-grid-main">
               <div className="tpi-panel">
                 <div className="tpi-panel-head">
-                  <h3>Pattern clusters</h3>
+                  <h3>Caption length vs engagement</h3>
                 </div>
-                <div className="tpi-cluster-group">
+                <div className="tpi-cluster-group" style={{ gridTemplateColumns: "1fr" }}>
                   <div>
-                    <span className="tpi-cluster-label">Formats</span>
-                    {patternClusters.formats.map(([label, count]) => (
-                      <div className="tpi-cluster-row" key={label}>
-                        <span>{label}</span>
-                        <strong>{count}</strong>
-                      </div>
-                    ))}
-                  </div>
-                  <div>
-                    <span className="tpi-cluster-label">Topics</span>
-                    {patternClusters.topics.map(([label, count]) => (
-                      <div className="tpi-cluster-row" key={label}>
-                        <span>{label}</span>
-                        <strong>{count}</strong>
-                      </div>
-                    ))}
-                  </div>
-                  <div>
-                    <span className="tpi-cluster-label">Music</span>
-                    {patternClusters.music.map(([label, count]) => (
-                      <div className="tpi-cluster-row" key={label}>
-                        <span>{label}</span>
-                        <strong>{count}</strong>
+                    {(summary.captionPerformance || []).map((row) => (
+                      <div className="tpi-cluster-row" key={row.bucket}>
+                        <span>{row.bucket} · {row.count}</span>
+                        <strong>{compactNumber(row.avgEngagement)}</strong>
                       </div>
                     ))}
                   </div>
                 </div>
               </div>
-
               <div className="tpi-panel">
                 <div className="tpi-panel-head">
                   <h3>Opportunity queue</h3>
                 </div>
                 <ul className="tpi-reasons">
-                  {(summary.recommendations || []).map((recommendation) => (
-                    <li key={recommendation}>{recommendation}</li>
+                  {(summary.recommendations || []).map((r) => (
+                    <li key={r}>{r}</li>
                   ))}
                 </ul>
-                <div className="tpi-opportunity-metrics">
-                  <div>
-                    <span>Dominant format</span>
-                    <strong>{summary.dominantFormat || "-"}</strong>
-                  </div>
-                  <div>
-                    <span>Dominant topic</span>
-                    <strong>{summary.dominantTopic || "-"}</strong>
-                  </div>
-                </div>
                 {(summary.topHashtags || []).length > 0 && (
                   <>
-                    <span className="tpi-cluster-label" style={{ marginTop: 18 }}>
-                      Top hashtags
-                    </span>
+                    <span className="tpi-cluster-label" style={{ marginTop: 18 }}>Top hashtags</span>
                     <div className="tpi-chip-group">
                       {summary.topHashtags.slice(0, 8).map((h) => (
-                        <span className="tpi-chip" key={h.tag}>
-                          #{h.tag} · {h.count}
-                        </span>
+                        <span className="tpi-chip" key={h.tag}>#{h.tag} · {h.count}</span>
                       ))}
                     </div>
                   </>
@@ -637,11 +566,12 @@ export default function TikTokProfileIntelligence() {
                   <thead>
                     <tr>
                       <th>Rank</th>
+                      <th>Type</th>
                       <th>Caption</th>
+                      <th>Likes</th>
+                      <th>Comments</th>
                       <th>Views</th>
-                      <th>Shares</th>
-                      <th>Saves</th>
-                      <th>Eng. density</th>
+                      <th>Eng. rate</th>
                       <th>Top score</th>
                     </tr>
                   </thead>
@@ -649,11 +579,12 @@ export default function TikTokProfileIntelligence() {
                     {(reportDetail.items || []).map((item) => (
                       <tr key={item.id}>
                         <td>{item.rank_position || "-"}</td>
-                        <td>{item.caption || "-"}</td>
+                        <td>{item.post_type || "-"}</td>
+                        <td>{(item.caption || "-").slice(0, 80)}</td>
+                        <td>{numberFormat(item.like_count)}</td>
+                        <td>{numberFormat(item.comment_count)}</td>
                         <td>{numberFormat(item.view_count)}</td>
-                        <td>{numberFormat(item.share_count)}</td>
-                        <td>{numberFormat(item.save_count)}</td>
-                        <td>{percentFormat(item.view_to_engagement_rate)}</td>
+                        <td>{percentFormat(item.engagement_rate)}</td>
                         <td>{Number(item.top_score || 0).toFixed(1)}</td>
                       </tr>
                     ))}

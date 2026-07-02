@@ -14,7 +14,11 @@
     "head_sampling_rate": 1
   },
   "vars": {
-    "ANTHROPIC_MODEL": "claude-sonnet-4-5"
+    "ANTHROPIC_MODEL": "claude-sonnet-4-5",
+    "APIFY_TIKTOK_ACTOR_ID": "GdWCkxBtKWOsKjdch",
+    "APIFY_INSTAGRAM_ACTOR_ID": "shu8hvrXbJbY3Eb9W",
+    "APIFY_TIKTOK_ADS_ACTOR_ID": "AovGexsTSmlalAFzp",
+    "APIFY_META_ADS_ACTOR_ID": "XtaWFhbtfxyzqrFmd"
   },
   "queues": {
     "producers": [

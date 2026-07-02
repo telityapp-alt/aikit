@@ -86,14 +86,23 @@ function replaceTemplateTokens(value, tokens) {
   return value;
 }
 
+// Apify's clockworks/tiktok-scraper expects an ISO `YYYY-MM-DD` date for its
+// `oldestPostDateUnified` / `newestPostDate` filters, not a full ISO timestamp.
+function toActorDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
+}
+
 export function buildTikTokActorInput(env, input) {
+  const handle = String(input.handle || "").replace(/^@/, "");
   const tokens = {
-    handle: input.handle,
-    username: input.handle,
-    profileUrl: `https://www.tiktok.com/@${String(input.handle || "").replace(/^@/, "")}`,
+    handle,
+    username: handle,
+    profileUrl: `https://www.tiktok.com/@${handle}`,
     maxItems: input.maxItems,
-    dateFrom: input.dateFrom || "",
-    dateTo: input.dateTo || "",
+    dateFrom: toActorDate(input.dateFrom),
+    dateTo: toActorDate(input.dateTo),
   };
 
   if (env.APIFY_TIKTOK_INPUT_TEMPLATE) {
@@ -108,15 +117,25 @@ export function buildTikTokActorInput(env, input) {
     }
   }
 
-  return {
-    profiles: [tokens.handle],
-    profileUrls: [tokens.profileUrl],
-    usernames: [tokens.handle],
+  // Native clockworks/tiktok-scraper input schema. Only the keys the actor
+  // actually understands are sent; download flags are disabled to keep runs
+  // fast and cheap since we only need metadata + metrics.
+  const actorInput = {
+    profiles: [handle],
     resultsPerPage: input.maxItems,
-    maxItems: input.maxItems,
-    dateFrom: input.dateFrom || undefined,
-    dateTo: input.dateTo || undefined,
+    profileScrapeSections: ["videos"],
+    profileSorting: "latest",
+    excludePinnedPosts: false,
+    shouldDownloadVideos: false,
+    shouldDownloadCovers: false,
+    shouldDownloadSubtitles: false,
+    shouldDownloadSlideshowImages: false,
+    shouldDownloadAvatars: false,
+    shouldDownloadMusicCovers: false,
   };
+  if (tokens.dateFrom) actorInput.oldestPostDateUnified = tokens.dateFrom;
+  if (tokens.dateTo) actorInput.newestPostDate = tokens.dateTo;
+  return actorInput;
 }
 
 export async function startActorRun(env, { actorId, input }) {
