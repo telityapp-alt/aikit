@@ -177,11 +177,10 @@ function Avatar({ name, onClick }) {
 
 /* ── Nav items ───────────────────────────────────────────────── */
 const NAV_ITEMS = [
-  { label: "Platform", href: "#platform" },
-  { label: "Solutions", href: "#solutions" },
-  { label: "Docs", href: "#docs" },
-  { label: "Community", href: "#community" },
-  { label: "Company", href: "#company" },
+  { label: "Automasi", to: "/automasi" },
+  { label: "Module", to: "/module" },
+  { label: "AI Agent", to: "/ai-agent" },
+  { label: "Harga", to: "/harga" },
 ];
 
 /* ── Header ──────────────────────────────────────────────────── */
@@ -215,10 +214,9 @@ export default function Header({ onOpenAuth }) {
         <HeaderLogo />
         <nav className="topnav" aria-label="Primary">
           {NAV_ITEMS.map((item) => (
-            <a key={item.label} href={item.href}>
+            <Link key={item.label} to={item.to} className="topnav-link">
               {item.label}
-              <CaretIcon />
-            </a>
+            </Link>
           ))}
         </nav>
       </div>

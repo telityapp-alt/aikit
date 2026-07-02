@@ -664,6 +664,40 @@
         gap: 20px;
     }
 
+    .library-filter-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 24px;
+    }
+
+    .library-pill {
+        padding: 4px 14px;
+        border-radius: 999px;
+        border: 1.5px solid #d9d1c2;
+        background: transparent;
+        color: #47576c;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.6;
+        cursor: pointer;
+        transition:
+            border-color 150ms,
+            background 150ms,
+            color 150ms;
+    }
+
+    .library-pill:hover {
+        border-color: #0d1d38;
+        color: #0d1d38;
+    }
+
+    .library-pill.active {
+        border-color: #0d1d38;
+        background: #0d1d38;
+        color: #fffdf8;
+    }
+
     .library-card {
         position: relative;
         overflow: hidden;

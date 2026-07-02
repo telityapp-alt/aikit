@@ -149,3 +149,10 @@ export const AUTOMATION_CARDS = [
 export function getAutomationCostLabel(card) {
   return card.costPerRun === 0 ? "Gratis" : `${card.costPerRun} kredit`;
 }
+
+export const AUTOMATION_TOTAL = AUTOMATION_CARDS.length;
+export const AUTOMATION_CATEGORY_COUNTS = AUTOMATION_CARDS.reduce((acc, c) => {
+  const cat = c.details?.category || "Lainnya";
+  acc[cat] = (acc[cat] || 0) + 1;
+  return acc;
+}, {});

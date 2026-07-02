@@ -441,7 +441,12 @@ function ViewDashboard({ onNavigate, onOpenModule, onTopUp }) {
       <div className="db-welcome">
         <div className="db-welcome-copy">
           <h1 className="db-welcome-heading">
-            Selamat Datang, {profile?.full_name || "Grou App"}! 👋
+            Selamat Datang,{" "}
+            {profile?.full_name ||
+              profile?.username ||
+              user?.email?.split("@")[0] ||
+              "kamu"}
+            ! 👋
           </h1>
           <p className="db-welcome-sub">
             Siap mengotomasi proses bisnis Anda hari ini?
@@ -522,50 +527,6 @@ function ViewDashboard({ onNavigate, onOpenModule, onTopUp }) {
         </div>
       </section>
 
-      <section aria-labelledby="system-flow-heading">
-        <div className="db-section-header">
-          <h2 className="db-section-title" id="system-flow-heading">
-            Alur Sistem
-          </h2>
-        </div>
-        <div className="db-stats-row">
-          <div className="db-stat-card">
-            <div className="db-stat-top">
-              <span className="db-stat-value">1</span>
-              <span className="db-stat-label">
-                Contact menjadi source of truth
-              </span>
-            </div>
-            <p className="db-activity-snippet">
-              Semua lead, customer, creator, dan kompetitor hidup di satu
-              backbone.
-            </p>
-          </div>
-          <div className="db-stat-card">
-            <div className="db-stat-top">
-              <span className="db-stat-value">2</span>
-              <span className="db-stat-label">
-                Campaign mengikat konteks bisnis
-              </span>
-            </div>
-            <p className="db-activity-snippet">
-              Budget, objective, timeline, dan siapa yang terlibat sekarang
-              punya rumah yang jelas.
-            </p>
-          </div>
-          <div className="db-stat-card">
-            <div className="db-stat-top">
-              <span className="db-stat-value">3</span>
-              <span className="db-stat-label">Content jadi layer eksekusi</span>
-            </div>
-            <p className="db-activity-snippet">
-              Kalender konten sudah siap jadi jembatan dari insight ke aktivitas
-              operasional.
-            </p>
-          </div>
-        </div>
-      </section>
-
       <section aria-labelledby="aktivitas-heading">
         <div className="db-section-header">
           <h2 className="db-section-title" id="aktivitas-heading">
@@ -604,7 +565,7 @@ function ViewDashboard({ onNavigate, onOpenModule, onTopUp }) {
                     <span className="db-activity-title">{r.title}</span>
                     <div className="db-activity-meta">
                       <span
-                        className={`db-chip ${r.status === "completed" ? "db-chip-green" : r.status === "failed" ? "db-chip-blue" : "db-chip-amber"}`}
+                        className={`db-chip ${r.status === "completed" ? "db-chip-green" : r.status === "failed" ? "db-chip-amber" : "db-chip-amber"}`}
                       >
                         {r.status}
                       </span>

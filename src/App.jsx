@@ -4,12 +4,15 @@ import { useAuth } from "./lib/AuthContext";
 import AuthModal from "./components/AuthModal.jsx";
 import ToolPopover from "./components/ToolPopover.jsx";
 import Header from "./components/Header.jsx";
-import { AUTOMATION_CARDS } from "./lib/automationCards";
+import {
+  AUTOMATION_CARDS,
+  AUTOMATION_CATEGORY_COUNTS,
+  AUTOMATION_TOTAL,
+} from "./lib/automationCards";
 import {
   MODULE_CARDS,
-  MODULE_TOTAL,
   MODULE_CATEGORY_COUNTS,
-  MODULE_FREE_COUNT,
+  MODULE_TOTAL,
 } from "./lib/moduleCards";
 import { MASCOT_SCENES } from "./lib/mascots";
 
@@ -225,14 +228,6 @@ const heroHighlights = [
   "Untuk kerja, bisnis, dan kehidupan sehari-hari",
 ];
 
-const libraryCards = AUTOMATION_CARDS.map((card) => ({
-  name: card.title,
-  slug: card.id || "automasi",
-  place: card.desc,
-  team: getAutomationCostLabel(card),
-  image: card.image,
-}));
-
 function IconPeople() {
   return (
     <svg
@@ -250,45 +245,6 @@ function IconPeople() {
       <circle cx="9" cy="7" r="4" />
       <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
       <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  );
-}
-
-function CaretIcon() {
-  return (
-    <svg
-      viewBox="0 0 10 10"
-      aria-hidden="true"
-      className="icon-inline caret-icon"
-    >
-      <path d="M2 3.5 5 6.5l3-3" />
-    </svg>
-  );
-}
-
-function SearchIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="icon-inline">
-      <circle cx="10.5" cy="10.5" r="5.5" />
-      <path d="m15 15 4 4" />
-    </svg>
-  );
-}
-
-function MessageIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="icon-inline">
-      <path d="M5 6.5h14v9H11l-4 3v-3H5z" />
-      <path d="M9 10.5h6" />
-    </svg>
-  );
-}
-
-function UserIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="icon-inline">
-      <circle cx="12" cy="8.5" r="3.5" />
-      <path d="M5.5 19c1.4-3 4-4.5 6.5-4.5S17.1 16 18.5 19" />
     </svg>
   );
 }
@@ -353,61 +309,6 @@ function CheckIcon() {
       <path d="m5.2 8.1 1.8 1.9 3.8-4" />
     </svg>
   );
-}
-
-function ThemeToggle() {
-  const { dark, toggle } = useTheme();
-  return (
-    <button
-      type="button"
-      className="theme-toggle"
-      onClick={toggle}
-      aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-      title={dark ? "Light mode" : "Dark mode"}
-    >
-      {dark ? (
-        <svg
-          viewBox="0 0 18 18"
-          width="16"
-          height="16"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <circle cx="9" cy="9" r="4" />
-          <line x1="9" y1="1" x2="9" y2="3" />
-          <line x1="9" y1="15" x2="9" y2="17" />
-          <line x1="1" y1="9" x2="3" y2="9" />
-          <line x1="15" y1="9" x2="17" y2="9" />
-          <line x1="3.05" y1="3.05" x2="4.46" y2="4.46" />
-          <line x1="13.54" y1="13.54" x2="14.95" y2="14.95" />
-          <line x1="3.05" y1="14.95" x2="4.46" y2="13.54" />
-          <line x1="13.54" y1="4.46" x2="14.95" y2="3.05" />
-        </svg>
-      ) : (
-        <svg
-          viewBox="0 0 18 18"
-          width="16"
-          height="16"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M15.5 10.5A7 7 0 0 1 7.5 2.5a7 7 0 1 0 8 8z" />
-        </svg>
-      )}
-    </button>
-  );
-}
-
-function HeaderLogo() {
-  return <span className="header-logo-text">aikit</span>;
 }
 
 function Wordmark() {
@@ -536,14 +437,6 @@ function MiniAppWindow({ variant }) {
 }
 
 /* ── Derived library stats (computed once, outside component) ── */
-const LIBRARY_TOTAL = AUTOMATION_CARDS.length;
-const LIBRARY_TYPE_COUNTS = AUTOMATION_CARDS.reduce((acc, card) => {
-  acc[card.type] = (acc[card.type] || 0) + 1;
-  return acc;
-}, {});
-const LIBRARY_FREE_COUNT = AUTOMATION_CARDS.filter(
-  (c) => c.pricing === "Free" || c.costPerRun === 0,
-).length;
 
 function App() {
   const [activeTab, setActiveTab] = useState("business");
@@ -554,6 +447,10 @@ function App() {
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState("login");
   const [popoverCard, setPopoverCard] = useState(null);
+  const [popoverCardSource, setPopoverCardSource] = useState("automasi");
+  const [moduleCategoryFilter, setModuleCategoryFilter] = useState("All");
+  const [automationCategoryFilter, setAutomationCategoryFilter] =
+    useState("All");
 
   // Existing CTAs/avatar route to dashboard when signed in, else open auth.
   const openAuth = (mode) => {
@@ -569,54 +466,7 @@ function App() {
     <div className="page-shell">
       <div className="texture-rail" aria-hidden="true" />
       <div className="site-frame">
-        <header className="topbar">
-          <div className="topbar-left">
-            <HeaderLogo />
-            <nav className="topnav" aria-label="Primary">
-              {[
-                "Platform",
-                "Solutions",
-                "Docs",
-                "Community",
-                "Company",
-                "More",
-              ].map((item) => (
-                <a
-                  href="/"
-                  key={item}
-                  onClick={(event) => event.preventDefault()}
-                >
-                  {item}
-                  <CaretIcon />
-                </a>
-              ))}
-            </nav>
-          </div>
-          <div className="topbar-right">
-            <ThemeToggle />
-            <button
-              type="button"
-              className="cta-button topbar-cta"
-              onClick={() => openAuth("signup")}
-            >
-              Start free
-            </button>
-            <button type="button" className="icon-button" aria-label="Search">
-              <SearchIcon />
-            </button>
-            <button type="button" className="icon-button" aria-label="Messages">
-              <MessageIcon />
-            </button>
-            <button
-              type="button"
-              className="icon-button avatar-button"
-              aria-label="Account"
-              onClick={() => openAuth("login")}
-            >
-              <UserIcon />
-            </button>
-          </div>
-        </header>
+        <Header onOpenAuth={openAuth} />
 
         <main className="content">
           <section className="hero">
@@ -791,27 +641,59 @@ function App() {
             </div>
           </section>
 
-          <section className="library-section" aria-labelledby="library-title">
+          <section className="library-section" aria-labelledby="automasi-title">
             <div className="library-copy">
               <div>
-                <span className="library-kicker">Library</span>
-                <h2 id="library-title">
-                  <strong>Galeri aplikasi otomatis siap pakai</strong>
+                <span className="library-kicker">Automasi</span>
+                <h2 id="automasi-title">
+                  <strong>Tools otomasi siap jalankan</strong>
                 </h2>
               </div>
               <div className="library-copy-right">
                 <p>
-                  <strong>{LIBRARY_TOTAL} tools</strong> siap pakai —{" "}
-                  {Object.entries(LIBRARY_TYPE_COUNTS)
-                    .map(([type, count]) => `${count} ${type}`)
+                  <strong>{AUTOMATION_TOTAL} tools</strong> siap pakai —{" "}
+                  {Object.entries(AUTOMATION_CATEGORY_COUNTS)
+                    .map(([cat, count]) => `${count} ${cat}`)
                     .join(", ")}
-                  . {LIBRARY_FREE_COUNT} di antaranya gratis.
+                  .
                 </p>
               </div>
             </div>
+            {/* Category filter pills */}
+            <div className="library-filter-pills">
+              {["All", ...Object.keys(AUTOMATION_CATEGORY_COUNTS)].map(
+                (cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    className={
+                      automationCategoryFilter === cat
+                        ? "cta-button"
+                        : "ghost-button"
+                    }
+                    style={{
+                      fontSize: "12px",
+                      padding: "6px 14px",
+                      height: "auto",
+                      borderRadius: "16px",
+                    }}
+                    onClick={() => setAutomationCategoryFilter(cat)}
+                  >
+                    {cat === "All"
+                      ? `Semua (${AUTOMATION_TOTAL})`
+                      : `${cat} (${AUTOMATION_CATEGORY_COUNTS[cat]})`}
+                  </button>
+                ),
+              )}
+            </div>
 
             <div className="library-grid">
-              {AUTOMATION_CARDS.map((card) => {
+              {AUTOMATION_CARDS.filter(
+                (card) =>
+                  automationCategoryFilter === "All" ||
+                  (card.details?.category || "Lainnya") ===
+                    automationCategoryFilter,
+              ).map((card) => {
                 const slug = card.id || "automasi";
                 const pricingBadge =
                   card.costPerRun === 0 ? "Gratis" : card.pricing;
@@ -821,10 +703,14 @@ function App() {
                     className="db-product-card"
                     role="button"
                     tabIndex={0}
-                    onClick={() => setPopoverCard(card)}
+                    onClick={() => {
+                      setPopoverCardSource("automasi");
+                      setPopoverCard(card);
+                    }}
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
+                        setPopoverCardSource("automasi");
                         setPopoverCard(card);
                       }
                     }}
@@ -895,6 +781,101 @@ function App() {
               })}
             </div>
           </section>
+
+          {/* ── Module section ── */}
+          <section className="library-section" aria-labelledby="module-title">
+            <div className="library-copy">
+              <div>
+                <span className="library-kicker">Module</span>
+                <h2 id="module-title">
+                  <strong>Sistem lengkap siap pakai</strong>
+                </h2>
+              </div>
+              <div className="library-copy-right">
+                <p>
+                  <strong>{MODULE_TOTAL} module</strong> tersedia —{" "}
+                  {Object.entries(MODULE_CATEGORY_COUNTS)
+                    .map(([cat, count]) => `${count} ${cat}`)
+                    .join(", ")}
+                  .
+                </p>
+              </div>
+            </div>
+            <div className="library-filter-pills">
+              {["All", ...Object.keys(MODULE_CATEGORY_COUNTS)].map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  className={
+                    moduleCategoryFilter === cat ? "cta-button" : "ghost-button"
+                  }
+                  style={{
+                    fontSize: "12px",
+                    padding: "6px 14px",
+                    height: "auto",
+                    borderRadius: "16px",
+                  }}
+                  onClick={() => setModuleCategoryFilter(cat)}
+                >
+                  {cat === "All"
+                    ? `Semua (${MODULE_TOTAL})`
+                    : `${cat} (${MODULE_CATEGORY_COUNTS[cat]})`}
+                </button>
+              ))}
+            </div>
+            <div className="library-grid">
+              {MODULE_CARDS.filter(
+                (card) =>
+                  moduleCategoryFilter === "All" ||
+                  card.category === moduleCategoryFilter,
+              ).map((card) => {
+                const pricingBadge =
+                  card.pricing === "Free" ? "Gratis" : card.pricing;
+                return (
+                  <article
+                    key={card.id}
+                    className="db-auto-card"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => {
+                      setPopoverCardSource("module");
+                      setPopoverCard(card);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setPopoverCardSource("module");
+                        setPopoverCard(card);
+                      }
+                    }}
+                  >
+                    <div className="db-auto-card-header">
+                      <div
+                        style={{ display: "flex", gap: 6, flexWrap: "wrap" }}
+                      >
+                        <span className="db-chip db-chip-amber">
+                          {card.category}
+                        </span>
+                        <span
+                          className={`db-chip ${pricingBadge === "Gratis" ? "db-chip-green" : "db-chip-amber"}`}
+                        >
+                          {pricingBadge}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="db-auto-card-title">{card.title}</p>
+                    <p className="db-auto-card-desc">{card.desc}</p>
+                    <div className="db-auto-card-footer">
+                      <span className="db-usage-count">
+                        <IconPeople />
+                        {card.users} pengguna
+                      </span>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
         </main>
 
         <footer className="site-footer">
@@ -932,13 +913,17 @@ function App() {
           card={popoverCard}
           onClose={() => setPopoverCard(null)}
           onGoToDashboard={() => {
-            setPopoverCard(null);
             const slug = popoverCard.id || "automasi";
-            navigate(
-              slug === "automasi"
-                ? "/dashboard/automasi"
-                : `/dashboard/automasi/${slug}`,
-            );
+            setPopoverCard(null);
+            if (popoverCardSource === "module") {
+              navigate(`/dashboard/module/${slug}`);
+            } else {
+              navigate(
+                slug === "automasi"
+                  ? "/dashboard/automasi"
+                  : `/dashboard/automasi/${slug}`,
+              );
+            }
           }}
         />
       )}

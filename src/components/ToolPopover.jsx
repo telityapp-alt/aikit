@@ -41,18 +41,20 @@ function IconArrowRight() {
 export default function ToolPopover({ card, onClose, onGoToDashboard }) {
   const overlayRef = useRef(null);
 
-  // handle both automasi cards (costPerRun number) and module cards (pricing string)
+  // Automasi cards have costPerRun (number); module cards have pricing (string)
+  const pricingDisplay = (() => {
+    if (card.costPerRun !== undefined) {
+      return card.costPerRun === 0
+        ? "Gratis"
+        : `${card.costPerRun} kredit / run`;
+    }
+    return card.pricing || "—";
+  })();
+
   const isFree =
     card.costPerRun === 0 ||
     card.pricing === "Free" ||
     card.pricing === "Gratis";
-
-  const pricingDisplay = (() => {
-    if (card.costPerRun !== undefined) {
-      return card.costPerRun === 0 ? "Gratis" : `${card.costPerRun} kredit`;
-    }
-    return card.pricing || "—";
-  })();
 
   useEffect(() => {
     const onKey = (e) => {
@@ -69,26 +71,14 @@ export default function ToolPopover({ card, onClose, onGoToDashboard }) {
     };
   }, []);
 
-  // Build meta rows, skipping missing fields gracefully
+  // Build meta rows — no card.type row, single merged pricing row
   const metaRows = [
-    card.type ? { label: "Tipe", value: card.type } : null,
     card.category
       ? { label: "Kategori", value: card.category }
       : card.details?.category
         ? { label: "Kategori", value: card.details.category }
         : null,
-    {
-      label: "Pricing",
-      value: isFree ? "Gratis" : card.pricing || "Pay per run",
-      green: isFree,
-    },
-    card.costPerRun !== undefined
-      ? {
-          label: "Biaya per run",
-          value: card.costPerRun === 0 ? "Gratis" : `${card.costPerRun} kredit`,
-          green: card.costPerRun === 0,
-        }
-      : null,
+    { label: "Biaya per run", value: pricingDisplay, green: isFree },
     card.details?.estimatedTime
       ? { label: "Estimasi waktu", value: card.details.estimatedTime }
       : null,
@@ -137,13 +127,10 @@ export default function ToolPopover({ card, onClose, onGoToDashboard }) {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-ink-dark/40 to-transparent" />
             <div className="absolute bottom-3 left-4 flex gap-1.5 flex-wrap">
-              {card.type && (
-                <span className="db-chip db-chip-amber">{card.type}</span>
-              )}
               <span
                 className={`db-chip ${isFree ? "db-chip-green" : "db-chip-amber"}`}
               >
-                {isFree ? "Gratis" : card.pricing || "Pay per run"}
+                {pricingDisplay}
               </span>
             </div>
           </div>
@@ -151,6 +138,7 @@ export default function ToolPopover({ card, onClose, onGoToDashboard }) {
 
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto overscroll-contain">
+          {/* Header */}
           <div className="px-6 pt-5 pb-2">
             <h2 className="font-sans text-[17px] font-bold text-ink-dark leading-snug m-0">
               {card.title}
@@ -162,53 +150,30 @@ export default function ToolPopover({ card, onClose, onGoToDashboard }) {
             )}
           </div>
 
-          {/* Meta table */}
+          {/* Info rows — no border between rows, just gap spacing */}
           {metaRows.length > 0 && (
-            <div className="mx-6 mt-4 rounded-xl overflow-hidden border border-border-muted">
-              <table className="w-full text-[12px] font-sans border-collapse">
-                <tbody>
-                  {metaRows.map((row, i) => (
-                    <tr
-                      key={row.label}
-                      className={
-                        i < metaRows.length - 1
-                          ? "border-b border-border-muted"
-                          : ""
-                      }
-                    >
-                      <td className="py-2.5 px-3.5 text-ink-muted font-medium w-[42%] bg-sand/40 align-top">
-                        {row.label}
-                      </td>
-                      <td
-                        className={`py-2.5 px-3.5 align-top font-medium ${
-                          row.green ? "text-green-brand" : "text-ink-dark"
-                        }`}
-                      >
-                        {row.value}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="mx-6 mt-4 flex flex-col gap-3">
+              {metaRows.map((row) => (
+                <div key={row.label} className="flex items-start gap-3">
+                  <span className="font-sans text-[12px] text-ink-muted w-[38%] shrink-0 pt-px">
+                    {row.label}
+                  </span>
+                  <span
+                    className={`font-sans text-[12px] font-medium leading-snug ${
+                      row.green ? "text-green-brand" : "text-ink-dark"
+                    }`}
+                  >
+                    {row.value}
+                  </span>
+                </div>
+              ))}
             </div>
           )}
 
-          {/* Detail sections — only if card has details */}
+          {/* Detail sections */}
           {card.details && (
             <div className="px-6 pt-5 pb-6 flex flex-col gap-5">
-              {/* Expected output */}
-              {card.details.expectedOutput && (
-                <div className="flex flex-col gap-2">
-                  <p className="font-sans text-[12px] font-semibold text-ink-muted m-0">
-                    Output yang kamu dapat
-                  </p>
-                  <p className="font-sans text-[13px] font-medium text-ink-mid leading-relaxed m-0 bg-sand/50 rounded-xl px-4 py-3 border border-border-muted">
-                    {card.details.expectedOutput}
-                  </p>
-                </div>
-              )}
-
-              {/* How it works */}
+              {/* Cara kerja */}
               {card.details.howItWorks?.length > 0 && (
                 <div className="flex flex-col gap-2">
                   <p className="font-sans text-[12px] font-semibold text-ink-muted m-0">
@@ -230,7 +195,19 @@ export default function ToolPopover({ card, onClose, onGoToDashboard }) {
                 </div>
               )}
 
-              {/* Use cases */}
+              {/* Output yang dihasilkan */}
+              {card.details.expectedOutput && (
+                <div className="flex flex-col gap-2">
+                  <p className="font-sans text-[12px] font-semibold text-ink-muted m-0">
+                    Output yang dihasilkan
+                  </p>
+                  <p className="font-sans text-[13px] font-medium text-ink-mid leading-relaxed m-0 bg-sand/50 rounded-xl px-4 py-3 border border-border-muted">
+                    {card.details.expectedOutput}
+                  </p>
+                </div>
+              )}
+
+              {/* Cocok untuk */}
               {card.details.useCases?.length > 0 && (
                 <div className="flex flex-col gap-2">
                   <p className="font-sans text-[12px] font-semibold text-ink-muted m-0">
@@ -252,7 +229,7 @@ export default function ToolPopover({ card, onClose, onGoToDashboard }) {
             </div>
           )}
 
-          {/* Spacer if no details section */}
+          {/* Spacer if no details */}
           {!card.details && <div className="pb-4" />}
         </div>
 
