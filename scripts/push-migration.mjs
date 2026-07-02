@@ -4,7 +4,7 @@
  * Run: node scripts/push-migration.mjs
  */
 
-const PAT = "REMOVED_SECRET";
+const PAT = process.env.SUPABASE_PAT || "";
 const PROJECT_REF = "lftgaziycyvxqtlwvxgi";
 
 async function query(sql) {
