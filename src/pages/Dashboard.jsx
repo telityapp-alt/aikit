@@ -8,6 +8,8 @@ import { api } from "../lib/api";
 import { fmt } from "../lib/format";
 import { getModuleComponent, getModuleEntry } from "../modules/registry";
 import { MASCOT_SCENES } from "../lib/mascots";
+import AIAgentsHome from "../features/ai/pages/AIAgentsHome";
+import AgentWorkspace from "../features/ai/pages/AgentWorkspace";
 
 /* ── Inline SVG icons ──────────────────────────────────────── */
 function IconGrid() {
@@ -238,7 +240,7 @@ function IconSignOut() {
 /* ── Nav items ─────────────────────────────────────────────── */
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: <IconGrid /> },
-  { id: "ai-agent", label: "AI Agent", icon: <IconSparkle /> },
+  { id: "ai-agent", label: "AI agents", icon: <IconSparkle /> },
   { id: "automasi", label: "Automasi", icon: <IconZap /> },
   { id: "module", label: "Module", icon: <IconLayers /> },
   { id: "file", label: "File", icon: <IconFile /> },
@@ -827,258 +829,22 @@ function ViewModuleHost({ slug, onBack }) {
 }
 
 /* ── AI Agent icons ───────────────────────────────────────── */
-function IconPencil() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-    </svg>
-  );
-}
-function IconChartBar() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <rect x="3" y="12" width="4" height="9" rx="1" />
-      <rect x="10" y="7" width="4" height="14" rx="1" />
-      <rect x="17" y="3" width="4" height="18" rx="1" />
-    </svg>
-  );
-}
-function IconSearch() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <circle cx="11" cy="11" r="8" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-  );
-}
-function IconCode() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <polyline points="16 18 22 12 16 6" />
-      <polyline points="8 6 2 12 8 18" />
-    </svg>
-  );
-}
-function IconSend() {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <line x1="22" y1="2" x2="11" y2="13" />
-      <polygon points="22 2 15 22 11 13 2 9 22 2" />
-    </svg>
-  );
-}
-function IconArrowLeft() {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <line x1="19" y1="12" x2="5" y2="12" />
-      <polyline points="12 19 5 12 12 5" />
-    </svg>
-  );
-}
-function IconPlus() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <line x1="12" y1="5" x2="12" y2="19" />
-      <line x1="5" y1="12" x2="19" y2="12" />
-    </svg>
-  );
-}
-
-const AI_SKILLS = [
-  {
-    id: "tulis",
-    title: "Tulis & Edit",
-    desc: "Bantu menulis email, laporan, konten, atau dokumen apapun",
-    icon: <IconPencil />,
-  },
-  {
-    id: "analisis",
-    title: "Analisis Data",
-    desc: "Interpretasi data, buat ringkasan, atau temukan insight",
-    icon: <IconChartBar />,
-  },
-  {
-    id: "riset",
-    title: "Riset & Rangkum",
-    desc: "Cari informasi, rangkum artikel, atau jelaskan topik kompleks",
-    icon: <IconSearch />,
-  },
-  {
-    id: "kode",
-    title: "Automasi & Kode",
-    desc: "Bantu coding, debugging, atau buat skrip otomasi",
-    icon: <IconCode />,
-  },
-];
 
 /* ── View: AI Agent Home ───────────────────────────────────── */
-function ViewAIAgentHome({
-  setAiChatActive,
-  setMessages,
-  setActiveChatId,
-  setChatHistory,
-  chatHistory,
-  setServerChatId,
-}) {
-  const [localInput, setLocalInput] = useState("");
+function IconSend() {
+  return null;
+}
 
-  function startChat(text) {
-    if (!text.trim()) return;
-    const newId = Date.now();
-    const newMsg = { id: Date.now(), role: "user", text: text.trim() };
-    const newHistoryItem = {
-      id: newId,
-      title: text.trim().slice(0, 40) + (text.trim().length > 40 ? "..." : ""),
-      time: "Baru saja",
-      preview: text.trim().slice(0, 32) + "...",
-    };
-    setChatHistory((prev) => [newHistoryItem, ...prev]);
-    setActiveChatId(newId);
-    setMessages([newMsg]);
-    setServerChatId(null);
-    setAiChatActive(true);
-  }
+function IconArrowLeft() {
+  return null;
+}
 
-  function handleKeyDown(e) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      startChat(localInput);
-    }
-  }
+function IconPlus() {
+  return null;
+}
 
-  return (
-    <div className="ai-home">
-      <div className="ai-home-center">
-        <div className="ai-home-mascot-wrap" aria-hidden="true">
-          <img
-            src={MASCOT_SCENES.aiGreeting}
-            alt=""
-            className="ai-home-mascot"
-          />
-        </div>
-        {/* Greeting */}
-        <div className="ai-home-greeting">
-          <span className="ai-eyebrow">AI Agent</span>
-          <h1 className="ai-home-heading">Halo, Grou App</h1>
-          <p className="ai-home-sub">
-            Saya siap membantu. Mau mulai dari mana?
-          </p>
-        </div>
-
-        {/* Skill cards */}
-        <div className="ai-skill-grid">
-          {AI_SKILLS.map((skill) => (
-            <button
-              key={skill.id}
-              className="ai-skill-card"
-              onClick={() => startChat(skill.title + " — ")}
-            >
-              <div className="ai-skill-icon-wrap" aria-hidden="true">
-                {skill.icon}
-              </div>
-              <div className="ai-skill-text">
-                <span className="ai-skill-title">{skill.title}</span>
-                <span className="ai-skill-desc">{skill.desc}</span>
-              </div>
-            </button>
-          ))}
-        </div>
-
-        {/* Input bar */}
-        <div className="ai-home-input-wrap">
-          <div className="ai-input-bar">
-            <input
-              className="ai-input-field"
-              type="text"
-              placeholder="Ketik pesan atau pilih skill di atas..."
-              value={localInput}
-              onChange={(e) => setLocalInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              aria-label="Pesan ke AI Agent"
-            />
-            <button
-              className="cta-button ai-send-btn"
-              onClick={() => startChat(localInput)}
-              aria-label="Kirim pesan"
-            >
-              <IconSend /> Kirim
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+function ViewAIAgentHome() {
+  return null;
 }
 
 /* ── View: AI Agent Chat ───────────────────────────────────── */
@@ -1322,6 +1088,10 @@ function ViewAIAgentChat({
 }
 
 /* ── View: Pengaturan (profile settings) ───────────────────── */
+
+void ViewAIAgentHome;
+void ViewAIAgentChat;
+
 function ViewPengaturan() {
   const { user, profile, refreshProfile } = useAuth();
   const toast = useToast();
@@ -1778,54 +1548,16 @@ export default function Dashboard() {
     .filter(Boolean);
   const activeNav = segments[0] || "dashboard";
   const moduleSlug = activeNav === "module" ? segments[1] : null;
+  const aiAgentSlug = activeNav === "ai-agent" ? segments[1] : null;
+  const aiThreadId = activeNav === "ai-agent" ? segments[2] : null;
   // Automasi = small tools that still live inside the Automasi dashboard tab
   // (App-type cards open here, NOT under /module which is reserved for kits).
   const automasiSlug = activeNav === "automasi" ? segments[1] : null;
 
-  const [aiChatActive, setAiChatActive] = useState(false);
   const setActiveNav = (id) =>
     navigate(id === "dashboard" ? "/dashboard" : `/dashboard/${id}`);
-  const [chatHistory, setChatHistory] = useState([]);
-  const [activeChatId, setActiveChatId] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [inputValue, setInputValue] = useState("");
-  const [serverChatId, setServerChatId] = useState(null);
-
-  // Load the user's real chat history from Supabase.
-  const loadChats = () =>
-    supabase
-      .from("chats")
-      .select("id,title,updated_at")
-      .order("updated_at", { ascending: false })
-      .then(({ data }) =>
-        setChatHistory(
-          (data || []).map((c) => ({
-            id: c.id,
-            title: c.title,
-            time: c.updated_at,
-          })),
-        ),
-      );
-  useEffect(() => {
-    loadChats();
-  }, []);
-
-  // Open an existing conversation: load its messages from the DB.
-  async function openChat(chatId) {
-    setActiveChatId(chatId);
-    setServerChatId(chatId);
-    const { data } = await supabase
-      .from("messages")
-      .select("id,role,content")
-      .eq("chat_id", chatId)
-      .order("created_at", { ascending: true });
-    setMessages(
-      (data || []).map((m) => ({ id: m.id, role: m.role, text: m.content })),
-    );
-  }
 
   function handleNavClick(id) {
-    if (id !== "ai-agent") setAiChatActive(false);
     setActiveNav(id);
   }
 
@@ -1871,14 +1603,18 @@ export default function Dashboard() {
           />
         );
       case "ai-agent":
-        return (
-          <ViewAIAgentHome
-            setAiChatActive={setAiChatActive}
-            setMessages={setMessages}
-            setActiveChatId={setActiveChatId}
-            setChatHistory={setChatHistory}
-            chatHistory={chatHistory}
-            setServerChatId={setServerChatId}
+        return aiAgentSlug ? (
+          <AgentWorkspace
+            agentSlug={aiAgentSlug}
+            activeThreadId={aiThreadId}
+            onOpenThread={(threadId) =>
+              navigate(`/dashboard/ai-agent/${aiAgentSlug}/${threadId}`)
+            }
+            onBackHome={() => navigate("/dashboard/ai-agent")}
+          />
+        ) : (
+          <AIAgentsHome
+            onOpenAgent={(slug) => navigate(`/dashboard/ai-agent/${slug}`)}
           />
         );
       case "file":
@@ -1898,28 +1634,6 @@ export default function Dashboard() {
           />
         );
     }
-  }
-
-  // Fullscreen chat — replaces the entire db-shell
-  if (aiChatActive) {
-    return (
-      <ViewAIAgentChat
-        chatHistory={chatHistory}
-        activeChatId={activeChatId}
-        setActiveChatId={setActiveChatId}
-        messages={messages}
-        setMessages={setMessages}
-        inputValue={inputValue}
-        setInputValue={setInputValue}
-        setAiChatActive={setAiChatActive}
-        setActiveNav={setActiveNav}
-        setChatHistory={setChatHistory}
-        serverChatId={serverChatId}
-        setServerChatId={setServerChatId}
-        openChat={openChat}
-        reloadChats={loadChats}
-      />
-    );
   }
 
   return (
@@ -1974,7 +1688,11 @@ export default function Dashboard() {
       </aside>
 
       <main className="db-main">
-        <div className="db-main-inner">{renderView()}</div>
+        <div
+          className={`db-main-inner${activeNav === "ai-agent" ? " db-main-inner--wide" : ""}`}
+        >
+          {renderView()}
+        </div>
       </main>
     </div>
   );

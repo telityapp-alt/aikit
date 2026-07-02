@@ -177,8 +177,8 @@ function Avatar({ name, onClick }) {
 
 /* ── Nav items ───────────────────────────────────────────────── */
 const NAV_ITEMS = [
-  { label: "Automasi", to: "/automasi" },
-  { label: "Module", to: "/module" },
+  { label: "Automasi", to: "/automasi-landing" },
+  { label: "Modul", to: "/modul-landing" },
   { label: "AI Agent", to: "/ai-agent" },
   { label: "Harga", to: "/harga" },
 ];

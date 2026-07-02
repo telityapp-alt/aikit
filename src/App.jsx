@@ -8,6 +8,7 @@ import {
   AUTOMATION_CARDS,
   AUTOMATION_CATEGORY_COUNTS,
   AUTOMATION_TOTAL,
+  getAutomationCostLabel,
 } from "./lib/automationCards";
 import {
   MODULE_CARDS,

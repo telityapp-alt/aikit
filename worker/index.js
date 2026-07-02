@@ -25,6 +25,17 @@ import {
   processMetaAdsRun,
   validateMetaAdsInput,
 } from "./modules/meta-ads-spy.js";
+import {
+  handleAiKnowledgeIngest,
+  handleAiKnowledgeList,
+  handleAiSendMessage,
+  handleAiSendMessageStream,
+  handleAiThreadArtifacts,
+  handleAiThreadCreate,
+  handleAiThreadMessages,
+  handleAiThreadUpdate,
+  handleAiThreadsList,
+} from "./ai/routes.js";
 
 const API_RATE_LIMIT = {
   bucket: "api",
@@ -813,6 +824,45 @@ async function handleApi(request, env) {
 
   if (url.pathname === "/api/chat" && request.method === "POST") {
     return handleChatRequest(request, env);
+  }
+
+  if (url.pathname === "/api/ai/threads" && request.method === "GET") {
+    return handleAiThreadsList(request, env);
+  }
+
+  if (url.pathname === "/api/ai/threads" && request.method === "POST") {
+    return handleAiThreadCreate(request, env);
+  }
+
+  if (url.pathname === "/api/ai/messages" && request.method === "POST") {
+    return handleAiSendMessage(request, env);
+  }
+
+  if (url.pathname === "/api/ai/messages/stream" && request.method === "POST") {
+    return handleAiSendMessageStream(request, env);
+  }
+
+  if (url.pathname === "/api/ai/knowledge" && request.method === "GET") {
+    return handleAiKnowledgeList(request, env);
+  }
+
+  if (url.pathname === "/api/ai/knowledge" && request.method === "POST") {
+    return handleAiKnowledgeIngest(request, env);
+  }
+
+  const aiThreadMessagesMatch = url.pathname.match(/^\/api\/ai\/threads\/([^/]+)\/messages$/);
+  if (aiThreadMessagesMatch && request.method === "GET") {
+    return handleAiThreadMessages(request, env, aiThreadMessagesMatch[1]);
+  }
+
+  const aiThreadUpdateMatch = url.pathname.match(/^\/api\/ai\/threads\/([^/]+)$/);
+  if (aiThreadUpdateMatch && request.method === "PATCH") {
+    return handleAiThreadUpdate(request, env, aiThreadUpdateMatch[1]);
+  }
+
+  const aiThreadArtifactsMatch = url.pathname.match(/^\/api\/ai\/threads\/([^/]+)\/artifacts$/);
+  if (aiThreadArtifactsMatch && request.method === "GET") {
+    return handleAiThreadArtifacts(request, env, aiThreadArtifactsMatch[1]);
   }
 
   if (url.pathname === "/api/topup" && request.method === "POST") {

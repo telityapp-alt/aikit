@@ -15,6 +15,8 @@ const ProductDetail = lazy(() => import("./pages/ProductDetail.jsx"));
 const LegalPage = lazy(() => import("./pages/LegalPage.jsx"));
 const NotFound = lazy(() => import("./pages/NotFound.jsx"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword.jsx"));
+const AutomasiLanding = lazy(() => import("./pages/AutomasiLanding.jsx"));
+const ModulLanding = lazy(() => import("./pages/ModulLanding.jsx"));
 
 // Minimal inline fallback — keeps the shell visible while the chunk loads.
 function PageLoader() {
@@ -40,28 +42,36 @@ createRoot(document.getElementById("root")).render(
     <BrowserRouter>
       <ThemeProvider>
         <ToastProvider>
-        <AuthProvider>
-          <ErrorBoundary>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/" element={<App />} />
-                <Route path="/product/:slug" element={<ProductDetail />} />
-                <Route path="/privacy" element={<LegalPage doc="privacy" />} />
-                <Route path="/terms" element={<LegalPage doc="terms" />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route
-                  path="/dashboard/*"
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </ErrorBoundary>
-        </AuthProvider>
+          <AuthProvider>
+            <ErrorBoundary>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<App />} />
+                  <Route path="/product/:slug" element={<ProductDetail />} />
+                  <Route
+                    path="/privacy"
+                    element={<LegalPage doc="privacy" />}
+                  />
+                  <Route path="/terms" element={<LegalPage doc="terms" />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route
+                    path="/dashboard/*"
+                    element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/automasi-landing"
+                    element={<AutomasiLanding />}
+                  />
+                  <Route path="/modul-landing" element={<ModulLanding />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
+          </AuthProvider>
         </ToastProvider>
       </ThemeProvider>
     </BrowserRouter>
