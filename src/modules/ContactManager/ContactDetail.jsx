@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { fmt } from "../../lib/format.js";
 import ContactForm from "./ContactForm.jsx";
+import ContactCampaigns from "./ContactCampaigns.jsx";
+import EntityActivityTimeline from "../../components/EntityActivityTimeline.jsx";
 
 const TYPE_LABELS = {
   lead: "Lead",
@@ -65,6 +67,19 @@ export default function ContactDetail({ contact, onUpdate, onDelete, onClose }) 
     const updated = await onUpdate(id, changes);
     setEditing(false);
     return updated;
+  }
+
+  async function handleActivityCreated(activity) {
+    const patch = {};
+    if (activity.activity_type !== "task") {
+      patch.last_interaction_at = activity.happened_at;
+    }
+    if (activity.metadata?.follow_up_at) {
+      patch.next_follow_up_at = activity.metadata.follow_up_at;
+    }
+    if (Object.keys(patch).length > 0) {
+      await onUpdate(contact.id, patch);
+    }
   }
 
   if (editing) {
@@ -177,6 +192,28 @@ export default function ContactDetail({ contact, onUpdate, onDelete, onClose }) 
             <p className="cm-detail-notes">{contact.notes}</p>
           </div>
         )}
+
+        <div className="cm-detail-section">
+          <DetailRow
+            label="Interaksi Terakhir"
+            value={contact.last_interaction_at ? fmt.date(contact.last_interaction_at) : "-"}
+          />
+          <DetailRow
+            label="Next Follow-up"
+            value={contact.next_follow_up_at ? fmt.date(contact.next_follow_up_at) : "-"}
+          />
+        </div>
+
+        <ContactCampaigns contact={contact} />
+
+        <EntityActivityTimeline
+          entityType="contact"
+          entityId={contact.id}
+          entityLabel={contact.name}
+          allowFollowUp
+          emptyTitle="Belum ada aktivitas untuk kontak ini."
+          onActivityCreated={handleActivityCreated}
+        />
 
         {/* Delete */}
         <div className="cm-detail-section cm-detail-danger-zone">

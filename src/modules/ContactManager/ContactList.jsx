@@ -48,10 +48,11 @@ export default function ContactList({ contacts, loading, selectedId, onSelect, o
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("recent");
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return contacts.filter((c) => {
+    const list = contacts.filter((c) => {
       if (typeFilter !== "all" && c.type !== typeFilter) return false;
       if (statusFilter !== "all" && c.status !== statusFilter) return false;
       if (q) {
@@ -60,7 +61,19 @@ export default function ContactList({ contacts, loading, selectedId, onSelect, o
       }
       return true;
     });
-  }, [contacts, search, typeFilter, statusFilter]);
+    list.sort((a, b) => {
+      if (sortBy === "name") return a.name.localeCompare(b.name);
+      if (sortBy === "follow_up") {
+        const aTime = a.next_follow_up_at ? new Date(a.next_follow_up_at).getTime() : Number.MAX_SAFE_INTEGER;
+        const bTime = b.next_follow_up_at ? new Date(b.next_follow_up_at).getTime() : Number.MAX_SAFE_INTEGER;
+        return aTime - bTime;
+      }
+      const aTime = new Date(a.updated_at || a.created_at).getTime();
+      const bTime = new Date(b.updated_at || b.created_at).getTime();
+      return bTime - aTime;
+    });
+    return list;
+  }, [contacts, search, typeFilter, statusFilter, sortBy]);
 
   function emptyMessage() {
     if (contacts.length === 0) return "Belum ada kontak. Klik \"Tambah Kontak\" untuk memulai.";
@@ -120,6 +133,16 @@ export default function ContactList({ contacts, loading, selectedId, onSelect, o
 
       {/* Status filter */}
       <div className="cm-status-filter-wrap">
+        <select
+          className="cm-status-select"
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          aria-label="Urutkan kontak"
+        >
+          <option value="recent">Terbaru</option>
+          <option value="name">Nama A-Z</option>
+          <option value="follow_up">Follow-up Terdekat</option>
+        </select>
         <select
           className="cm-status-select"
           value={statusFilter}
