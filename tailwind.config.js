@@ -107,6 +107,14 @@ export default {
           from: { opacity: "0", transform: "translateY(10px) scale(0.98)" },
           to: { opacity: "1", transform: "translateY(0) scale(1)" },
         },
+        "tp-fade": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        "tp-slide": {
+          from: { opacity: "0", transform: "translateY(14px) scale(0.98)" },
+          to: { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
       },
 
       transitionProperty: {

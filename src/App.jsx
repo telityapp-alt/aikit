@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "./lib/AuthContext";
 import { useTheme } from "./lib/ThemeContext";
 import AuthModal from "./components/AuthModal.jsx";
+import ToolPopover from "./components/ToolPopover.jsx";
 import {
   AUTOMATION_CARDS,
   getAutomationCostLabel,
@@ -229,6 +230,27 @@ const libraryCards = AUTOMATION_CARDS.map((card) => ({
   image: card.image,
 }));
 
+function IconPeople() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
+
 function CaretIcon() {
   return (
     <svg
@@ -341,7 +363,17 @@ function ThemeToggle() {
       title={dark ? "Light mode" : "Dark mode"}
     >
       {dark ? (
-        <svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg
+          viewBox="0 0 18 18"
+          width="16"
+          height="16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
           <circle cx="9" cy="9" r="4" />
           <line x1="9" y1="1" x2="9" y2="3" />
           <line x1="9" y1="15" x2="9" y2="17" />
@@ -353,7 +385,17 @@ function ThemeToggle() {
           <line x1="13.54" y1="4.46" x2="14.95" y2="3.05" />
         </svg>
       ) : (
-        <svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg
+          viewBox="0 0 18 18"
+          width="16"
+          height="16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
           <path d="M15.5 10.5A7 7 0 0 1 7.5 2.5a7 7 0 1 0 8 8z" />
         </svg>
       )}
@@ -490,6 +532,16 @@ function MiniAppWindow({ variant }) {
   );
 }
 
+/* ── Derived library stats (computed once, outside component) ── */
+const LIBRARY_TOTAL = AUTOMATION_CARDS.length;
+const LIBRARY_TYPE_COUNTS = AUTOMATION_CARDS.reduce((acc, card) => {
+  acc[card.type] = (acc[card.type] || 0) + 1;
+  return acc;
+}, {});
+const LIBRARY_FREE_COUNT = AUTOMATION_CARDS.filter(
+  (c) => c.pricing === "Free" || c.costPerRun === 0,
+).length;
+
 function App() {
   const [activeTab, setActiveTab] = useState("business");
   const currentTab = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
@@ -498,6 +550,7 @@ function App() {
   const navigate = useNavigate();
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState("login");
+  const [popoverCard, setPopoverCard] = useState(null);
 
   // Existing CTAs/avatar route to dashboard when signed in, else open auth.
   const openAuth = (mode) => {
@@ -743,70 +796,100 @@ function App() {
                   <strong>Galeri aplikasi otomatis siap pakai</strong>
                 </h2>
               </div>
-              <p>
-                Seluruh kartu di bagian ini diselaraskan dengan daftar automasi
-                di dashboard utama, lengkap dengan cover, nama aplikasi, dan
-                ringkasan fungsi yang sama.
-              </p>
+              <div className="library-copy-right">
+                <p>
+                  <strong>{LIBRARY_TOTAL} tools</strong> siap pakai —{" "}
+                  {Object.entries(LIBRARY_TYPE_COUNTS)
+                    .map(([type, count]) => `${count} ${type}`)
+                    .join(", ")}
+                  . {LIBRARY_FREE_COUNT} di antaranya gratis.
+                </p>
+              </div>
             </div>
 
             <div className="library-grid">
-              {libraryCards.map((card) => (
-                <article
-                  key={card.name}
-                  className="library-card"
-                  role="link"
-                  tabIndex={0}
-                  style={{ cursor: "pointer" }}
-                  onClick={() =>
-                    navigate(
-                      card.slug === "automasi"
-                        ? "/dashboard/automasi"
-                        : `/dashboard/automasi/${card.slug}`,
-                    )
-                  }
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      navigate(
-                        card.slug === "automasi"
-                          ? "/dashboard/automasi"
-                          : `/dashboard/automasi/${card.slug}`,
-                      );
-                    }
-                  }}
-                >
-                  <div className="library-card-hero">
-                    <div className="library-card-screenshot-wrap">
-                      <img
-                        src={card.image}
-                        alt={`${card.name} interface screenshot`}
-                        className="library-card-screenshot"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                          e.currentTarget.nextElementSibling.style.display =
-                            "flex";
-                        }}
-                      />
-                      <div
-                        className="library-card-placeholder"
-                        aria-hidden="true"
-                      >
-                        <span className="placeholder-label">{card.name}</span>
+              {AUTOMATION_CARDS.map((card) => {
+                const slug = card.id || "automasi";
+                const pricingBadge =
+                  card.costPerRun === 0 ? "Gratis" : card.pricing;
+                return (
+                  <article
+                    key={card.title}
+                    className="db-product-card"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setPopoverCard(card)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setPopoverCard(card);
+                      }
+                    }}
+                  >
+                    {card.image && (
+                      <div className="db-product-card-img-wrap">
+                        <img
+                          src={card.image}
+                          alt={card.title}
+                          className="db-product-card-img"
+                        />
+                        <div className="db-product-card-img-chips">
+                          <span className="db-chip db-chip-amber">
+                            {card.type}
+                          </span>
+                          <span
+                            className={`db-chip ${
+                              pricingBadge === "Gratis"
+                                ? "db-chip-green"
+                                : "db-chip-amber"
+                            }`}
+                          >
+                            {pricingBadge}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {!card.image && (
+                      <div className="db-product-card-header">
+                        <div className="db-product-card-chips">
+                          <span className="db-chip db-chip-amber">
+                            {card.type}
+                          </span>
+                          <span
+                            className={`db-chip ${
+                              pricingBadge === "Gratis"
+                                ? "db-chip-green"
+                                : "db-chip-amber"
+                            }`}
+                          >
+                            {pricingBadge}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    <div className="db-product-card-body">
+                      <h3 className="db-product-card-title">{card.title}</h3>
+                      <p className="db-product-card-desc">{card.desc}</p>
+                      <div className="db-product-card-cost">
+                        <span className="db-cost-label">Biaya per run</span>
+                        <span className="db-cost-value">
+                          {card.costPerRun === 0 ? (
+                            <span className="db-cost-free">Gratis</span>
+                          ) : (
+                            <span>{card.costPerRun} kredit</span>
+                          )}
+                        </span>
+                      </div>
+                      <div className="db-product-card-footer">
+                        <span className="db-usage-count">
+                          <IconPeople />
+                          {card.users} pengguna
+                        </span>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="library-card-ribbon">
-                    <strong>{card.name}</strong>
-                  </div>
-
-                  <div className="library-card-meta">
-                    <p>{card.place}</p>
-                    <div className="library-card-chip">{card.team}</div>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                );
+              })}
             </div>
           </section>
         </main>
@@ -840,9 +923,24 @@ function App() {
         onClose={() => setAuthOpen(false)}
         onModeChange={setAuthMode}
       />
+
+      {popoverCard && (
+        <ToolPopover
+          card={popoverCard}
+          onClose={() => setPopoverCard(null)}
+          onGoToDashboard={() => {
+            setPopoverCard(null);
+            const slug = popoverCard.id || "automasi";
+            navigate(
+              slug === "automasi"
+                ? "/dashboard/automasi"
+                : `/dashboard/automasi/${slug}`,
+            );
+          }}
+        />
+      )}
     </div>
   );
 }
 
 export default App;
-
