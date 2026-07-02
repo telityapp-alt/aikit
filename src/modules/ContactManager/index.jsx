@@ -11,7 +11,7 @@ const CONTACTS_OPTIONS = { orderBy: "created_at", ascending: false };
 
 export default function ContactManager() {
   const toast = useToast();
-  const { data: contacts, loading, create, update, remove, refresh } = useEntity(
+  const { data: contacts, loading, create, update, remove } = useEntity(
     "contacts",
     CONTACTS_OPTIONS,
   );

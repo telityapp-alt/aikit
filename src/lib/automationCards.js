@@ -1,0 +1,121 @@
+export const AUTOMATION_CARDS = [
+  {
+    id: "competitor-analyzer",
+    title: "Generator Laporan Kompetitor Instagram",
+    desc: "Ambil data Posts atau Reels kompetitor, analisis top content dan komentar, lalu download report Excel yang siap dipakai tim.",
+    type: "App",
+    pricing: "Pro",
+    costPerRun: 0,
+    users: 38,
+    image: "/automation-covers/competitor-analyzer.webp",
+  },
+  {
+    id: "tiktok-profile-intelligence",
+    title: "TikTok Profile Intelligence",
+    desc: "Tarik video TikTok via Apify, hitung KPI virality dan intent, lalu baca dashboard insight yang siap dipakai tim growth.",
+    type: "App",
+    pricing: "Pro",
+    costPerRun: 125,
+    users: 12,
+    image: "/automation-covers/tiktok-profile-intelligence.webp",
+  },
+  {
+    id: "instagram-profile-intelligence",
+    title: "Instagram Profile Intelligence",
+    desc: "Scrape profil Instagram via Apify, hitung KPI engagement & format, lalu baca dashboard insight siap pakai tim growth.",
+    type: "App",
+    pricing: "Pro",
+    costPerRun: 125,
+    users: 8,
+    image: "/automation-covers/instagram-profile-intelligence.webp",
+  },
+  {
+    id: "tiktok-ads-spy",
+    title: "TikTok Ads Spy",
+    desc: "Spy iklan kompetitor di TikTok Ads Library — creative gallery, share-of-voice, targeting & region intelligence.",
+    type: "App",
+    pricing: "Pro",
+    costPerRun: 150,
+    users: 5,
+    image: "/automation-covers/tiktok-ads-spy.webp",
+  },
+  {
+    id: "meta-ads-spy",
+    title: "Meta Ads Spy",
+    desc: "Spy iklan kompetitor di Meta Ads Library (Facebook + Instagram) — creative gallery, ad copy, format & platform mix, longevity & influencer partnerships.",
+    type: "App",
+    pricing: "Pro",
+    costPerRun: 150,
+    users: 4,
+    image: "/automation-covers/meta-ads-spy.webp",
+  },
+  {
+    title: "ATS-Friendly CV Converter",
+    desc: "Ubah CV lama berbasis teks menjadi format ATS-Friendly secara instan.",
+    type: "Automation",
+    pricing: "Free",
+    costPerRun: 0,
+    users: 4,
+    image:
+      "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=400&h=200&fit=crop&auto=format",
+  },
+  {
+    id: "invoice-gen",
+    title: "Invoice Generator",
+    desc: "Generate invoice profesional dari data sederhana dalam hitungan detik.",
+    type: "Automation",
+    pricing: "Free",
+    costPerRun: 0,
+    users: 12,
+    image:
+      "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=200&fit=crop&auto=format",
+  },
+  {
+    id: "email-blast",
+    title: "Email Blast Personalizer",
+    desc: "Personalisasi ratusan email marketing secara otomatis dengan AI.",
+    type: "Automation",
+    pricing: "Paid",
+    costPerRun: 150,
+    users: 31,
+    image:
+      "https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=400&h=200&fit=crop&auto=format",
+  },
+  {
+    id: "social-caption",
+    title: "Social Media Caption AI",
+    desc: "Generate caption Instagram, Twitter, dan LinkedIn dari brief singkat.",
+    type: "Automation",
+    pricing: "Free",
+    costPerRun: 0,
+    users: 58,
+    image:
+      "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&h=200&fit=crop&auto=format",
+  },
+  {
+    id: "pdf-summarizer",
+    title: "PDF Summarizer",
+    desc: "Rangkum dokumen PDF panjang menjadi poin-poin penting dalam menit.",
+    type: "Automation",
+    pricing: "Paid",
+    costPerRun: 100,
+    users: 19,
+    image:
+      "https://images.unsplash.com/photo-1568667256549-094345857637?w=400&h=200&fit=crop&auto=format",
+  },
+  {
+    id: "data-cleaner",
+    title: "Data Cleaner & Formatter",
+    desc: "Bersihkan dan format data spreadsheet kotor secara otomatis.",
+    type: "Automation",
+    pricing: "Paid",
+    costPerRun: 200,
+    users: 7,
+    image:
+      "https://images.unsplash.com/photo-1543286386-2e659306cd6c?w=400&h=200&fit=crop&auto=format",
+  },
+];
+
+export function getAutomationCostLabel(card) {
+  return card.costPerRun === 0 ? "Gratis" : `${card.costPerRun} kredit`;
+}

@@ -60,7 +60,7 @@ export default function CampaignForm({ campaign, onCreate, onUpdate, onCancel })
   useEffect(() => {
     setFields(buildInitial(campaign));
     setErrors({});
-  }, [campaign?.id]);
+  }, [campaign]);
 
   function set(key, value) {
     setFields((prev) => ({ ...prev, [key]: value }));

@@ -1,5 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
-import { supabase } from "../../lib/supabase";
+import { useMemo, useState } from "react";
 import { useEntity } from "../../lib/useEntity";
 import { useToast } from "../../lib/ToastContext";
 
@@ -27,8 +26,6 @@ function getInitials(name) {
 
 export default function CampaignContacts({ campaignId }) {
   const toast = useToast();
-  const [campaignContacts, setCampaignContacts] = useState([]);
-  const [loadingContacts, setLoadingContacts] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
   const { data: allContacts, loading: loadingAll } = useEntity("contacts", {
@@ -36,41 +33,23 @@ export default function CampaignContacts({ campaignId }) {
     ascending: true,
   });
 
-  useEffect(() => {
-    loadCampaignContacts();
-  }, [campaignId]);
+  const {
+    data: campaignContacts,
+    loading: loadingContacts,
+    error: campaignContactsError,
+    create,
+    remove,
+    refresh,
+  } = useEntity("campaign_contacts", {
+    select: "*, contact:contacts(*)",
+    filter: { campaign_id: campaignId },
+    injectUserId: false,
+    autoLoad: Boolean(campaignId),
+  });
 
-  async function loadCampaignContacts() {
-    if (!campaignId) {
-      setCampaignContacts([]);
-      setLoadingContacts(false);
-      return;
-    }
-    setLoadingContacts(true);
+  async function handleRemove(rowId) {
     try {
-      const { data, error } = await supabase
-        .from("campaign_contacts")
-        .select("*, contact:contacts(*)")
-        .eq("campaign_id", campaignId);
-      if (error) throw error;
-      setCampaignContacts(data ?? []);
-    } catch (err) {
-      toast.error("Gagal memuat kontak campaign.");
-      console.error(err);
-    } finally {
-      setLoadingContacts(false);
-    }
-  }
-
-  async function handleRemove(contactId) {
-    try {
-      const { error } = await supabase
-        .from("campaign_contacts")
-        .delete()
-        .eq("campaign_id", campaignId)
-        .eq("contact_id", contactId);
-      if (error) throw error;
-      setCampaignContacts((prev) => prev.filter((cc) => cc.contact_id !== contactId));
+      await remove(rowId);
       toast.success("Kontak dihapus dari campaign.");
     } catch (err) {
       toast.error("Gagal menghapus kontak.");
@@ -80,13 +59,12 @@ export default function CampaignContacts({ campaignId }) {
 
   async function handleAdd(contactId, role) {
     try {
-      const { error } = await supabase.from("campaign_contacts").insert({
+      await create({
         campaign_id: campaignId,
         contact_id: contactId,
         role,
       });
-      if (error) throw error;
-      await loadCampaignContacts();
+      await refresh();
       toast.success("Kontak ditambahkan ke campaign.");
     } catch (err) {
       if (err.code === "23505") {
@@ -95,6 +73,7 @@ export default function CampaignContacts({ campaignId }) {
         toast.error("Gagal menambah kontak.");
       }
       console.error(err);
+      throw err;
     }
   }
 
@@ -115,7 +94,9 @@ export default function CampaignContacts({ campaignId }) {
         </button>
       </div>
 
-      {loadingContacts ? (
+      {campaignContactsError ? (
+        <p className="cgm-contacts-empty">Gagal memuat kontak campaign.</p>
+      ) : loadingContacts ? (
         <p className="cgm-contacts-empty">Memuat kontak...</p>
       ) : campaignContacts.length === 0 ? (
         <p className="cgm-contacts-empty">
@@ -146,9 +127,9 @@ export default function CampaignContacts({ campaignId }) {
                   type="button"
                   className="cgm-remove-contact"
                   aria-label={`Hapus ${contact.name}`}
-                  onClick={() => handleRemove(contact.id)}
+                  onClick={() => handleRemove(cc.id)}
                 >
-                  ×
+                  x
                 </button>
               </div>
             );
@@ -180,7 +161,7 @@ function ContactSearchModal({ contacts, loading, onAdd, onClose }) {
       (c) =>
         c.name.toLowerCase().includes(q) ||
         c.email?.toLowerCase().includes(q) ||
-        c.company?.toLowerCase().includes(q)
+        c.company?.toLowerCase().includes(q),
     );
   }, [contacts, search]);
 
@@ -205,7 +186,7 @@ function ContactSearchModal({ contacts, loading, onAdd, onClose }) {
             aria-label="Tutup"
             onClick={onClose}
           >
-            ×
+            x
           </button>
         </div>
 
@@ -255,9 +236,9 @@ function ContactSearchModal({ contacts, loading, onAdd, onClose }) {
                     <div className="cgm-search-result-name">{c.name}</div>
                     {(c.email || c.company) && (
                       <div className="cgm-search-result-meta">
-                        {c.email && c.email}
-                        {c.email && c.company && " • "}
-                        {c.company && c.company}
+                        {c.email || ""}
+                        {c.email && c.company ? " - " : ""}
+                        {c.company || ""}
                       </div>
                     )}
                   </div>

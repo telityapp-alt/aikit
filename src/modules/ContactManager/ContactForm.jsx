@@ -60,7 +60,7 @@ export default function ContactForm({ contact, onCreate, onUpdate, onCancel, sub
     setForm(buildInitialForm(contact));
     setErrors({});
     setTagInput("");
-  }, [contact?.id]);
+  }, [contact]);
 
   function setField(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }));

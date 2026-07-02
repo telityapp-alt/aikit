@@ -3,6 +3,10 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "./lib/AuthContext";
 import { useTheme } from "./lib/ThemeContext";
 import AuthModal from "./components/AuthModal.jsx";
+import {
+  AUTOMATION_CARDS,
+  getAutomationCostLabel,
+} from "./lib/automationCards";
 import { MASCOT_SCENES } from "./lib/mascots";
 
 const tabs = [
@@ -217,88 +221,13 @@ const heroHighlights = [
   "Untuk kerja, bisnis, dan kehidupan sehari-hari",
 ];
 
-const libraryCards = [
-  {
-    name: "Instagram Analyzer",
-    slug: "instagram-analyzer",
-    role: "Analisis profil & konten kompetitor Instagram secara otomatis",
-    place: "Engagement, top content & waktu posting",
-    team: "Rp15.000/run",
-    accent: "#e1306c",
-    surface: "#f7a1c4",
-    image: "/lib-signal-board.png",
-  },
-  {
-    name: "CV Reviewer",
-    slug: "cv-reviewer",
-    role: "Upload CV kamu, dapat feedback detail dari AI dalam 30 detik",
-    place: "Skor, kelemahan & saran perbaikan per section",
-    team: "Rp10.000/run",
-    accent: "#37d7c8",
-    surface: "#98f0e8",
-    image: "/lib-flow-pilot.png",
-  },
-  {
-    name: "Riset Pasar Instan",
-    slug: "riset-pasar",
-    role: "Ringkasan riset pasar untuk ide bisnis atau produk baru kamu",
-    place: "Target market, kompetitor & peluang dalam 1 laporan",
-    team: "Rp25.000/run",
-    accent: "#f3ba3f",
-    surface: "#fdd98a",
-    image: "/lib-warehouse-one.png",
-  },
-  {
-    name: "Email Writer",
-    slug: "email-writer",
-    role: "Tulis email profesional, pitching, atau follow-up dalam hitungan detik",
-    place: "Cold email, proposal, negosiasi & customer support",
-    team: "Rp5.000/run",
-    accent: "#ff5c62",
-    surface: "#f7a1a8",
-    image: "/lib-issue-radar.png",
-  },
-  {
-    name: "YouTube Summarizer",
-    slug: "youtube-summarizer",
-    role: "Rangkum video YouTube panjang jadi poin-poin penting",
-    place: "Transkrip, insight utama & takeaway actionable",
-    team: "Rp8.000/run",
-    accent: "#ff0000",
-    surface: "#ff8080",
-    image: "/lib-launch-deck.png",
-  },
-  {
-    name: "Price Tracker",
-    slug: "price-tracker",
-    role: "Pantau harga produk kompetitor di marketplace secara real-time",
-    place: "Price range, siapa termurah & tren harga",
-    team: "Rp20.000/run",
-    accent: "#6f58ff",
-    surface: "#afa2ff",
-    image: "/lib-audience-lab.png",
-  },
-  {
-    name: "Konten Sosmed",
-    slug: "konten-sosmed",
-    role: "Generate caption, thread, atau skrip konten siap posting",
-    place: "Instagram, TikTok, Twitter & LinkedIn",
-    team: "Rp8.000/run",
-    accent: "#1da1f2",
-    surface: "#90d4f7",
-    image: "/lib-support-graph.png",
-  },
-  {
-    name: "Lead Scraper",
-    slug: "lead-scraper",
-    role: "Temukan prospek potensial berdasarkan kriteria bisnis kamu",
-    place: "Nama, jabatan, perusahaan & contact info publik",
-    team: "Rp50.000/run",
-    accent: "#0a66c2",
-    surface: "#7ab5e8",
-    image: "/lib-focus-room.png",
-  },
-];
+const libraryCards = AUTOMATION_CARDS.map((card) => ({
+  name: card.title,
+  slug: card.id || "automasi",
+  place: card.desc,
+  team: getAutomationCostLabel(card),
+  image: card.image,
+}));
 
 function CaretIcon() {
   return (
@@ -750,7 +679,9 @@ function App() {
 
                 <div className="panel-copy">
                   <span className="panel-eyebrow">{currentTab.eyebrow}</span>
-                  <h2>{currentTab.title}</h2>
+                  <h2>
+                    <strong>{currentTab.title}</strong>
+                  </h2>
                   <p>{currentTab.description}</p>
 
                   <div className="panel-chips" aria-label="Top modules">
@@ -809,13 +740,13 @@ function App() {
               <div>
                 <span className="library-kicker">Library</span>
                 <h2 id="library-title">
-                  A colourful gallery of app UI systems
+                  <strong>Galeri aplikasi otomatis siap pakai</strong>
                 </h2>
               </div>
               <p>
-                Built in the spirit of collectible profile cards, but every card
-                here showcases product interfaces instead of portraits. Think
-                dashboards, rollout rooms, analytics cockpits, and ops surfaces.
+                Seluruh kartu di bagian ini diselaraskan dengan daftar automasi
+                di dashboard utama, lengkap dengan cover, nama aplikasi, dan
+                ringkasan fungsi yang sama.
               </p>
             </div>
 
@@ -827,11 +758,21 @@ function App() {
                   role="link"
                   tabIndex={0}
                   style={{ cursor: "pointer" }}
-                  onClick={() => navigate(`/product/${card.slug}`)}
+                  onClick={() =>
+                    navigate(
+                      card.slug === "automasi"
+                        ? "/dashboard/automasi"
+                        : `/dashboard/automasi/${card.slug}`,
+                    )
+                  }
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
-                      navigate(`/product/${card.slug}`);
+                      navigate(
+                        card.slug === "automasi"
+                          ? "/dashboard/automasi"
+                          : `/dashboard/automasi/${card.slug}`,
+                      );
                     }
                   }}
                 >

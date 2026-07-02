@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { fmt } from "../../lib/format.js";
 import { useToast } from "../../lib/ToastContext.jsx";
 
 const PLATFORM_OPTIONS = [
@@ -83,7 +82,7 @@ export default function PostForm({
   useEffect(() => {
     setFields(buildInitial(post, prefilledStatus, prefilledDate));
     setErrors({});
-  }, [post?.id, prefilledStatus, prefilledDate]);
+  }, [post, prefilledStatus, prefilledDate]);
 
   function set(key, value) {
     setFields((prev) => ({ ...prev, [key]: value }));

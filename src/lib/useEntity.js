@@ -18,10 +18,12 @@ import { useAuth } from "./AuthContext";
  */
 export function useEntity(table, options = {}) {
   const {
+    select = "*",
     orderBy = "created_at",
     ascending = false,
     filter = {},
     autoLoad = true,
+    injectUserId = true,
   } = options;
 
   const { user } = useAuth();
@@ -31,14 +33,14 @@ export function useEntity(table, options = {}) {
 
   // Builds a base query with ordering and any static filters applied.
   const buildQuery = useCallback(() => {
-    let q = supabase.from(table).select("*").order(orderBy, { ascending });
+    let q = supabase.from(table).select(select).order(orderBy, { ascending });
     for (const [key, value] of Object.entries(filter)) {
       q = q.eq(key, value);
     }
     return q;
     // filter is an object literal — serialise it so the dep array is stable
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [table, orderBy, ascending, JSON.stringify(filter)]);
+  }, [table, select, orderBy, ascending, JSON.stringify(filter)]);
 
   const refresh = useCallback(async () => {
     if (!user) return;
@@ -68,7 +70,11 @@ export function useEntity(table, options = {}) {
    */
   const create = useCallback(
     async (record) => {
-      const payload = { ...record, user_id: user.id };
+      if (!user) {
+        throw new Error("User belum login.");
+      }
+
+      const payload = injectUserId ? { ...record, user_id: user.id } : record;
 
       // Optimistic insert with a temporary id so the UI responds immediately.
       const tempId = `temp_${Date.now()}_${Math.random()}`;
@@ -91,7 +97,7 @@ export function useEntity(table, options = {}) {
         throw err;
       }
     },
-    [table, user],
+    [table, user, injectUserId],
   );
 
   /**

@@ -4,7 +4,8 @@ import { useAuth } from "../lib/AuthContext";
 import { useToast } from "../lib/ToastContext";
 import { supabase } from "../lib/supabase";
 import { api } from "../lib/api";
-import { getModuleComponent } from "../modules/registry";
+import { fmt } from "../lib/format";
+import { getModuleComponent, getModuleEntry } from "../modules/registry";
 import { MASCOT_SCENES } from "../lib/mascots";
 
 /* ── Inline SVG icons ──────────────────────────────────────── */
@@ -424,56 +425,6 @@ const MODULE_CARDS = [
       "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400&h=200&fit=crop&auto=format",
   },
   {
-    id: "crm-lite",
-    title: "CRM Lite",
-    desc: "Kelola kontak, pipeline penjualan, dan follow-up klien dalam satu tempat yang sederhana.",
-    category: "Bisnis",
-    pricing: "Pro",
-    users: 67,
-    image:
-      "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=200&fit=crop&auto=format",
-  },
-  {
-    id: "hr-attendance",
-    title: "HR Attendance Tracker",
-    desc: "Catat kehadiran karyawan, kelola izin, dan generate laporan bulanan otomatis.",
-    category: "HR",
-    pricing: "Pro",
-    users: 34,
-    image:
-      "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=400&h=200&fit=crop&auto=format",
-  },
-  {
-    id: "content-planner",
-    title: "Content Planner",
-    desc: "Rencanakan kalender konten, schedule posting, dan pantau performa konten kamu.",
-    category: "Marketing",
-    pricing: "Free",
-    users: 211,
-    image:
-      "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=400&h=200&fit=crop&auto=format",
-  },
-  {
-    id: "inventory-manager",
-    title: "Inventory Manager",
-    desc: "Pantau stok barang, kelola supplier, dan dapatkan notifikasi restock otomatis.",
-    category: "Operasional",
-    pricing: "Pro",
-    users: 88,
-    image:
-      "https://images.unsplash.com/photo-1553413077-190dd305871c?w=400&h=200&fit=crop&auto=format",
-  },
-  {
-    id: "project-tracker",
-    title: "Project Tracker",
-    desc: "Kelola proyek tim dengan task board, deadline, dan laporan progres mingguan.",
-    category: "Produktivitas",
-    pricing: "Free",
-    users: 176,
-    image:
-      "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400&h=200&fit=crop&auto=format",
-  },
-  {
     id: "contact-manager",
     title: "Contact Manager",
     desc: "Kelola kontak bisnis — customers, leads, creator, vendor, dan kompetitor dalam satu database terpusat.",
@@ -503,6 +454,15 @@ const MODULE_CARDS = [
     image:
       "https://images.unsplash.com/photo-1506784365847-bbad939e9335?w=400&h=200&fit=crop&auto=format",
   },
+];
+
+const MODULE_CARD_MAP = Object.fromEntries(
+  MODULE_CARDS.map((card) => [card.id, card]),
+);
+const MARKETING_CORE_SLUGS = [
+  "contact-manager",
+  "campaign-manager",
+  "content-calendar",
 ];
 
 /* ── Reusable card component ───────────────────────────────── */
@@ -598,17 +558,10 @@ async function pollRun(runId, timeoutMs = 30000) {
 
 /* ── View: Dashboard (home) ────────────────────────────────── */
 function relativeTime(iso) {
-  if (!iso) return "";
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "Baru saja";
-  if (mins < 60) return `${mins} menit lalu`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs} jam lalu`;
-  return `${Math.floor(hrs / 24)} hari lalu`;
+  return fmt.relativeTime(iso);
 }
 
-function ViewDashboard({ onNavigate, onTopUp }) {
+function ViewDashboard({ onNavigate, onOpenModule, onTopUp }) {
   const { profile } = useAuth();
   const [recent, setRecent] = useState([]);
   const [usageMonth, setUsageMonth] = useState(0);
@@ -687,28 +640,72 @@ function ViewDashboard({ onNavigate, onTopUp }) {
         </div>
       </div>
 
-      <section aria-labelledby="mulai-cepat-heading">
+      <section aria-labelledby="marketing-core-heading">
         <div className="db-section-header">
-          <h2 className="db-section-title" id="mulai-cepat-heading">
-            Mulai Cepat
+          <h2 className="db-section-title" id="marketing-core-heading">
+            Marketing Core
           </h2>
           <button
             className="db-section-link"
-            onClick={() => onNavigate("automasi")}
+            onClick={() => onNavigate("module")}
           >
             Lihat Semua
           </button>
         </div>
-        <div className="db-product-grid db-product-grid-1">
-          <ProductCard
-            title="ATS-Friendly CV Converter"
-            desc="Automasi berbasis AI untuk mengubah CV lama berbasis teks (bukan JPG) menjadi format yang ramah ATS secara instan dan gratis."
-            typeBadge="Automation"
-            pricingBadge="Free"
-            users={4}
-            ctaLabel="Jalankan"
-            onCta={() => onNavigate("automasi")}
-          />
+        <div className="db-product-grid">
+          {MARKETING_CORE_SLUGS.map((slug) => {
+            const card = MODULE_CARD_MAP[slug];
+            return (
+              <ProductCard
+                key={slug}
+                title={card.title}
+                desc={card.desc}
+                typeBadge={card.category}
+                pricingBadge={card.pricing}
+                users={card.users}
+                ctaLabel="Buka"
+                image={card.image}
+                onCta={() => onOpenModule(slug)}
+              />
+            );
+          })}
+        </div>
+      </section>
+
+      <section aria-labelledby="system-flow-heading">
+        <div className="db-section-header">
+          <h2 className="db-section-title" id="system-flow-heading">
+            Alur Sistem
+          </h2>
+        </div>
+        <div className="db-stats-row">
+          <div className="db-stat-card">
+            <div className="db-stat-top">
+              <span className="db-stat-value">1</span>
+              <span className="db-stat-label">Contact menjadi source of truth</span>
+            </div>
+            <p className="db-activity-snippet">
+              Semua lead, customer, creator, dan kompetitor hidup di satu backbone.
+            </p>
+          </div>
+          <div className="db-stat-card">
+            <div className="db-stat-top">
+              <span className="db-stat-value">2</span>
+              <span className="db-stat-label">Campaign mengikat konteks bisnis</span>
+            </div>
+            <p className="db-activity-snippet">
+              Budget, objective, timeline, dan siapa yang terlibat sekarang punya rumah yang jelas.
+            </p>
+          </div>
+          <div className="db-stat-card">
+            <div className="db-stat-top">
+              <span className="db-stat-value">3</span>
+              <span className="db-stat-label">Content jadi layer eksekusi</span>
+            </div>
+            <p className="db-activity-snippet">
+              Kalender konten sudah siap jadi jembatan dari insight ke aktivitas operasional.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -879,15 +876,17 @@ function ViewModule({ onOpen }) {
       .then(({ data }) => {
         setItems(
           data && data.length
-            ? data.map((d) => ({
-                id: d.slug,
-                title: d.title,
-                desc: d.description,
-                category: d.category,
-                pricing: d.pricing,
-                users: 0,
-                image: d.image,
-              }))
+            ? data
+                .filter((d) => getModuleEntry(d.slug))
+                .map((d) => ({
+                  id: d.slug,
+                  title: d.title,
+                  desc: d.description,
+                  category: d.category,
+                  pricing: d.pricing,
+                  users: MODULE_CARD_MAP[d.slug]?.users ?? 0,
+                  image: d.image || MODULE_CARD_MAP[d.slug]?.image,
+                }))
             : MODULE_CARDS,
         );
       });
@@ -2025,7 +2024,11 @@ export default function Dashboard() {
     switch (activeNav) {
       case "dashboard":
         return (
-          <ViewDashboard onNavigate={handleNavClick} onTopUp={handleTopUp} />
+          <ViewDashboard
+            onNavigate={handleNavClick}
+            onOpenModule={(slug) => navigate(`/dashboard/module/${slug}`)}
+            onTopUp={handleTopUp}
+          />
         );
       case "automasi":
         return automasiSlug ? (
