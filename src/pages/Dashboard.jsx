@@ -1900,6 +1900,9 @@ export default function Dashboard() {
     .filter(Boolean);
   const activeNav = segments[0] || "dashboard";
   const moduleSlug = activeNav === "module" ? segments[1] : null;
+  // Automasi = small tools that still live inside the Automasi dashboard tab
+  // (App-type cards open here, NOT under /module which is reserved for kits).
+  const automasiSlug = activeNav === "automasi" ? segments[1] : null;
 
   const [aiChatActive, setAiChatActive] = useState(false);
   const setActiveNav = (id) =>
@@ -1964,9 +1967,14 @@ export default function Dashboard() {
           <ViewDashboard onNavigate={handleNavClick} onTopUp={handleTopUp} />
         );
       case "automasi":
-        return (
+        return automasiSlug ? (
+          <ViewModuleHost
+            slug={automasiSlug}
+            onBack={() => navigate("/dashboard/automasi")}
+          />
+        ) : (
           <ViewAutomasi
-            onOpenApp={(slug) => navigate(`/dashboard/module/${slug}`)}
+            onOpenApp={(slug) => navigate(`/dashboard/automasi/${slug}`)}
           />
         );
       case "module":
