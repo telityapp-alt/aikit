@@ -14,9 +14,34 @@ const PLATFORM_OPTIONS = [
 const STATUS_OPTIONS = [
   { value: "idea", label: "Ide" },
   { value: "draft", label: "Draft" },
+  { value: "review", label: "Review" },
+  { value: "approved", label: "Approved" },
   { value: "scheduled", label: "Terjadwal" },
   { value: "published", label: "Terbit" },
   { value: "cancelled", label: "Dibatalkan" },
+];
+
+const CONTENT_TYPE_OPTIONS = [
+  { value: "post", label: "Post" },
+  { value: "reel", label: "Reel" },
+  { value: "story", label: "Story" },
+  { value: "carousel", label: "Carousel" },
+  { value: "video", label: "Video" },
+  { value: "ad", label: "Ad" },
+  { value: "other", label: "Lainnya" },
+];
+
+const APPROVAL_OPTIONS = [
+  { value: "not_needed", label: "Tidak Perlu" },
+  { value: "pending", label: "Pending" },
+  { value: "approved", label: "Approved" },
+  { value: "changes_requested", label: "Changes Requested" },
+];
+
+const PRIORITY_OPTIONS = [
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High" },
 ];
 
 function dateTimeLocalValue(isoString) {
@@ -34,7 +59,10 @@ function buildInitial(post, prefilledStatus, prefilledDate) {
   if (!post) {
     return {
       platform: "instagram",
+      content_type: "post",
       status: prefilledStatus || "idea",
+      approval_status: "not_needed",
+      priority: "medium",
       title: "",
       body: "",
       campaign_id: "",
@@ -46,7 +74,10 @@ function buildInitial(post, prefilledStatus, prefilledDate) {
   }
   return {
     platform: post.platform ?? "instagram",
+    content_type: post.content_type ?? "post",
     status: post.status ?? "idea",
+    approval_status: post.approval_status ?? "not_needed",
+    priority: post.priority ?? "medium",
     title: post.title ?? "",
     body: post.body ?? "",
     campaign_id: post.campaign_id ?? "",
@@ -113,7 +144,10 @@ export default function PostForm({
     try {
       const payload = {
         platform: fields.platform,
+        content_type: fields.content_type,
         status: fields.status,
+        approval_status: fields.approval_status,
+        priority: fields.priority,
         title: fields.title || null,
         body: fields.body || null,
         campaign_id: fields.campaign_id || null,
@@ -199,6 +233,24 @@ export default function PostForm({
         </div>
 
         <div className="cc-form-row">
+          <label htmlFor="cc-content-type" className="cc-form-label">
+            Tipe Konten
+          </label>
+          <select
+            id="cc-content-type"
+            className="cc-form-select"
+            value={fields.content_type}
+            onChange={(e) => set("content_type", e.target.value)}
+          >
+            {CONTENT_TYPE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="cc-form-row">
           <label htmlFor="cc-status" className="cc-form-label">
             Status
           </label>
@@ -215,6 +267,42 @@ export default function PostForm({
             ))}
           </select>
           {errors.status && <p className="cc-form-error">{errors.status}</p>}
+        </div>
+
+        <div className="cc-form-row">
+          <label htmlFor="cc-approval" className="cc-form-label">
+            Approval
+          </label>
+          <select
+            id="cc-approval"
+            className="cc-form-select"
+            value={fields.approval_status}
+            onChange={(e) => set("approval_status", e.target.value)}
+          >
+            {APPROVAL_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="cc-form-row">
+          <label htmlFor="cc-priority" className="cc-form-label">
+            Priority
+          </label>
+          <select
+            id="cc-priority"
+            className="cc-form-select"
+            value={fields.priority}
+            onChange={(e) => set("priority", e.target.value)}
+          >
+            {PRIORITY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="cc-form-row">

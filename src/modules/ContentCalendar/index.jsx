@@ -33,15 +33,29 @@ export default function ContentCalendar() {
   // Pre-fill values passed into PostForm when opening from a day cell or column
   const [prefilledStatus, setPrefilledStatus] = useState(null);
   const [prefilledDate, setPrefilledDate] = useState(null);
+  const [platformFilter, setPlatformFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [approvalFilter, setApprovalFilter] = useState("all");
+  const [campaignFilter, setCampaignFilter] = useState("all");
 
   // Stats
   const stats = useMemo(() => {
     const total = posts.length;
     const scheduled = posts.filter((p) => p.status === "scheduled").length;
     const published = posts.filter((p) => p.status === "published").length;
-    const draft = posts.filter((p) => p.status === "draft").length;
-    return { total, scheduled, published, draft };
+    const approvalPending = posts.filter((p) => p.approval_status === "pending").length;
+    return { total, scheduled, published, approvalPending };
   }, [posts]);
+
+  const filteredPosts = useMemo(() => {
+    return posts.filter((post) => {
+      if (platformFilter !== "all" && post.platform !== platformFilter) return false;
+      if (statusFilter !== "all" && post.status !== statusFilter) return false;
+      if (approvalFilter !== "all" && post.approval_status !== approvalFilter) return false;
+      if (campaignFilter !== "all" && post.campaign_id !== campaignFilter) return false;
+      return true;
+    });
+  }, [posts, platformFilter, statusFilter, approvalFilter, campaignFilter]);
 
   function openCreate(status = null, date = null) {
     setSelectedPost(null);
@@ -145,12 +159,69 @@ export default function ContentCalendar() {
         </div>
         <div className="db-stat-card">
           <div className="db-stat-top">
-            <span className="db-stat-label">Draft</span>
+            <span className="db-stat-label">Pending Approval</span>
           </div>
           <div className="db-stat-value cc-stat-value--draft">
-            {stats.draft}
+            {stats.approvalPending}
           </div>
         </div>
+      </div>
+
+      <div className="cc-filters">
+        <select
+          className="cc-form-select"
+          value={platformFilter}
+          onChange={(e) => setPlatformFilter(e.target.value)}
+        >
+          <option value="all">Semua Platform</option>
+          <option value="instagram">Instagram</option>
+          <option value="tiktok">TikTok</option>
+          <option value="facebook">Facebook</option>
+          <option value="linkedin">LinkedIn</option>
+          <option value="twitter">Twitter/X</option>
+          <option value="youtube">YouTube</option>
+          <option value="other">Lainnya</option>
+        </select>
+
+        <select
+          className="cc-form-select"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="all">Semua Status</option>
+          <option value="idea">Ide</option>
+          <option value="draft">Draft</option>
+          <option value="review">Review</option>
+          <option value="approved">Approved</option>
+          <option value="scheduled">Terjadwal</option>
+          <option value="published">Terbit</option>
+          <option value="cancelled">Dibatalkan</option>
+        </select>
+
+        <select
+          className="cc-form-select"
+          value={approvalFilter}
+          onChange={(e) => setApprovalFilter(e.target.value)}
+        >
+          <option value="all">Semua Approval</option>
+          <option value="not_needed">No approval</option>
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="changes_requested">Needs changes</option>
+        </select>
+
+        <select
+          className="cc-form-select"
+          value={campaignFilter}
+          onChange={(e) => setCampaignFilter(e.target.value)}
+        >
+          <option value="all">Semua Campaign</option>
+          {campaigns.map((campaign) => (
+            <option key={campaign.id} value={campaign.id}>
+              {campaign.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* ── View toggle tabs ─────────────────────────────────────── */}
@@ -180,14 +251,14 @@ export default function ContentCalendar() {
           </div>
         ) : activeView === "calendar" ? (
           <CalendarView
-            posts={posts}
+            posts={filteredPosts}
             campaigns={campaigns}
             onPostClick={openEdit}
             onDayClick={(date) => openCreate(null, date)}
           />
         ) : (
           <KanbanView
-            posts={posts}
+            posts={filteredPosts}
             campaigns={campaigns}
             onPostClick={openEdit}
             onAddPost={(status) => openCreate(status, null)}

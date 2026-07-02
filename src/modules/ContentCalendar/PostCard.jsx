@@ -1,13 +1,13 @@
 import { fmt } from "../../lib/format.js";
 
 const PLATFORM_EMOJI = {
-  instagram: "📸",
-  tiktok: "🎵",
-  facebook: "👤",
-  linkedin: "💼",
-  twitter: "🐦",
-  youtube: "▶️",
-  other: "📝",
+  instagram: "IG",
+  tiktok: "TT",
+  facebook: "FB",
+  linkedin: "IN",
+  twitter: "X",
+  youtube: "YT",
+  other: "OT",
 };
 
 const PLATFORM_LABEL = {
@@ -23,13 +23,22 @@ const PLATFORM_LABEL = {
 const STATUS_LABEL = {
   idea: "Ide",
   draft: "Draft",
+  review: "Review",
+  approved: "Approved",
   scheduled: "Terjadwal",
   published: "Terbit",
   cancelled: "Dibatalkan",
 };
 
+const APPROVAL_LABEL = {
+  not_needed: "No approval",
+  pending: "Pending review",
+  approved: "Approved",
+  changes_requested: "Needs changes",
+};
+
 export default function PostCard({ post, onClick, compact = false, campaign }) {
-  const emoji = PLATFORM_EMOJI[post.platform] ?? "📝";
+  const emoji = PLATFORM_EMOJI[post.platform] ?? "OT";
   const platformLabel = PLATFORM_LABEL[post.platform] ?? post.platform;
   const statusLabel = STATUS_LABEL[post.status] ?? post.status;
   const preview = post.title || post.body || "(Tanpa judul)";
@@ -76,15 +85,18 @@ export default function PostCard({ post, onClick, compact = false, campaign }) {
       <p className="cc-card-title">{preview}</p>
 
       {campaign && (
-        <p className="cc-card-campaign">📋 {campaign.name}</p>
+        <p className="cc-card-campaign">Campaign: {campaign.name}</p>
       )}
 
       <div className="cc-card-footer">
         <span className="cc-card-time">{timeDisplay}</span>
+        <span className="cc-card-time">
+          {APPROVAL_LABEL[post.approval_status] ?? post.approval_status}
+        </span>
         {shownTags.length > 0 && (
           <div className="cc-card-tags" aria-label="Tag">
-            {shownTags.map((t) => (
-              <span key={t} className="cc-tag-chip">{t}</span>
+            {shownTags.map((tag) => (
+              <span key={tag} className="cc-tag-chip">{tag}</span>
             ))}
             {extraTags > 0 && (
               <span className="cc-tag-more">+{extraTags}</span>

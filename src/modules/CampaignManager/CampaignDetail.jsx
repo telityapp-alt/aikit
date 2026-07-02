@@ -2,6 +2,9 @@ import { useState } from "react";
 import { fmt } from "../../lib/format";
 import { useToast } from "../../lib/ToastContext";
 import CampaignContacts from "./CampaignContacts";
+import CampaignLinkedReports from "./CampaignLinkedReports";
+import CampaignContentPosts from "./CampaignContentPosts";
+import EntityActivityTimeline from "../../components/EntityActivityTimeline";
 
 const STATUS_LABEL = {
   draft: "Draft",
@@ -124,6 +127,16 @@ export default function CampaignDetail({ campaign, onEdit, onDelete }) {
       )}
 
       <CampaignContacts campaignId={campaign.id} />
+      <CampaignLinkedReports campaign={campaign} />
+      <CampaignContentPosts campaignId={campaign.id} />
+      <div className="cgm-section">
+        <EntityActivityTimeline
+          entityType="campaign"
+          entityId={campaign.id}
+          entityLabel={campaign.name}
+          emptyTitle="Belum ada aktivitas untuk campaign ini."
+        />
+      </div>
     </div>
   );
 }

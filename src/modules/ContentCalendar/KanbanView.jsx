@@ -2,10 +2,12 @@ import { useMemo, useState } from "react";
 import PostCard from "./PostCard.jsx";
 
 const COLUMNS = [
-  { status: "idea", label: "Ide", emoji: "💡" },
-  { status: "draft", label: "Draft", emoji: "✏️" },
-  { status: "scheduled", label: "Terjadwal", emoji: "📅" },
-  { status: "published", label: "Terbit", emoji: "✅" },
+  { status: "idea", label: "Ide", emoji: "I" },
+  { status: "draft", label: "Draft", emoji: "D" },
+  { status: "review", label: "Review", emoji: "R" },
+  { status: "approved", label: "Approved", emoji: "A" },
+  { status: "scheduled", label: "Terjadwal", emoji: "S" },
+  { status: "published", label: "Terbit", emoji: "P" },
 ];
 
 export default function KanbanView({ posts, campaigns, onPostClick, onAddPost }) {
@@ -13,13 +15,13 @@ export default function KanbanView({ posts, campaigns, onPostClick, onAddPost })
 
   const campaignMap = useMemo(() => {
     const map = new Map();
-    campaigns.forEach((c) => map.set(c.id, c));
+    campaigns.forEach((campaign) => map.set(campaign.id, campaign));
     return map;
   }, [campaigns]);
 
   const postsByStatus = useMemo(() => {
     const map = new Map();
-    COLUMNS.forEach((col) => map.set(col.status, []));
+    COLUMNS.forEach((column) => map.set(column.status, []));
     const cancelled = [];
 
     posts.forEach((post) => {
@@ -30,7 +32,6 @@ export default function KanbanView({ posts, campaigns, onPostClick, onAddPost })
       }
     });
 
-    // Sort each column by updated_at desc
     map.forEach((list) => {
       list.sort((a, b) => {
         const dateA = new Date(a.updated_at || a.created_at);
@@ -50,30 +51,30 @@ export default function KanbanView({ posts, campaigns, onPostClick, onAddPost })
 
   return (
     <div className="cc-kanban-wrap">
-      <div className="cc-kanban-columns">
-        {COLUMNS.map((col) => {
-          const colPosts = postsByStatus.columns.get(col.status) || [];
+      <div className="cc-kanban-columns cc-kanban-columns--wide">
+        {COLUMNS.map((column) => {
+          const columnPosts = postsByStatus.columns.get(column.status) || [];
           return (
-            <div key={col.status} className="cc-kanban-column">
+            <div key={column.status} className="cc-kanban-column">
               <div className="cc-kanban-header">
                 <h3 className="cc-kanban-title">
                   <span className="cc-kanban-emoji" aria-hidden="true">
-                    {col.emoji}
+                    {column.emoji}
                   </span>
-                  {col.label}
-                  <span className="cc-kanban-count">{colPosts.length}</span>
+                  {column.label}
+                  <span className="cc-kanban-count">{columnPosts.length}</span>
                 </h3>
                 <button
                   type="button"
                   className="cc-kanban-add"
-                  onClick={() => onAddPost(col.status)}
-                  aria-label={`Tambah post ${col.label}`}
+                  onClick={() => onAddPost(column.status)}
+                  aria-label={`Tambah post ${column.label}`}
                 >
                   +
                 </button>
               </div>
               <div className="cc-kanban-list">
-                {colPosts.map((post) => (
+                {columnPosts.map((post) => (
                   <PostCard
                     key={post.id}
                     post={post}
@@ -81,7 +82,7 @@ export default function KanbanView({ posts, campaigns, onPostClick, onAddPost })
                     campaign={campaignMap.get(post.campaign_id)}
                   />
                 ))}
-                {colPosts.length === 0 && (
+                {columnPosts.length === 0 && (
                   <p className="cc-kanban-empty">Belum ada post</p>
                 )}
               </div>
@@ -98,7 +99,7 @@ export default function KanbanView({ posts, campaigns, onPostClick, onAddPost })
             onClick={() => setShowCancelled(!showCancelled)}
             aria-expanded={showCancelled}
           >
-            <span className="cc-cancelled-arrow">{showCancelled ? "▼" : "▶"}</span>
+            <span className="cc-cancelled-arrow">{showCancelled ? "v" : ">"}</span>
             Dibatalkan ({postsByStatus.cancelled.length})
           </button>
           {showCancelled && (
