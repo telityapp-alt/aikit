@@ -259,6 +259,17 @@ const AUTOMASI_CARDS = [
       "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=200&fit=crop&auto=format",
   },
   {
+    id: "tiktok-profile-intelligence",
+    title: "TikTok Profile Intelligence",
+    desc: "Tarik video TikTok via Apify, hitung KPI virality dan intent, lalu baca dashboard insight yang siap dipakai tim growth.",
+    type: "App",
+    pricing: "Pro",
+    costPerRun: 125,
+    users: 12,
+    image:
+      "https://images.unsplash.com/photo-1611605698335-8b1569810432?w=400&h=200&fit=crop&auto=format",
+  },
+  {
     title: "ATS-Friendly CV Converter",
     desc: "Ubah CV lama berbasis teks menjadi format ATS-Friendly secara instan.",
     type: "Automation",
@@ -327,6 +338,16 @@ const AUTOMASI_CARDS = [
 
 /* ── Data: Module (fitur besar / produk penuh) ─────────────── */
 const MODULE_CARDS = [
+  {
+    id: "tiktok-profile-intelligence",
+    title: "TikTok Profile Intelligence",
+    desc: "Bedah performa satu profil TikTok dengan signal deck, top movers, topic clusters, dan opportunity queue.",
+    category: "Marketing",
+    pricing: "Pro",
+    users: 19,
+    image:
+      "https://images.unsplash.com/photo-1611605698335-8b1569810432?w=400&h=200&fit=crop&auto=format",
+  },
   {
     id: "keuangan-pribadi",
     title: "Manajer Keuangan Pribadi",

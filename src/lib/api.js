@@ -79,6 +79,17 @@ export const api = {
       `/api/instagram-competitor-reports/${reportId}/download`,
       `instagram-competitor-report-${handle}.xlsx`,
     ),
+  getTikTokProfileReports: () =>
+    apiFetch("/api/tiktok-profile-reports", { method: "GET" }),
+  getTikTokProfileReport: (reportId) =>
+    apiFetch(`/api/tiktok-profile-reports/${reportId}`, {
+      method: "GET",
+    }),
+  downloadTikTokProfileReport: (reportId, handle = "report") =>
+    downloadFile(
+      `/api/tiktok-profile-reports/${reportId}/download`,
+      `tiktok-profile-intelligence-${handle}.xlsx`,
+    ),
   sendChat: (chatId, message, moduleSlug) =>
     apiFetch("/api/chat", { body: { chatId, message, moduleSlug } }),
   topUp: (amount) => apiFetch("/api/topup", { body: { amount } }),

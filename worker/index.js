@@ -5,6 +5,11 @@ import {
   processCompetitorRun,
   validateCompetitorInput,
 } from "./modules/instagram-competitor.js";
+import {
+  createTikTokProfileRun,
+  processTikTokProfileRun,
+  validateTikTokInput,
+} from "./modules/tiktok-profile-intelligence.js";
 
 const API_RATE_LIMIT = {
   bucket: "api",
@@ -83,22 +88,37 @@ async function handleRunRequest(request, env) {
   }
 
   const ip = clientIp(request);
-  if (slug !== "competitor-analyzer") {
-    throw new HttpError(400, "Saat ini route Worker hanya mendukung competitor-analyzer.");
+  if (slug === "competitor-analyzer") {
+    const input = validateCompetitorInput(payload.input);
+    const run = await createRun(env, user, slug, input, ip);
+    const report = await createCompetitorReportRun(env, { user, run, input });
+
+    await env.RUN_QUEUE.send({
+      kind: "instagram-competitor-report",
+      runId: run.id,
+      reportId: report.id,
+      userId: user.id,
+    });
+
+    return json({ run, report }, 202, corsHeaders());
   }
 
-  const input = validateCompetitorInput(payload.input);
-  const run = await createRun(env, user, slug, input, ip);
-  const report = await createCompetitorReportRun(env, { user, run, input });
+  if (slug === "tiktok-profile-intelligence") {
+    const input = validateTikTokInput(payload.input);
+    const run = await createRun(env, user, slug, input, ip);
+    const report = await createTikTokProfileRun(env, { user, run, input });
 
-  await env.RUN_QUEUE.send({
-    kind: "instagram-competitor-report",
-    runId: run.id,
-    reportId: report.id,
-    userId: user.id,
-  });
+    await env.RUN_QUEUE.send({
+      kind: "tiktok-profile-intelligence",
+      runId: run.id,
+      reportId: report.id,
+      userId: user.id,
+    });
 
-  return json({ run, report }, 202, corsHeaders());
+    return json({ run, report }, 202, corsHeaders());
+  }
+
+  throw new HttpError(400, `Slug ${slug} belum didukung oleh Worker.`);
 }
 
 async function handleChatRequest(request, env) {
@@ -438,6 +458,83 @@ async function downloadReport(request, env, reportId) {
   return new Response(object.body, { headers });
 }
 
+async function listTikTokReports(request, env) {
+  const user = await getUser(env, request);
+  await rateLimit(env, user.id);
+
+  const reports = await db(
+    env,
+    `tiktok_profile_reports?user_id=eq.${user.id}&select=id,run_id,tiktok_handle,status,date_from,date_to,filters,summary,created_at,completed_at,updated_at,artifact_id&order=created_at.desc&limit=25`,
+  );
+
+  return json({ reports }, 200, corsHeaders());
+}
+
+async function getTikTokReportDetail(request, env, reportId) {
+  const user = await getUser(env, request);
+  await rateLimit(env, user.id);
+
+  const [report] = await db(
+    env,
+    `tiktok_profile_reports?id=eq.${reportId}&user_id=eq.${user.id}&select=*`,
+  );
+  if (!report) {
+    throw new HttpError(404, "Report TikTok tidak ditemukan.");
+  }
+
+  const items = await db(
+    env,
+    `tiktok_profile_report_items?report_id=eq.${reportId}&select=*&order=rank_position.asc`,
+  );
+  const events = await db(
+    env,
+    `tiktok_report_events?report_id=eq.${reportId}&select=stage,status,message,payload,created_at&order=created_at.asc`,
+  );
+
+  return json(
+    {
+      report,
+      items,
+      events,
+    },
+    200,
+    corsHeaders(),
+  );
+}
+
+async function downloadTikTokReport(request, env, reportId) {
+  const user = await getUser(env, request);
+  await rateLimit(env, user.id);
+
+  const [report] = await db(
+    env,
+    `tiktok_profile_reports?id=eq.${reportId}&user_id=eq.${user.id}&select=id,tiktok_handle,artifact_id`,
+  );
+  if (!report?.artifact_id) {
+    throw new HttpError(404, "File TikTok report belum tersedia.");
+  }
+
+  const [artifact] = await db(
+    env,
+    `generated_artifacts?id=eq.${report.artifact_id}&select=*`,
+  );
+  if (!artifact?.path) {
+    throw new HttpError(404, "Artifact TikTok tidak ditemukan.");
+  }
+
+  const object = await env.REPORTS_BUCKET.get(artifact.path);
+  if (!object) {
+    throw new HttpError(404, "File TikTok report tidak ditemukan di storage.");
+  }
+
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set("etag", object.httpEtag);
+  headers.set("cache-control", "private, no-store");
+
+  return new Response(object.body, { headers });
+}
+
 function isApiPath(pathname) {
   return pathname.startsWith("/api/");
 }
@@ -469,6 +566,10 @@ async function handleApi(request, env) {
     return listReports(request, env);
   }
 
+  if (url.pathname === "/api/tiktok-profile-reports" && request.method === "GET") {
+    return listTikTokReports(request, env);
+  }
+
   const reportDetailMatch = url.pathname.match(
     /^\/api\/instagram-competitor-reports\/([^/]+)$/,
   );
@@ -481,6 +582,20 @@ async function handleApi(request, env) {
   );
   if (reportDownloadMatch && request.method === "GET") {
     return downloadReport(request, env, reportDownloadMatch[1]);
+  }
+
+  const tiktokReportDetailMatch = url.pathname.match(
+    /^\/api\/tiktok-profile-reports\/([^/]+)$/,
+  );
+  if (tiktokReportDetailMatch && request.method === "GET") {
+    return getTikTokReportDetail(request, env, tiktokReportDetailMatch[1]);
+  }
+
+  const tiktokReportDownloadMatch = url.pathname.match(
+    /^\/api\/tiktok-profile-reports\/([^/]+)\/download$/,
+  );
+  if (tiktokReportDownloadMatch && request.method === "GET") {
+    return downloadTikTokReport(request, env, tiktokReportDownloadMatch[1]);
   }
 
   throw new HttpError(404, "API route tidak ditemukan.");
@@ -512,6 +627,9 @@ export default {
       try {
         if (message.body?.kind === "instagram-competitor-report") {
           await processCompetitorRun(env, message.body);
+        }
+        if (message.body?.kind === "tiktok-profile-intelligence") {
+          await processTikTokProfileRun(env, message.body);
         }
         message.ack();
       } catch (error) {
