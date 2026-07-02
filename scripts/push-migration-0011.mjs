@@ -4,20 +4,20 @@
  * that are safe (skips ALTER TABLE on non-existent report tables)
  */
 
-const PAT = process.env.SUPABASE_PAT || 'REMOVED_SECRET';
-const PROJECT_REF = 'lftgaziycyvxqtlwvxgi';
+const PAT = process.env.SUPABASE_PAT || "";
+const PROJECT_REF = "lftgaziycyvxqtlwvxgi";
 
 async function query(sql) {
   const res = await fetch(
     `https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query`,
     {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${PAT}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${PAT}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ query: sql }),
-    }
+    },
   );
   const text = await res.text();
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${text}`);
@@ -27,9 +27,9 @@ async function query(sql) {
 // First check which report tables exist
 async function getExistingTables() {
   const rows = await query(
-    `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name`
+    `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name`,
   );
-  return rows.map(r => r.table_name);
+  return rows.map((r) => r.table_name);
 }
 
 const coreStatements = [
@@ -97,54 +97,54 @@ const coreStatements = [
 // Report table alterations — only run if table exists
 const reportAlterations = [
   {
-    table: 'instagram_competitor_reports',
+    table: "instagram_competitor_reports",
     stmts: [
       `alter table public.instagram_competitor_reports
   add column if not exists campaign_id uuid references public.campaigns(id) on delete set null`,
       `create index if not exists instagram_competitor_reports_campaign_idx
   on public.instagram_competitor_reports(campaign_id)
   where campaign_id is not null`,
-    ]
+    ],
   },
   {
-    table: 'tiktok_profile_reports',
+    table: "tiktok_profile_reports",
     stmts: [
       `alter table public.tiktok_profile_reports
   add column if not exists campaign_id uuid references public.campaigns(id) on delete set null`,
       `create index if not exists tiktok_profile_reports_campaign_idx
   on public.tiktok_profile_reports(campaign_id)
   where campaign_id is not null`,
-    ]
+    ],
   },
   {
-    table: 'instagram_profile_reports',
+    table: "instagram_profile_reports",
     stmts: [
       `alter table public.instagram_profile_reports
   add column if not exists campaign_id uuid references public.campaigns(id) on delete set null`,
       `create index if not exists instagram_profile_reports_campaign_idx
   on public.instagram_profile_reports(campaign_id)
   where campaign_id is not null`,
-    ]
+    ],
   },
   {
-    table: 'tiktok_ads_reports',
+    table: "tiktok_ads_reports",
     stmts: [
       `alter table public.tiktok_ads_reports
   add column if not exists campaign_id uuid references public.campaigns(id) on delete set null`,
       `create index if not exists tiktok_ads_reports_campaign_idx
   on public.tiktok_ads_reports(campaign_id)
   where campaign_id is not null`,
-    ]
+    ],
   },
   {
-    table: 'meta_ads_reports',
+    table: "meta_ads_reports",
     stmts: [
       `alter table public.meta_ads_reports
   add column if not exists campaign_id uuid references public.campaigns(id) on delete set null`,
       `create index if not exists meta_ads_reports_campaign_idx
   on public.meta_ads_reports(campaign_id)
   where campaign_id is not null`,
-    ]
+    ],
   },
 ];
 
@@ -152,17 +152,17 @@ async function runStatements(statements) {
   let ok = 0;
   for (let i = 0; i < statements.length; i++) {
     const stmt = statements[i];
-    const preview = stmt.trim().split('\n')[0].slice(0, 70);
+    const preview = stmt.trim().split("\n")[0].slice(0, 70);
     try {
       await query(stmt);
       console.log(`✅ ${preview}`);
       ok++;
     } catch (err) {
       if (
-        err.message.includes('already exists') ||
-        err.message.includes('42710') ||
-        err.message.includes('42P07') ||
-        err.message.includes('42701') // column already exists
+        err.message.includes("already exists") ||
+        err.message.includes("42710") ||
+        err.message.includes("42P07") ||
+        err.message.includes("42701") // column already exists
       ) {
         console.log(`⚠️  already exists — skipped: ${preview}`);
         ok++;
@@ -176,9 +176,9 @@ async function runStatements(statements) {
 }
 
 async function main() {
-  console.log('Checking existing tables...');
+  console.log("Checking existing tables...");
   const existing = await getExistingTables();
-  console.log('Tables in DB:', existing.join(', '), '\n');
+  console.log("Tables in DB:", existing.join(", "), "\n");
 
   console.log(`Running ${coreStatements.length} core statements...\n`);
   const coreOk = await runStatements(coreStatements);
@@ -195,7 +195,9 @@ async function main() {
   }
 
   if (skippedTables.length > 0) {
-    console.log(`\nSkipping ALTER for non-existent tables: ${skippedTables.join(', ')}`);
+    console.log(
+      `\nSkipping ALTER for non-existent tables: ${skippedTables.join(", ")}`,
+    );
   }
 
   if (reportStmts.length > 0) {
