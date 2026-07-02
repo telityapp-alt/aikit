@@ -40,7 +40,19 @@ function IconArrowRight() {
 
 export default function ToolPopover({ card, onClose, onGoToDashboard }) {
   const overlayRef = useRef(null);
-  const isFree = card.costPerRun === 0;
+
+  // handle both automasi cards (costPerRun number) and module cards (pricing string)
+  const isFree =
+    card.costPerRun === 0 ||
+    card.pricing === "Free" ||
+    card.pricing === "Gratis";
+
+  const pricingDisplay = (() => {
+    if (card.costPerRun !== undefined) {
+      return card.costPerRun === 0 ? "Gratis" : `${card.costPerRun} kredit`;
+    }
+    return card.pricing || "—";
+  })();
 
   useEffect(() => {
     const onKey = (e) => {
@@ -57,21 +69,32 @@ export default function ToolPopover({ card, onClose, onGoToDashboard }) {
     };
   }, []);
 
+  // Build meta rows, skipping missing fields gracefully
   const metaRows = [
-    { label: "Tipe", value: card.type },
-    card.details?.category
-      ? { label: "Kategori", value: card.details.category }
-      : null,
-    { label: "Pricing", value: card.pricing || "Pay per run" },
+    card.type ? { label: "Tipe", value: card.type } : null,
+    card.category
+      ? { label: "Kategori", value: card.category }
+      : card.details?.category
+        ? { label: "Kategori", value: card.details.category }
+        : null,
     {
-      label: "Biaya per run",
-      value: isFree ? "Gratis" : `${card.costPerRun} kredit`,
+      label: "Pricing",
+      value: isFree ? "Gratis" : card.pricing || "Pay per run",
       green: isFree,
     },
+    card.costPerRun !== undefined
+      ? {
+          label: "Biaya per run",
+          value: card.costPerRun === 0 ? "Gratis" : `${card.costPerRun} kredit`,
+          green: card.costPerRun === 0,
+        }
+      : null,
     card.details?.estimatedTime
       ? { label: "Estimasi waktu", value: card.details.estimatedTime }
       : null,
-    { label: "Pengguna aktif", value: `${card.users ?? 0} orang` },
+    card.users !== undefined
+      ? { label: "Pengguna aktif", value: `${card.users} orang` }
+      : null,
     card.details?.requirements
       ? { label: "Requirements", value: card.details.requirements }
       : null,
@@ -112,70 +135,74 @@ export default function ToolPopover({ card, onClose, onGoToDashboard }) {
               alt={card.title}
               className="w-full h-full object-cover block"
             />
-            {/* subtle gradient so text chips are readable */}
             <div className="absolute inset-0 bg-gradient-to-t from-ink-dark/40 to-transparent" />
             <div className="absolute bottom-3 left-4 flex gap-1.5 flex-wrap">
-              <span className="db-chip db-chip-amber">{card.type}</span>
+              {card.type && (
+                <span className="db-chip db-chip-amber">{card.type}</span>
+              )}
+              <span
+                className={`db-chip ${isFree ? "db-chip-green" : "db-chip-amber"}`}
+              >
+                {isFree ? "Gratis" : card.pricing || "Pay per run"}
+              </span>
             </div>
           </div>
         )}
 
         {/* Scrollable body */}
-        <div
-          className="overflow-y-auto flex-1 px-6 pt-5 pb-4 flex flex-col gap-5"
-          style={{
-            scrollbarWidth: "thin",
-            scrollbarColor: "#d9d1c2 transparent",
-          }}
-        >
-          {/* No-image chips */}
-          {!card.image && (
-            <div className="flex gap-1.5 flex-wrap">
-              <span className="db-chip db-chip-amber">{card.type}</span>
+        <div className="flex-1 overflow-y-auto overscroll-contain">
+          <div className="px-6 pt-5 pb-2">
+            <h2 className="font-sans text-[17px] font-bold text-ink-dark leading-snug m-0">
+              {card.title}
+            </h2>
+            {card.desc && (
+              <p className="font-sans text-[13px] text-ink-soft leading-relaxed mt-1.5 mb-0">
+                {card.desc}
+              </p>
+            )}
+          </div>
+
+          {/* Meta table */}
+          {metaRows.length > 0 && (
+            <div className="mx-6 mt-4 rounded-xl overflow-hidden border border-border-muted">
+              <table className="w-full text-[12px] font-sans border-collapse">
+                <tbody>
+                  {metaRows.map((row, i) => (
+                    <tr
+                      key={row.label}
+                      className={
+                        i < metaRows.length - 1
+                          ? "border-b border-border-muted"
+                          : ""
+                      }
+                    >
+                      <td className="py-2.5 px-3.5 text-ink-muted font-medium w-[42%] bg-sand/40 align-top">
+                        {row.label}
+                      </td>
+                      <td
+                        className={`py-2.5 px-3.5 align-top font-medium ${
+                          row.green ? "text-green-brand" : "text-ink-dark"
+                        }`}
+                      >
+                        {row.value}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
 
-          {/* Title + desc */}
-          <div className="flex flex-col gap-1.5">
-            <h2 className="font-sans text-[20px] font-extrabold text-ink-dark tracking-[-0.02em] leading-tight m-0">
-              {card.title}
-            </h2>
-            <p className="font-sans text-[13px] font-medium text-ink-soft leading-relaxed m-0">
-              {card.desc}
-            </p>
-          </div>
-
-          {/* Meta table — clean grid, no internal borders */}
-          <div className="rounded-xl bg-sand overflow-hidden">
-            {metaRows.map((row, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between px-4 py-2.5 gap-4"
-              >
-                <span className="font-sans text-[12px] font-medium text-ink-muted shrink-0 leading-none">
-                  {row.label}
-                </span>
-                <span
-                  className={`font-sans text-[13px] font-semibold text-right leading-snug ${
-                    row.green ? "text-green-brand" : "text-ink-dark"
-                  }`}
-                >
-                  {row.value}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* Detail sections */}
+          {/* Detail sections — only if card has details */}
           {card.details && (
-            <div className="flex flex-col gap-5 border-t border-border-muted pt-5">
+            <div className="px-6 pt-5 pb-6 flex flex-col gap-5">
               {/* Expected output */}
               {card.details.expectedOutput && (
                 <div className="flex flex-col gap-2">
                   <p className="font-sans text-[12px] font-semibold text-ink-muted m-0">
-                    Output yang dihasilkan
+                    Output yang kamu dapat
                   </p>
-                  <p className="font-sans text-[13px] font-medium text-ink-mid leading-relaxed m-0">
+                  <p className="font-sans text-[13px] font-medium text-ink-mid leading-relaxed m-0 bg-sand/50 rounded-xl px-4 py-3 border border-border-muted">
                     {card.details.expectedOutput}
                   </p>
                 </div>
@@ -187,7 +214,7 @@ export default function ToolPopover({ card, onClose, onGoToDashboard }) {
                   <p className="font-sans text-[12px] font-semibold text-ink-muted m-0">
                     Cara kerja
                   </p>
-                  <ol className="list-none m-0 p-0 flex flex-col gap-2">
+                  <ol className="flex flex-col gap-2 m-0 p-0 list-none">
                     {card.details.howItWorks.map((step, i) => (
                       <li
                         key={i}
@@ -224,6 +251,9 @@ export default function ToolPopover({ card, onClose, onGoToDashboard }) {
               )}
             </div>
           )}
+
+          {/* Spacer if no details section */}
+          {!card.details && <div className="pb-4" />}
         </div>
 
         {/* Sticky footer */}

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, Suspense } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { MODULE_CARDS, MODULE_CARD_MAP } from "../lib/moduleCards";
 import { useAuth } from "../lib/AuthContext";
 import { useToast } from "../lib/ToastContext";
 import { supabase } from "../lib/supabase";
@@ -307,93 +308,7 @@ const AUTOMATION_IMAGE_OVERRIDES = Object.fromEntries(
   ]),
 );
 
-/* ── Data: Module (fitur besar / produk penuh) ─────────────── */
-const MODULE_CARDS = [
-  {
-    id: "tiktok-profile-intelligence",
-    title: "TikTok Profile Intelligence",
-    desc: "Bedah performa satu profil TikTok dengan signal deck, top movers, topic clusters, dan opportunity queue.",
-    category: "Marketing",
-    pricing: "Pro",
-    users: 19,
-    image:
-      "https://images.unsplash.com/photo-1611605698335-8b1569810432?w=400&h=200&fit=crop&auto=format",
-  },
-  {
-    id: "instagram-profile-intelligence",
-    title: "Instagram Profile Intelligence",
-    desc: "Bedah performa satu profil Instagram: engagement KPI, format breakdown, reels vs statis, audience sentiment, dan top movers.",
-    category: "Marketing",
-    pricing: "Pro",
-    users: 8,
-    image:
-      "https://images.unsplash.com/photo-1611262588024-d12430b98920?w=400&h=200&fit=crop&auto=format",
-  },
-  {
-    id: "tiktok-ads-spy",
-    title: "TikTok Ads Spy",
-    desc: "Competitive ad intelligence TikTok: bedah kreatif, CTA, targeting usia/gender, dan share-of-voice kompetitor.",
-    category: "Marketing",
-    pricing: "Pro",
-    users: 5,
-    image:
-      "https://images.unsplash.com/photo-1533750516457-a7f992034fec?w=400&h=200&fit=crop&auto=format",
-  },
-  {
-    id: "meta-ads-spy",
-    title: "Meta Ads Spy",
-    desc: "Competitive ad intelligence Facebook & Instagram: swipe creative, ad copy, format mix, longevity, dan influencer partnerships kompetitor.",
-    category: "Marketing",
-    pricing: "Pro",
-    users: 4,
-    image:
-      "https://images.unsplash.com/photo-1633675254053-d96c7668c3b8?w=400&h=200&fit=crop&auto=format",
-  },
-  {
-    id: "keuangan-pribadi",
-    title: "Manajer Keuangan Pribadi",
-    desc: "Lacak pengeluaran, buat anggaran, dan analisis pola keuangan bulanan kamu secara otomatis.",
-    category: "Keuangan",
-    pricing: "Free",
-    users: 143,
-    image:
-      "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400&h=200&fit=crop&auto=format",
-  },
-  {
-    id: "contact-manager",
-    title: "Contact Manager",
-    desc: "Kelola kontak bisnis — customers, leads, creator, vendor, dan kompetitor dalam satu database terpusat.",
-    category: "Marketing",
-    pricing: "Free",
-    users: 0,
-    image:
-      "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=400&h=200&fit=crop&auto=format",
-  },
-  {
-    id: "campaign-manager",
-    title: "Campaign Manager",
-    desc: "Rencanakan dan kelola campaign marketing end-to-end: objective, budget, timeline, dan kontak terlibat.",
-    category: "Marketing",
-    pricing: "Free",
-    users: 0,
-    image:
-      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=200&fit=crop&auto=format",
-  },
-  {
-    id: "content-calendar",
-    title: "Content Calendar",
-    desc: "Rencanakan, jadwalkan, dan pantau konten dari semua platform dalam satu kalender visual.",
-    category: "Marketing",
-    pricing: "Free",
-    users: 0,
-    image:
-      "https://images.unsplash.com/photo-1506784365847-bbad939e9335?w=400&h=200&fit=crop&auto=format",
-  },
-];
-
-const MODULE_CARD_MAP = Object.fromEntries(
-  MODULE_CARDS.map((card) => [card.id, card]),
-);
+/* MODULE_CARDS and MODULE_CARD_MAP imported from src/lib/moduleCards.js */
 const MARKETING_CORE_SLUGS = [
   "contact-manager",
   "campaign-manager",

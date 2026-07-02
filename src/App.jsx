@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "./lib/AuthContext";
-import { useTheme } from "./lib/ThemeContext";
 import AuthModal from "./components/AuthModal.jsx";
 import ToolPopover from "./components/ToolPopover.jsx";
+import Header from "./components/Header.jsx";
+import { AUTOMATION_CARDS } from "./lib/automationCards";
 import {
-  AUTOMATION_CARDS,
-  getAutomationCostLabel,
-} from "./lib/automationCards";
+  MODULE_CARDS,
+  MODULE_TOTAL,
+  MODULE_CATEGORY_COUNTS,
+  MODULE_FREE_COUNT,
+} from "./lib/moduleCards";
 import { MASCOT_SCENES } from "./lib/mascots";
 
 const tabs = [
