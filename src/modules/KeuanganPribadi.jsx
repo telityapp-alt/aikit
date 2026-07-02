@@ -1,82 +1,43 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { supabase } from "../lib/supabase";
-import { useAuth } from "../lib/AuthContext";
+import { useState } from "react";
+import { useModuleState } from "../lib/useModuleState";
+import { fmt } from "../lib/format";
 import "./KeuanganPribadi.css";
 
 const SLUG = "keuangan-pribadi";
 const EMPTY = { entries: [] };
 
-const rupiah = (n) =>
-  "Rp" + Number(n || 0).toLocaleString("id-ID", { maximumFractionDigits: 0 });
-
 /**
- * Sample full mini-app (Module). Demonstrates the per-user persistence pattern
- * via the `module_instances` table — other modules follow the same shape.
+ * Manajer Keuangan Pribadi — stateful module.
+ * Persistence is handled entirely by useModuleState (debounced upsert to
+ * module_instances). This component owns only UI + business logic.
  */
 export default function KeuanganPribadi() {
-  const { user } = useAuth();
-  const [state, setState] = useState(EMPTY);
-  const [loaded, setLoaded] = useState(false);
+  const [state, setState, loaded] = useModuleState(SLUG, EMPTY);
   const [label, setLabel] = useState("");
   const [amount, setAmount] = useState("");
   const [type, setType] = useState("expense");
-  const saveTimer = useRef(null);
 
-  // Load persisted state.
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("module_instances")
-      .select("state")
-      .eq("module_slug", SLUG)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.state?.entries) setState(data.state);
-        setLoaded(true);
-      });
-  }, [user]);
-
-  // Debounced upsert whenever state changes (after initial load).
-  const persist = useCallback(
-    (next) => {
-      if (!user) return;
-      clearTimeout(saveTimer.current);
-      saveTimer.current = setTimeout(() => {
-        supabase
-          .from("module_instances")
-          .upsert(
-            { user_id: user.id, module_slug: SLUG, state: next, updated_at: new Date().toISOString() },
-            { onConflict: "user_id,module_slug" },
-          )
-          .then(() => {});
-      }, 500);
-    },
-    [user],
-  );
-
-  function update(next) {
-    setState(next);
-    persist(next);
-  }
+  // Ensure entries is always an array even if persisted state is malformed.
+  const entries = Array.isArray(state?.entries) ? state.entries : [];
 
   function addEntry(e) {
     e.preventDefault();
     const value = Number(amount);
     if (!label.trim() || !value) return;
     const entry = { id: Date.now(), label: label.trim(), amount: value, type };
-    update({ entries: [entry, ...state.entries] });
+    setState({ ...state, entries: [entry, ...entries] });
     setLabel("");
     setAmount("");
   }
 
   function removeEntry(id) {
-    update({ entries: state.entries.filter((x) => x.id !== id) });
+    setState({ ...state, entries: entries.filter((x) => x.id !== id) });
   }
 
-  const income = state.entries
+  const income = entries
     .filter((x) => x.type === "income")
     .reduce((s, x) => s + x.amount, 0);
-  const expense = state.entries
+  const expense = entries
     .filter((x) => x.type === "expense")
     .reduce((s, x) => s + x.amount, 0);
   const balance = income - expense;
@@ -87,7 +48,7 @@ export default function KeuanganPribadi() {
         <div>
           <h1 className="db-view-title">Manajer Keuangan Pribadi</h1>
           <p className="db-view-sub">
-            Catat pemasukan & pengeluaran kamu — tersimpan otomatis.
+            Catat pemasukan &amp; pengeluaran kamu — tersimpan otomatis.
           </p>
         </div>
       </div>
@@ -95,19 +56,19 @@ export default function KeuanganPribadi() {
       <div className="db-stats-row">
         <div className="db-stat-card">
           <div className="db-stat-top">
-            <span className="db-stat-value">{rupiah(income)}</span>
+            <span className="db-stat-value">{fmt.rupiah(income)}</span>
             <span className="db-stat-label">Pemasukan</span>
           </div>
         </div>
         <div className="db-stat-card">
           <div className="db-stat-top">
-            <span className="db-stat-value">{rupiah(expense)}</span>
+            <span className="db-stat-value">{fmt.rupiah(expense)}</span>
             <span className="db-stat-label">Pengeluaran</span>
           </div>
         </div>
         <div className="db-stat-card">
           <div className="db-stat-top">
-            <span className="db-stat-value">{rupiah(balance)}</span>
+            <span className="db-stat-value">{fmt.rupiah(balance)}</span>
             <span className="db-stat-label">Saldo</span>
           </div>
         </div>
@@ -143,17 +104,17 @@ export default function KeuanganPribadi() {
       <div className="kp-list">
         {!loaded ? (
           <p className="kp-empty">Memuat...</p>
-        ) : state.entries.length === 0 ? (
+        ) : entries.length === 0 ? (
           <p className="kp-empty">Belum ada catatan. Tambahkan yang pertama.</p>
         ) : (
-          state.entries.map((x) => (
+          entries.map((x) => (
             <div key={x.id} className="kp-row">
               <span className="kp-row-label">{x.label}</span>
               <span
                 className={`kp-row-amount ${x.type === "income" ? "kp-in" : "kp-out"}`}
               >
                 {x.type === "income" ? "+" : "−"}
-                {rupiah(x.amount)}
+                {fmt.rupiah(x.amount)}
               </span>
               <button
                 type="button"

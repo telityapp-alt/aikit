@@ -1,8 +1,13 @@
 import { useEffect, useEffectEvent, useMemo, useState } from "react";
 import { api } from "../lib/api";
 import { useToast } from "../lib/ToastContext";
+import { useEntity } from "../lib/useEntity";
 import "./TikTokProfileIntelligence.css";
 import "./TikTokAdsSpy.css";
+import "../lib/bridge.css";
+
+// Bridge entity options — module-level to ensure stability
+const CAMPAIGNS_OPTS = { orderBy: "name", ascending: true, autoLoad: false };
 
 const DEFAULT_FORM = {
   query: "",
@@ -10,7 +15,9 @@ const DEFAULT_FORM = {
   resultsLimit: 50,
   mode: "full",
   startUrl: "",
-  dateFrom: new Date(Date.now() - 1000 * 60 * 60 * 24 * 180).toISOString().slice(0, 10),
+  dateFrom: new Date(Date.now() - 1000 * 60 * 60 * 24 * 180)
+    .toISOString()
+    .slice(0, 10),
   dateTo: new Date().toISOString().slice(0, 10),
 };
 
@@ -28,7 +35,8 @@ function numberFormat(v) {
 }
 function compactNumber(v) {
   const n = Number(v || 0);
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+  if (n >= 1_000_000)
+    return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}K`;
   return String(n);
 }
@@ -44,12 +52,18 @@ function compactTime(value) {
 }
 function dateFormat(value) {
   if (!value) return "-";
-  return new Intl.DateTimeFormat("id-ID", { day: "2-digit", month: "short", year: "numeric" }).format(
-    new Date(value),
-  );
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
 }
 
-function BarChart({ data = [], formatValue = (v) => v, emptyLabel = "Belum ada data." }) {
+function BarChart({
+  data = [],
+  formatValue = (v) => v,
+  emptyLabel = "Belum ada data.",
+}) {
   const max = Math.max(1, ...data.map((d) => Number(d.value) || 0));
   if (!data.length) return <div className="tpi-chart-empty">{emptyLabel}</div>;
   return (
@@ -58,7 +72,12 @@ function BarChart({ data = [], formatValue = (v) => v, emptyLabel = "Belum ada d
         <div className="tpi-chart-col" key={`${d.label}-${index}`}>
           <div className="tpi-chart-bar-wrap">
             <span className="tpi-chart-value">{formatValue(d.value)}</span>
-            <div className="tpi-chart-bar" style={{ height: `${Math.max(4, (Number(d.value) / max) * 100)}%` }} />
+            <div
+              className="tpi-chart-bar"
+              style={{
+                height: `${Math.max(4, (Number(d.value) / max) * 100)}%`,
+              }}
+            />
           </div>
           <span className="tpi-chart-label">{d.label}</span>
         </div>
@@ -67,7 +86,13 @@ function BarChart({ data = [], formatValue = (v) => v, emptyLabel = "Belum ada d
   );
 }
 
-function ClusterList({ rows = [], labelKey, valueKey, formatValue = numberFormat, emptyLabel = "Belum ada data." }) {
+function ClusterList({
+  rows = [],
+  labelKey,
+  valueKey,
+  formatValue = numberFormat,
+  emptyLabel = "Belum ada data.",
+}) {
   if (!rows.length) return <div className="tpi-chart-empty">{emptyLabel}</div>;
   return (
     <div style={{ marginTop: 8 }}>
@@ -91,6 +116,18 @@ export default function TikTokAdsSpy() {
   const [loadingReports, setLoadingReports] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Bridge state
+  const [showCampaignSelect, setShowCampaignSelect] = useState(false);
+  const [selectedCampaignId, setSelectedCampaignId] = useState("");
+  const [bridgeSaving, setBridgeSaving] = useState(false);
+
+  // Bridge hooks
+  const {
+    data: campaigns,
+    refresh: loadCampaigns,
+    update: updateCampaign,
+  } = useEntity("campaigns", CAMPAIGNS_OPTS);
 
   const loadReports = useEffectEvent(async (selectFirst = false) => {
     setLoadingReports(true);
@@ -129,7 +166,8 @@ export default function TikTokAdsSpy() {
   }, [activeReportId]);
   useEffect(() => {
     const status = reportDetail?.report?.status;
-    if (!activeReportId || !status || !["queued", "running"].includes(status)) return undefined;
+    if (!activeReportId || !status || !["queued", "running"].includes(status))
+      return undefined;
     const timer = setInterval(() => {
       loadReportDetail(activeReportId, true);
       loadReports(false);
@@ -137,7 +175,10 @@ export default function TikTokAdsSpy() {
     return () => clearInterval(timer);
   }, [activeReportId, reportDetail?.report?.status]);
 
-  const topAds = useMemo(() => (reportDetail?.items || []).slice(0, 6), [reportDetail]);
+  const topAds = useMemo(
+    () => (reportDetail?.items || []).slice(0, 6),
+    [reportDetail],
+  );
 
   async function submitRun(event) {
     event.preventDefault();
@@ -145,7 +186,9 @@ export default function TikTokAdsSpy() {
     try {
       const data = await api.runAutomation("tiktok-ads-spy", form);
       setActiveReportId(data.report.id);
-      toast.success("Run TikTok Ads Spy dimulai. Dashboard akan terisi otomatis.");
+      toast.success(
+        "Run TikTok Ads Spy dimulai. Dashboard akan terisi otomatis.",
+      );
       await loadReports();
       await loadReportDetail(data.report.id);
     } catch (error) {
@@ -158,10 +201,44 @@ export default function TikTokAdsSpy() {
   async function downloadReport() {
     if (!reportDetail?.report?.id) return;
     try {
-      await api.downloadTikTokAdsReport(reportDetail.report.id, (reportDetail.report.query || "report").slice(0, 30));
+      await api.downloadTikTokAdsReport(
+        reportDetail.report.id,
+        (reportDetail.report.query || "report").slice(0, 30),
+      );
       toast.success("Workbook TikTok Ads berhasil diunduh.");
     } catch (error) {
       toast.error(error.message);
+    }
+  }
+
+  // Bridge handlers
+  function handleOpenCampaignSelect() {
+    setSelectedCampaignId("");
+    setShowCampaignSelect(true);
+    loadCampaigns();
+  }
+
+  async function confirmAssignCampaign() {
+    if (!selectedCampaignId || !reportDetail?.report?.id) return;
+    setBridgeSaving(true);
+    try {
+      const campaign = campaigns.find((c) => c.id === selectedCampaignId);
+      const current = campaign?.metadata || {};
+      const linked = current.linked_reports || [];
+      if (!linked.includes(reportDetail.report.id)) {
+        await updateCampaign(selectedCampaignId, {
+          metadata: {
+            ...current,
+            linked_reports: [...linked, reportDetail.report.id],
+          },
+        });
+      }
+      toast.success("Report ditautkan ke Campaign");
+      setShowCampaignSelect(false);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setBridgeSaving(false);
     }
   }
 
@@ -175,8 +252,9 @@ export default function TikTokAdsSpy() {
           <span className="tpi-kicker">Apify Intelligence Stack</span>
           <h1 className="tpi-title">TikTok Ads Spy</h1>
           <p className="tpi-subtitle">
-            Bedah iklan kompetitor di TikTok Ads Library — creative gallery, share-of-voice,
-            targeting usia/gender, dan region intelligence. Competitive intel, bukan ROI.
+            Bedah iklan kompetitor di TikTok Ads Library — creative gallery,
+            share-of-voice, targeting usia/gender, dan region intelligence.
+            Competitive intel, bukan ROI.
           </p>
         </div>
 
@@ -185,7 +263,9 @@ export default function TikTokAdsSpy() {
             <span>Advertiser / keyword</span>
             <input
               value={form.query}
-              onChange={(e) => setForm((c) => ({ ...c, query: e.target.value }))}
+              onChange={(e) =>
+                setForm((c) => ({ ...c, query: e.target.value }))
+              }
               placeholder="contoh: NVIDIA GmbH"
             />
           </label>
@@ -195,7 +275,9 @@ export default function TikTokAdsSpy() {
               <span>Region</span>
               <input
                 value={form.region}
-                onChange={(e) => setForm((c) => ({ ...c, region: e.target.value }))}
+                onChange={(e) =>
+                  setForm((c) => ({ ...c, region: e.target.value }))
+                }
                 placeholder="all / ID / DE ..."
               />
             </label>
@@ -206,7 +288,12 @@ export default function TikTokAdsSpy() {
                 min="1"
                 max="500"
                 value={form.resultsLimit}
-                onChange={(e) => setForm((c) => ({ ...c, resultsLimit: Number(e.target.value || 1) }))}
+                onChange={(e) =>
+                  setForm((c) => ({
+                    ...c,
+                    resultsLimit: Number(e.target.value || 1),
+                  }))
+                }
               />
             </label>
           </div>
@@ -236,29 +323,53 @@ export default function TikTokAdsSpy() {
           <div className="tpi-grid-two">
             <label className="tpi-field">
               <span>Dari tanggal</span>
-              <input type="date" value={form.dateFrom} onChange={(e) => setForm((c) => ({ ...c, dateFrom: e.target.value }))} />
+              <input
+                type="date"
+                value={form.dateFrom}
+                onChange={(e) =>
+                  setForm((c) => ({ ...c, dateFrom: e.target.value }))
+                }
+              />
             </label>
             <label className="tpi-field">
               <span>Sampai tanggal</span>
-              <input type="date" value={form.dateTo} onChange={(e) => setForm((c) => ({ ...c, dateTo: e.target.value }))} />
+              <input
+                type="date"
+                value={form.dateTo}
+                onChange={(e) =>
+                  setForm((c) => ({ ...c, dateTo: e.target.value }))
+                }
+              />
             </label>
           </div>
 
-          <button type="button" className="tas-advanced-toggle" onClick={() => setShowAdvanced((v) => !v)}>
-            {showAdvanced ? "− Sembunyikan advanced" : "+ Advanced: tempel URL Ads Library"}
+          <button
+            type="button"
+            className="tas-advanced-toggle"
+            onClick={() => setShowAdvanced((v) => !v)}
+          >
+            {showAdvanced
+              ? "− Sembunyikan advanced"
+              : "+ Advanced: tempel URL Ads Library"}
           </button>
           {showAdvanced && (
             <label className="tpi-field">
               <span>startUrl (opsional, override)</span>
               <input
                 value={form.startUrl}
-                onChange={(e) => setForm((c) => ({ ...c, startUrl: e.target.value }))}
+                onChange={(e) =>
+                  setForm((c) => ({ ...c, startUrl: e.target.value }))
+                }
                 placeholder="https://library.tiktok.com/ads?..."
               />
             </label>
           )}
 
-          <button className="cta-button tpi-submit" type="submit" disabled={submitting}>
+          <button
+            className="cta-button tpi-submit"
+            type="submit"
+            disabled={submitting}
+          >
             {submitting ? "Menjalankan..." : "Run TikTok Ads Spy"}
           </button>
         </form>
@@ -266,7 +377,9 @@ export default function TikTokAdsSpy() {
         <div className="tpi-history">
           <div className="tpi-history-head">
             <h2>Report history</h2>
-            <span>{loadingReports ? "memuat" : `${reports.length} report`}</span>
+            <span>
+              {loadingReports ? "memuat" : `${reports.length} report`}
+            </span>
           </div>
           <div className="tpi-history-list">
             {reports.map((entry) => (
@@ -278,16 +391,25 @@ export default function TikTokAdsSpy() {
               >
                 <div className="tpi-history-top">
                   <strong>{entry.query}</strong>
-                  <span className={`tpi-badge tpi-badge-${entry.status}`}>{entry.status}</span>
+                  <span className={`tpi-badge tpi-badge-${entry.status}`}>
+                    {entry.status}
+                  </span>
                 </div>
                 <div className="tpi-history-meta">
-                  <span>{entry.summary?.totalAds ?? entry.filters?.resultsLimit ?? 0} ads</span>
+                  <span>
+                    {entry.summary?.totalAds ??
+                      entry.filters?.resultsLimit ??
+                      0}{" "}
+                    ads
+                  </span>
                   <span>{compactTime(entry.created_at)}</span>
                 </div>
               </button>
             ))}
             {!loadingReports && reports.length === 0 && (
-              <div className="tpi-empty-history">Report pertama yang kamu jalankan akan muncul di sini.</div>
+              <div className="tpi-empty-history">
+                Report pertama yang kamu jalankan akan muncul di sini.
+              </div>
             )}
           </div>
         </div>
@@ -297,96 +419,261 @@ export default function TikTokAdsSpy() {
         {!reportDetail && (
           <div className="tpi-empty-stage">
             <span className="tpi-kicker">Production vertical ready</span>
-            <h2>Run pertama akan membuat ads intelligence deck secara otomatis</h2>
+            <h2>
+              Run pertama akan membuat ads intelligence deck secara otomatis
+            </h2>
             <p>
-              Begitu run berjalan, workspace ini mengisi creative gallery, share-of-voice,
-              CTA & landing analysis, region impressions, dan targeting breakdown kompetitor.
+              Begitu run berjalan, workspace ini mengisi creative gallery,
+              share-of-voice, CTA & landing analysis, region impressions, dan
+              targeting breakdown kompetitor.
             </p>
           </div>
         )}
 
         {reportDetail && (
           <>
+            {/* Bridge actions — only show when report is complete */}
+            {reportDetail?.report?.status === "completed" && (
+              <div className="bridge-actions">
+                <button
+                  type="button"
+                  className="bridge-btn bridge-btn--secondary"
+                  aria-label="Assign report ini ke campaign"
+                  onClick={handleOpenCampaignSelect}
+                >
+                  📋 Assign ke Campaign
+                </button>
+              </div>
+            )}
+            {showCampaignSelect && (
+              <div className="bridge-panel">
+                <p>Assign ke Campaign:</p>
+                <select
+                  value={selectedCampaignId}
+                  onChange={(e) => setSelectedCampaignId(e.target.value)}
+                  aria-label="Pilih campaign"
+                >
+                  <option value="">-- Pilih Campaign --</option>
+                  {(campaigns || []).map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="bridge-panel-actions">
+                  <button
+                    onClick={confirmAssignCampaign}
+                    disabled={!selectedCampaignId || bridgeSaving}
+                  >
+                    {bridgeSaving ? "Menyimpan..." : "Assign"}
+                  </button>
+                  <button onClick={() => setShowCampaignSelect(false)}>
+                    Batal
+                  </button>
+                </div>
+              </div>
+            )}
             <section className="tpi-command">
               <div>
                 <span className="tpi-kicker">Ads Intelligence Deck</span>
                 <h2>{report.query}</h2>
                 <p>
-                  Region {report.region} · {dateFormat(report.date_from)} — {dateFormat(report.date_to)} ·{" "}
+                  Region {report.region} · {dateFormat(report.date_from)} —{" "}
+                  {dateFormat(report.date_to)} ·{" "}
                   {summary.totalAds ?? reportDetail.items?.length ?? 0} ads
                 </p>
               </div>
               <div className="tpi-command-actions">
-                <span className={`tpi-badge tpi-badge-${report.status}`}>{report.status}</span>
-                <button type="button" className="ghost-button" onClick={downloadReport} disabled={!report.artifact_id} style={{ height: 38 }}>
+                <span className={`tpi-badge tpi-badge-${report.status}`}>
+                  {report.status}
+                </span>
+                <button
+                  type="button"
+                  className="ghost-button"
+                  onClick={downloadReport}
+                  disabled={!report.artifact_id}
+                  style={{ height: 38 }}
+                >
                   Download Workbook
                 </button>
               </div>
             </section>
 
             <section className="tpi-signal-strip">
-              <article className="tpi-signal-card"><span>Total ads</span><strong>{numberFormat(summary.totalAds)}</strong></article>
-              <article className="tpi-signal-card"><span>Advertisers</span><strong>{numberFormat(summary.uniqueAdvertisers)}</strong></article>
-              <article className="tpi-signal-card"><span>Active ads</span><strong>{numberFormat(summary.activeAds)}</strong></article>
-              <article className="tpi-signal-card"><span>Est. impressions</span><strong>{compactNumber(summary.estImpressions)}</strong></article>
-              <article className="tpi-signal-card"><span>Est. reach</span><strong>{compactNumber(summary.estReach)}</strong></article>
-              <article className="tpi-signal-card"><span>Avg days active</span><strong>{numberFormat(summary.avgDaysActive)}</strong></article>
+              <article className="tpi-signal-card">
+                <span>Total ads</span>
+                <strong>{numberFormat(summary.totalAds)}</strong>
+              </article>
+              <article className="tpi-signal-card">
+                <span>Advertisers</span>
+                <strong>{numberFormat(summary.uniqueAdvertisers)}</strong>
+              </article>
+              <article className="tpi-signal-card">
+                <span>Active ads</span>
+                <strong>{numberFormat(summary.activeAds)}</strong>
+              </article>
+              <article className="tpi-signal-card">
+                <span>Est. impressions</span>
+                <strong>{compactNumber(summary.estImpressions)}</strong>
+              </article>
+              <article className="tpi-signal-card">
+                <span>Est. reach</span>
+                <strong>{compactNumber(summary.estReach)}</strong>
+              </article>
+              <article className="tpi-signal-card">
+                <span>Avg days active</span>
+                <strong>{numberFormat(summary.avgDaysActive)}</strong>
+              </article>
             </section>
 
             <section className="tpi-kpi-strip">
-              <article className="tpi-kpi-card"><span>Ad velocity</span><strong>{Number(summary.adVelocityPerWeek || 0).toFixed(1)}</strong><em>ads / minggu</em></article>
-              <article className="tpi-kpi-card"><span>Avg audience size</span><strong>{compactNumber(summary.avgAudienceSize)}</strong><em>targeting reach</em></article>
-              <article className="tpi-kpi-card"><span>High spend power</span><strong>{Math.round((summary.highSpendingPowerRatio || 0) * 100)}%</strong><em>ads targeting</em></article>
-              <article className="tpi-kpi-card"><span>Top CTA</span><strong className="tpi-kpi-text">{summary.ctaBreakdown?.[0]?.cta || "-"}</strong><em>{summary.ctaBreakdown?.[0]?.count || 0} ads</em></article>
-              <article className="tpi-kpi-card"><span>Top region</span><strong className="tpi-kpi-text">{summary.regionImpressions?.[0]?.regionCode || "-"}</strong><em>{compactNumber(summary.regionImpressions?.[0]?.impressions)} impr</em></article>
-              <article className="tpi-kpi-card"><span>Top advertiser</span><strong className="tpi-kpi-text">{summary.shareOfVoice?.[0]?.advertiser || "-"}</strong><em>{summary.shareOfVoice?.[0]?.share || 0}% SOV</em></article>
+              <article className="tpi-kpi-card">
+                <span>Ad velocity</span>
+                <strong>
+                  {Number(summary.adVelocityPerWeek || 0).toFixed(1)}
+                </strong>
+                <em>ads / minggu</em>
+              </article>
+              <article className="tpi-kpi-card">
+                <span>Avg audience size</span>
+                <strong>{compactNumber(summary.avgAudienceSize)}</strong>
+                <em>targeting reach</em>
+              </article>
+              <article className="tpi-kpi-card">
+                <span>High spend power</span>
+                <strong>
+                  {Math.round((summary.highSpendingPowerRatio || 0) * 100)}%
+                </strong>
+                <em>ads targeting</em>
+              </article>
+              <article className="tpi-kpi-card">
+                <span>Top CTA</span>
+                <strong className="tpi-kpi-text">
+                  {summary.ctaBreakdown?.[0]?.cta || "-"}
+                </strong>
+                <em>{summary.ctaBreakdown?.[0]?.count || 0} ads</em>
+              </article>
+              <article className="tpi-kpi-card">
+                <span>Top region</span>
+                <strong className="tpi-kpi-text">
+                  {summary.regionImpressions?.[0]?.regionCode || "-"}
+                </strong>
+                <em>
+                  {compactNumber(summary.regionImpressions?.[0]?.impressions)}{" "}
+                  impr
+                </em>
+              </article>
+              <article className="tpi-kpi-card">
+                <span>Top advertiser</span>
+                <strong className="tpi-kpi-text">
+                  {summary.shareOfVoice?.[0]?.advertiser || "-"}
+                </strong>
+                <em>{summary.shareOfVoice?.[0]?.share || 0}% SOV</em>
+              </article>
             </section>
 
             <section className="tpi-grid-main">
               <div className="tpi-panel">
-                <div className="tpi-panel-head"><h3>Est. impressions (top ads)</h3><span>geometric mid-point</span></div>
-                <BarChart data={(summary.impressionsSeries || []).map((d) => ({ label: d.label, value: d.value }))} formatValue={compactNumber} />
+                <div className="tpi-panel-head">
+                  <h3>Est. impressions (top ads)</h3>
+                  <span>geometric mid-point</span>
+                </div>
+                <BarChart
+                  data={(summary.impressionsSeries || []).map((d) => ({
+                    label: d.label,
+                    value: d.value,
+                  }))}
+                  formatValue={compactNumber}
+                />
               </div>
               <div className="tpi-panel">
-                <div className="tpi-panel-head"><h3>Share of voice</h3><span>by est. impressions</span></div>
-                <BarChart data={(summary.shareOfVoice || []).map((d) => ({ label: (d.advertiser || "").slice(0, 10), value: d.impressions }))} formatValue={compactNumber} />
+                <div className="tpi-panel-head">
+                  <h3>Share of voice</h3>
+                  <span>by est. impressions</span>
+                </div>
+                <BarChart
+                  data={(summary.shareOfVoice || []).map((d) => ({
+                    label: (d.advertiser || "").slice(0, 10),
+                    value: d.impressions,
+                  }))}
+                  formatValue={compactNumber}
+                />
               </div>
             </section>
 
             <section className="tpi-board">
-              <div className="tpi-panel-head"><h3>Creative gallery</h3><span>{topAds.length} top ads</span></div>
+              <div className="tpi-panel-head">
+                <h3>Creative gallery</h3>
+                <span>{topAds.length} top ads</span>
+              </div>
               <div className="tas-gallery">
                 {topAds.map((ad) => (
                   <article className="tas-ad-card" key={ad.id}>
                     <div className="tas-ad-thumb">
                       {ad.cover_image_url ? (
-                        <img src={ad.cover_image_url} alt={ad.advertiser_name} referrerPolicy="no-referrer" loading="lazy" />
+                        <img
+                          src={ad.cover_image_url}
+                          alt={ad.advertiser_name}
+                          referrerPolicy="no-referrer"
+                          loading="lazy"
+                        />
                       ) : (
-                        <div className="tas-ad-thumb-fallback">{(ad.advertiser_name || "AD")[0]}</div>
+                        <div className="tas-ad-thumb-fallback">
+                          {(ad.advertiser_name || "AD")[0]}
+                        </div>
                       )}
                       <span className="tas-ad-rank">#{ad.rank_position}</span>
                       {ad.video_url && (
-                        <a className="tas-ad-play" href={ad.video_url} target="_blank" rel="noopener noreferrer" title="Play creative">▶</a>
+                        <a
+                          className="tas-ad-play"
+                          href={ad.video_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="Play creative"
+                        >
+                          ▶
+                        </a>
                       )}
                     </div>
                     <div className="tas-ad-body">
-                      <strong>{ad.advertiser_name || "Unknown advertiser"}</strong>
-                      <p>{ad.ai_enrichment?.summary || ad.caption || "No caption"}</p>
+                      <strong>
+                        {ad.advertiser_name || "Unknown advertiser"}
+                      </strong>
+                      <p>
+                        {ad.ai_enrichment?.summary ||
+                          ad.caption ||
+                          "No caption"}
+                      </p>
                       <div className="tas-ad-metrics">
-                        <span>{compactNumber(ad.impressions_estimate)} impr</span>
+                        <span>
+                          {compactNumber(ad.impressions_estimate)} impr
+                        </span>
                         <span>{ad.days_active}d active</span>
                         <span>{ad.cta}</span>
                       </div>
                       <div className="tpi-chip-group">
-                        {(ad.ai_enrichment?.ageRanges || []).slice(0, 3).map((a) => (
-                          <span className="tpi-chip" key={a}>{a}</span>
-                        ))}
-                        {(ad.ai_enrichment?.targetRegions || []).slice(0, 3).map((r) => (
-                          <span className="tpi-chip tpi-chip-muted" key={r}>{r}</span>
-                        ))}
+                        {(ad.ai_enrichment?.ageRanges || [])
+                          .slice(0, 3)
+                          .map((a) => (
+                            <span className="tpi-chip" key={a}>
+                              {a}
+                            </span>
+                          ))}
+                        {(ad.ai_enrichment?.targetRegions || [])
+                          .slice(0, 3)
+                          .map((r) => (
+                            <span className="tpi-chip tpi-chip-muted" key={r}>
+                              {r}
+                            </span>
+                          ))}
                       </div>
                       {ad.click_url && (
-                        <a href={ad.click_url} target="_blank" rel="noopener noreferrer" className="tpi-link">
+                        <a
+                          href={ad.click_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="tpi-link"
+                        >
                           {ad.ai_enrichment?.landingDomain || "Open landing"}
                         </a>
                       )}
@@ -398,21 +685,46 @@ export default function TikTokAdsSpy() {
 
             <section className="tpi-grid-main">
               <div className="tpi-panel">
-                <div className="tpi-panel-head"><h3>Run progress</h3><span>{loadingDetail ? "refreshing" : `${reportDetail.events?.length || 0} events`}</span></div>
+                <div className="tpi-panel-head">
+                  <h3>Run progress</h3>
+                  <span>
+                    {loadingDetail
+                      ? "refreshing"
+                      : `${reportDetail.events?.length || 0} events`}
+                  </span>
+                </div>
                 <div className="tpi-stage-list">
                   {(reportDetail.events || []).map((event, index) => (
-                    <div className="tpi-stage-item" key={`${event.stage}-${index}`}>
-                      <div className={`tpi-stage-dot tpi-stage-dot-${event.status}`} />
-                      <div><strong>{STAGE_LABELS[event.stage] || event.stage}</strong><p>{event.message}</p></div>
+                    <div
+                      className="tpi-stage-item"
+                      key={`${event.stage}-${index}`}
+                    >
+                      <div
+                        className={`tpi-stage-dot tpi-stage-dot-${event.status}`}
+                      />
+                      <div>
+                        <strong>
+                          {STAGE_LABELS[event.stage] || event.stage}
+                        </strong>
+                        <p>{event.message}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
               <div className="tpi-panel">
-                <div className="tpi-panel-head"><h3>Executive summary</h3><span>{compactTime(report.updated_at)}</span></div>
-                <p className="tpi-summary-callout">{summary.executiveSummary || "Summary akan muncul setelah report selesai."}</p>
+                <div className="tpi-panel-head">
+                  <h3>Executive summary</h3>
+                  <span>{compactTime(report.updated_at)}</span>
+                </div>
+                <p className="tpi-summary-callout">
+                  {summary.executiveSummary ||
+                    "Summary akan muncul setelah report selesai."}
+                </p>
                 <ul className="tpi-reasons">
-                  {(summary.recommendations || []).map((r) => (<li key={r}>{r}</li>))}
+                  {(summary.recommendations || []).map((r) => (
+                    <li key={r}>{r}</li>
+                  ))}
                 </ul>
                 <p className="tas-disclaimer">{summary.creativeAngleNote}</p>
               </div>
@@ -420,39 +732,69 @@ export default function TikTokAdsSpy() {
 
             <section className="tpi-grid-main">
               <div className="tpi-panel">
-                <div className="tpi-panel-head"><h3>CTA breakdown</h3></div>
-                <ClusterList rows={summary.ctaBreakdown || []} labelKey="cta" valueKey="count" />
+                <div className="tpi-panel-head">
+                  <h3>CTA breakdown</h3>
+                </div>
+                <ClusterList
+                  rows={summary.ctaBreakdown || []}
+                  labelKey="cta"
+                  valueKey="count"
+                />
               </div>
               <div className="tpi-panel">
-                <div className="tpi-panel-head"><h3>Landing domains</h3></div>
-                <ClusterList rows={summary.landingDomains || []} labelKey="domain" valueKey="count" />
+                <div className="tpi-panel-head">
+                  <h3>Landing domains</h3>
+                </div>
+                <ClusterList
+                  rows={summary.landingDomains || []}
+                  labelKey="domain"
+                  valueKey="count"
+                />
               </div>
             </section>
 
             <section className="tpi-grid-main">
               <div className="tpi-panel">
-                <div className="tpi-panel-head"><h3>Region impressions</h3></div>
-                <ClusterList rows={summary.regionImpressions || []} labelKey="regionCode" valueKey="impressions" formatValue={compactNumber} />
+                <div className="tpi-panel-head">
+                  <h3>Region impressions</h3>
+                </div>
+                <ClusterList
+                  rows={summary.regionImpressions || []}
+                  labelKey="regionCode"
+                  valueKey="impressions"
+                  formatValue={compactNumber}
+                />
               </div>
               <div className="tpi-panel">
-                <div className="tpi-panel-head"><h3>Targeting mix</h3></div>
+                <div className="tpi-panel-head">
+                  <h3>Targeting mix</h3>
+                </div>
                 <div className="tpi-cluster-group">
                   <div>
                     <span className="tpi-cluster-label">Age</span>
                     {(summary.ageDistribution || []).map((r) => (
-                      <div className="tpi-cluster-row" key={r.label}><span>{r.label}</span><strong>{r.count}</strong></div>
+                      <div className="tpi-cluster-row" key={r.label}>
+                        <span>{r.label}</span>
+                        <strong>{r.count}</strong>
+                      </div>
                     ))}
                   </div>
                   <div>
                     <span className="tpi-cluster-label">Gender</span>
                     {(summary.genderDistribution || []).map((r) => (
-                      <div className="tpi-cluster-row" key={r.label}><span>{r.label}</span><strong>{r.count}</strong></div>
+                      <div className="tpi-cluster-row" key={r.label}>
+                        <span>{r.label}</span>
+                        <strong>{r.count}</strong>
+                      </div>
                     ))}
                   </div>
                   <div>
                     <span className="tpi-cluster-label">Language</span>
                     {(summary.languages || []).map((r) => (
-                      <div className="tpi-cluster-row" key={r.label}><span>{r.label}</span><strong>{r.count}</strong></div>
+                      <div className="tpi-cluster-row" key={r.label}>
+                        <span>{r.label}</span>
+                        <strong>{r.count}</strong>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -460,11 +802,22 @@ export default function TikTokAdsSpy() {
             </section>
 
             <section className="tpi-panel">
-              <div className="tpi-panel-head"><h3>Raw explorer</h3><span>{reportDetail.items?.length || 0} ads</span></div>
+              <div className="tpi-panel-head">
+                <h3>Raw explorer</h3>
+                <span>{reportDetail.items?.length || 0} ads</span>
+              </div>
               <div className="tpi-table-wrap">
                 <table className="tpi-table">
                   <thead>
-                    <tr><th>#</th><th>Advertiser</th><th>Caption</th><th>CTA</th><th>Est. impr</th><th>Days</th><th>First shown</th></tr>
+                    <tr>
+                      <th>#</th>
+                      <th>Advertiser</th>
+                      <th>Caption</th>
+                      <th>CTA</th>
+                      <th>Est. impr</th>
+                      <th>Days</th>
+                      <th>First shown</th>
+                    </tr>
                   </thead>
                   <tbody>
                     {(reportDetail.items || []).map((ad) => (

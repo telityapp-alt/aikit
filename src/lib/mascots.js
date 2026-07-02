@@ -1,12 +1,20 @@
 export const MASCOTS = {
-  wave: "/mascots/hedgehog-wave.webp",
-  peek: "/mascots/hedgehog-peek.webp",
-  sitCard: "/mascots/hedgehog-sit-card.webp",
-  footer: "/mascots/hedgehog-footer-wave.webp",
-  point: "/mascots/hedgehog-point.webp",
-  chat: "/mascots/hedgehog-chat.webp",
-  celebrate: "/mascots/hedgehog-celebrate.webp",
-  laptop: "/mascots/hedgehog-laptop.webp",
+  wave: "/mascots/flash-wave.webp",
+  peek: "/mascots/flash-peek.webp",
+  sitCard: "/mascots/flash-sit-card.webp",
+  footer: "/mascots/flash-footer-wave.webp",
+  point: "/mascots/flash-point.webp",
+  chat: "/mascots/flash-chat.webp",
+  celebrate: "/mascots/flash-celebrate.webp",
+  laptop: "/mascots/flash-laptop.webp",
+};
+
+export const MASCOT_SCENES = {
+  landingHero: MASCOTS.laptop,
+  landingSticker: MASCOTS.celebrate,
+  dashboardWelcome: MASCOTS.footer,
+  aiGreeting: MASCOTS.chat,
+  footer: MASCOTS.footer,
 };
 
 export function getLibraryMascot(index) {

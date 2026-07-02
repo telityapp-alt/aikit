@@ -1,14 +1,26 @@
 import { useEffect, useEffectEvent, useMemo, useState } from "react";
 import { api } from "../lib/api";
 import { useToast } from "../lib/ToastContext";
+import { useEntity } from "../lib/useEntity";
 import "./TikTokProfileIntelligence.css";
 import "./InstagramProfileIntelligence.css";
+import "../lib/bridge.css";
+
+// Bridge entity options — module-level to ensure stability
+const CONTACTS_OPTS = {
+  orderBy: "created_at",
+  ascending: false,
+  autoLoad: false,
+};
+const CAMPAIGNS_OPTS = { orderBy: "name", ascending: true, autoLoad: false };
 
 const DEFAULT_FORM = {
   handle: "",
   maxItems: 30,
   mode: "full",
-  dateFrom: new Date(Date.now() - 1000 * 60 * 60 * 24 * 90).toISOString().slice(0, 10),
+  dateFrom: new Date(Date.now() - 1000 * 60 * 60 * 24 * 90)
+    .toISOString()
+    .slice(0, 10),
   dateTo: new Date().toISOString().slice(0, 10),
 };
 
@@ -27,7 +39,8 @@ function numberFormat(value) {
 }
 function compactNumber(value) {
   const n = Number(value || 0);
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+  if (n >= 1_000_000)
+    return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}K`;
   return String(n);
 }
@@ -46,12 +59,18 @@ function compactTime(value) {
 }
 function dateFormat(value) {
   if (!value) return "-";
-  return new Intl.DateTimeFormat("id-ID", { day: "2-digit", month: "short", year: "numeric" }).format(
-    new Date(value),
-  );
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
 }
 
-function BarChart({ data = [], formatValue = (v) => v, emptyLabel = "Belum ada data." }) {
+function BarChart({
+  data = [],
+  formatValue = (v) => v,
+  emptyLabel = "Belum ada data.",
+}) {
   const max = Math.max(1, ...data.map((d) => Number(d.value) || 0));
   if (!data.length) return <div className="tpi-chart-empty">{emptyLabel}</div>;
   return (
@@ -62,7 +81,9 @@ function BarChart({ data = [], formatValue = (v) => v, emptyLabel = "Belum ada d
             <span className="tpi-chart-value">{formatValue(d.value)}</span>
             <div
               className="tpi-chart-bar"
-              style={{ height: `${Math.max(4, (Number(d.value) / max) * 100)}%` }}
+              style={{
+                height: `${Math.max(4, (Number(d.value) / max) * 100)}%`,
+              }}
             />
           </div>
           <span className="tpi-chart-label">{d.label}</span>
@@ -81,6 +102,20 @@ export default function InstagramProfileIntelligence() {
   const [loadingReports, setLoadingReports] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Bridge state
+  const [showSaveContact, setShowSaveContact] = useState(false);
+  const [showCampaignSelect, setShowCampaignSelect] = useState(false);
+  const [selectedCampaignId, setSelectedCampaignId] = useState("");
+  const [bridgeSaving, setBridgeSaving] = useState(false);
+
+  // Bridge hooks
+  const { create: createContact } = useEntity("contacts", CONTACTS_OPTS);
+  const {
+    data: campaigns,
+    refresh: loadCampaigns,
+    update: updateCampaign,
+  } = useEntity("campaigns", CAMPAIGNS_OPTS);
 
   const loadReports = useEffectEvent(async (selectFirst = false) => {
     setLoadingReports(true);
@@ -123,7 +158,8 @@ export default function InstagramProfileIntelligence() {
 
   useEffect(() => {
     const status = reportDetail?.report?.status;
-    if (!activeReportId || !status || !["queued", "running"].includes(status)) return undefined;
+    if (!activeReportId || !status || !["queued", "running"].includes(status))
+      return undefined;
     const timer = setInterval(() => {
       loadReportDetail(activeReportId, true);
       loadReports(false);
@@ -131,13 +167,19 @@ export default function InstagramProfileIntelligence() {
     return () => clearInterval(timer);
   }, [activeReportId, reportDetail?.report?.status]);
 
-  const topItems = useMemo(() => (reportDetail?.items || []).slice(0, 5), [reportDetail]);
+  const topItems = useMemo(
+    () => (reportDetail?.items || []).slice(0, 5),
+    [reportDetail],
+  );
 
   async function submitRun(event) {
     event.preventDefault();
     setSubmitting(true);
     try {
-      const data = await api.runAutomation("instagram-profile-intelligence", form);
+      const data = await api.runAutomation(
+        "instagram-profile-intelligence",
+        form,
+      );
       setActiveReportId(data.report.id);
       toast.success("Run Instagram dimulai. Dashboard akan terisi otomatis.");
       await loadReports();
@@ -146,6 +188,59 @@ export default function InstagramProfileIntelligence() {
       toast.error(error.message);
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  // Bridge handlers
+  async function confirmSaveContact() {
+    const handle = reportDetail?.report?.instagram_handle || "";
+    const name = reportDetail?.profile?.display_name || handle;
+    setBridgeSaving(true);
+    try {
+      await createContact({
+        name,
+        type: "creator",
+        social_handles: { instagram: handle },
+        tags: ["instagram", "creator"],
+        status: "active",
+      });
+      toast.success("Creator disimpan ke Contacts");
+      setShowSaveContact(false);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setBridgeSaving(false);
+    }
+  }
+
+  function handleOpenCampaignSelect() {
+    setShowSaveContact(false);
+    setSelectedCampaignId("");
+    setShowCampaignSelect(true);
+    loadCampaigns();
+  }
+
+  async function confirmAssignCampaign() {
+    if (!selectedCampaignId || !reportDetail?.report?.id) return;
+    setBridgeSaving(true);
+    try {
+      const campaign = campaigns.find((c) => c.id === selectedCampaignId);
+      const current = campaign?.metadata || {};
+      const linked = current.linked_reports || [];
+      if (!linked.includes(reportDetail.report.id)) {
+        await updateCampaign(selectedCampaignId, {
+          metadata: {
+            ...current,
+            linked_reports: [...linked, reportDetail.report.id],
+          },
+        });
+      }
+      toast.success("Report ditautkan ke Campaign");
+      setShowCampaignSelect(false);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setBridgeSaving(false);
     }
   }
 
@@ -164,7 +259,9 @@ export default function InstagramProfileIntelligence() {
 
   const report = reportDetail?.report;
   const summary = report?.summary || {};
-  const sentimentPct = Math.round(((Number(summary.audienceSignals?.avgSentiment || 0) + 1) / 2) * 100);
+  const sentimentPct = Math.round(
+    ((Number(summary.audienceSignals?.avgSentiment || 0) + 1) / 2) * 100,
+  );
 
   return (
     <div className="tpi-shell">
@@ -173,8 +270,8 @@ export default function InstagramProfileIntelligence() {
           <span className="tpi-kicker">Apify Intelligence Stack</span>
           <h1 className="tpi-title">Instagram Profile Intelligence</h1>
           <p className="tpi-subtitle">
-            Tarik post Instagram via Apify, hitung KPI engagement, format, dan audience
-            sentiment, lalu susun dashboard siap dipakai tim growth.
+            Tarik post Instagram via Apify, hitung KPI engagement, format, dan
+            audience sentiment, lalu susun dashboard siap dipakai tim growth.
           </p>
         </div>
 
@@ -183,7 +280,9 @@ export default function InstagramProfileIntelligence() {
             <span>Username Instagram</span>
             <input
               value={form.handle}
-              onChange={(e) => setForm((c) => ({ ...c, handle: e.target.value }))}
+              onChange={(e) =>
+                setForm((c) => ({ ...c, handle: e.target.value }))
+              }
               placeholder="contoh: humansofny"
             />
           </label>
@@ -196,12 +295,20 @@ export default function InstagramProfileIntelligence() {
                 min="1"
                 max="200"
                 value={form.maxItems}
-                onChange={(e) => setForm((c) => ({ ...c, maxItems: Number(e.target.value || 1) }))}
+                onChange={(e) =>
+                  setForm((c) => ({
+                    ...c,
+                    maxItems: Number(e.target.value || 1),
+                  }))
+                }
               />
             </label>
             <div className="tpi-mini-note">
               <strong>Signal logic</strong>
-              <span>Skor prioritaskan engagement rate, conversation, reach, dan bonus Reels.</span>
+              <span>
+                Skor prioritaskan engagement rate, conversation, reach, dan
+                bonus Reels.
+              </span>
             </div>
           </div>
 
@@ -233,7 +340,9 @@ export default function InstagramProfileIntelligence() {
               <input
                 type="date"
                 value={form.dateFrom}
-                onChange={(e) => setForm((c) => ({ ...c, dateFrom: e.target.value }))}
+                onChange={(e) =>
+                  setForm((c) => ({ ...c, dateFrom: e.target.value }))
+                }
               />
             </label>
             <label className="tpi-field">
@@ -241,12 +350,18 @@ export default function InstagramProfileIntelligence() {
               <input
                 type="date"
                 value={form.dateTo}
-                onChange={(e) => setForm((c) => ({ ...c, dateTo: e.target.value }))}
+                onChange={(e) =>
+                  setForm((c) => ({ ...c, dateTo: e.target.value }))
+                }
               />
             </label>
           </div>
 
-          <button className="cta-button tpi-submit" type="submit" disabled={submitting}>
+          <button
+            className="cta-button tpi-submit"
+            type="submit"
+            disabled={submitting}
+          >
             {submitting ? "Menjalankan..." : "Run Instagram Intelligence"}
           </button>
         </form>
@@ -254,7 +369,9 @@ export default function InstagramProfileIntelligence() {
         <div className="tpi-history">
           <div className="tpi-history-head">
             <h2>Report history</h2>
-            <span>{loadingReports ? "memuat" : `${reports.length} report`}</span>
+            <span>
+              {loadingReports ? "memuat" : `${reports.length} report`}
+            </span>
           </div>
           <div className="tpi-history-list">
             {reports.map((entry) => (
@@ -266,7 +383,9 @@ export default function InstagramProfileIntelligence() {
               >
                 <div className="tpi-history-top">
                   <strong>@{entry.instagram_handle}</strong>
-                  <span className={`tpi-badge tpi-badge-${entry.status}`}>{entry.status}</span>
+                  <span className={`tpi-badge tpi-badge-${entry.status}`}>
+                    {entry.status}
+                  </span>
                 </div>
                 <div className="tpi-history-meta">
                   <span>{entry.filters?.maxItems || 0} posts</span>
@@ -275,7 +394,9 @@ export default function InstagramProfileIntelligence() {
               </button>
             ))}
             {!loadingReports && reports.length === 0 && (
-              <div className="tpi-empty-history">Report pertama yang kamu jalankan akan muncul di sini.</div>
+              <div className="tpi-empty-history">
+                Report pertama yang kamu jalankan akan muncul di sini.
+              </div>
             )}
           </div>
         </div>
@@ -285,43 +406,140 @@ export default function InstagramProfileIntelligence() {
         {!reportDetail && (
           <div className="tpi-empty-stage">
             <span className="tpi-kicker">Production vertical ready</span>
-            <h2>Run pertama akan membuat signal deck Instagram secara otomatis</h2>
+            <h2>
+              Run pertama akan membuat signal deck Instagram secara otomatis
+            </h2>
             <p>
-              Begitu run berjalan, workspace ini mengisi progress actor, KPI engagement, format
-              breakdown, reels vs statis, audience sentiment, top movers, dan workbook export.
+              Begitu run berjalan, workspace ini mengisi progress actor, KPI
+              engagement, format breakdown, reels vs statis, audience sentiment,
+              top movers, dan workbook export.
             </p>
           </div>
         )}
 
         {reportDetail && (
           <>
+            {/* Bridge actions — only show when report is complete */}
+            {reportDetail?.report?.status === "completed" && (
+              <div className="bridge-actions">
+                <button
+                  type="button"
+                  className="bridge-btn"
+                  aria-label="Simpan creator ini sebagai kontak"
+                  onClick={() => {
+                    setShowCampaignSelect(false);
+                    setShowSaveContact(true);
+                  }}
+                >
+                  + Simpan sebagai Kontak
+                </button>
+                <button
+                  type="button"
+                  className="bridge-btn bridge-btn--secondary"
+                  aria-label="Assign report ini ke campaign"
+                  onClick={handleOpenCampaignSelect}
+                >
+                  📋 Assign ke Campaign
+                </button>
+              </div>
+            )}
+            {showSaveContact && (
+              <div className="bridge-panel">
+                <p>
+                  Simpan{" "}
+                  <strong>
+                    {reportDetail?.profile?.display_name ||
+                      reportDetail?.report?.instagram_handle}
+                  </strong>{" "}
+                  sebagai kreator?
+                </p>
+                <div className="bridge-panel-actions">
+                  <button onClick={confirmSaveContact} disabled={bridgeSaving}>
+                    {bridgeSaving ? "Menyimpan..." : "Simpan"}
+                  </button>
+                  <button onClick={() => setShowSaveContact(false)}>
+                    Batal
+                  </button>
+                </div>
+              </div>
+            )}
+            {showCampaignSelect && (
+              <div className="bridge-panel">
+                <p>Assign ke Campaign:</p>
+                <select
+                  value={selectedCampaignId}
+                  onChange={(e) => setSelectedCampaignId(e.target.value)}
+                  aria-label="Pilih campaign"
+                >
+                  <option value="">-- Pilih Campaign --</option>
+                  {(campaigns || []).map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="bridge-panel-actions">
+                  <button
+                    onClick={confirmAssignCampaign}
+                    disabled={!selectedCampaignId || bridgeSaving}
+                  >
+                    {bridgeSaving ? "Menyimpan..." : "Assign"}
+                  </button>
+                  <button onClick={() => setShowCampaignSelect(false)}>
+                    Batal
+                  </button>
+                </div>
+              </div>
+            )}
             <section className="tpi-command">
               <div className="tpi-command-identity">
                 {summary.profilePicUrl ? (
-                  <img className="tpi-avatar" src={summary.profilePicUrl} alt={report.instagram_handle} referrerPolicy="no-referrer" />
+                  <img
+                    className="tpi-avatar"
+                    src={summary.profilePicUrl}
+                    alt={report.instagram_handle}
+                    referrerPolicy="no-referrer"
+                  />
                 ) : (
                   <div className="tpi-avatar tpi-avatar-fallback">
                     {report.instagram_handle?.[0]?.toUpperCase() || "I"}
                   </div>
                 )}
                 <div>
-                  <span className="tpi-kicker">Signal Deck{summary.verified ? " · ✔ verified" : ""}</span>
+                  <span className="tpi-kicker">
+                    Signal Deck{summary.verified ? " · ✔ verified" : ""}
+                  </span>
                   <h2>@{report.instagram_handle}</h2>
                   <p>
-                    {dateFormat(report.date_from)} — {dateFormat(report.date_to)} ·{" "}
-                    {(report.filters?.maxItems || reportDetail.items?.length || 0)} target posts
+                    {dateFormat(report.date_from)} —{" "}
+                    {dateFormat(report.date_to)} ·{" "}
+                    {report.filters?.maxItems ||
+                      reportDetail.items?.length ||
+                      0}{" "}
+                    target posts
                   </p>
                   {summary.followerCount ? (
                     <div className="tpi-identity-stats">
-                      <span><strong>{compactNumber(summary.followerCount)}</strong> followers</span>
-                      <span><strong>{compactNumber(summary.postsCount)}</strong> posts</span>
-                      <span><strong>{compactNumber(summary.followingCount)}</strong> following</span>
+                      <span>
+                        <strong>{compactNumber(summary.followerCount)}</strong>{" "}
+                        followers
+                      </span>
+                      <span>
+                        <strong>{compactNumber(summary.postsCount)}</strong>{" "}
+                        posts
+                      </span>
+                      <span>
+                        <strong>{compactNumber(summary.followingCount)}</strong>{" "}
+                        following
+                      </span>
                     </div>
                   ) : null}
                 </div>
               </div>
               <div className="tpi-command-actions">
-                <span className={`tpi-badge tpi-badge-${report.status}`}>{report.status}</span>
+                <span className={`tpi-badge tpi-badge-${report.status}`}>
+                  {report.status}
+                </span>
                 <button
                   type="button"
                   className="ghost-button"
@@ -337,7 +555,11 @@ export default function InstagramProfileIntelligence() {
             <section className="tpi-signal-strip">
               <article className="tpi-signal-card">
                 <span>Total posts</span>
-                <strong>{numberFormat(summary.totalPostsAnalyzed || reportDetail.items?.length)}</strong>
+                <strong>
+                  {numberFormat(
+                    summary.totalPostsAnalyzed || reportDetail.items?.length,
+                  )}
+                </strong>
               </article>
               <article className="tpi-signal-card">
                 <span>Total engagement</span>
@@ -349,11 +571,15 @@ export default function InstagramProfileIntelligence() {
               </article>
               <article className="tpi-signal-card">
                 <span>Engagement score</span>
-                <strong>{Number(summary.engagementScore || 0).toFixed(1)}</strong>
+                <strong>
+                  {Number(summary.engagementScore || 0).toFixed(1)}
+                </strong>
               </article>
               <article className="tpi-signal-card">
                 <span>Conversation score</span>
-                <strong>{Number(summary.conversationScore || 0).toFixed(1)}</strong>
+                <strong>
+                  {Number(summary.conversationScore || 0).toFixed(1)}
+                </strong>
               </article>
               <article className="tpi-signal-card">
                 <span>Reach score</span>
@@ -374,7 +600,9 @@ export default function InstagramProfileIntelligence() {
               </article>
               <article className="tpi-kpi-card">
                 <span>Posting cadence</span>
-                <strong>{Number(summary.postingCadencePerWeek || 0).toFixed(1)}</strong>
+                <strong>
+                  {Number(summary.postingCadencePerWeek || 0).toFixed(1)}
+                </strong>
                 <em>post / minggu</em>
               </article>
               <article className="tpi-kpi-card">
@@ -384,12 +612,16 @@ export default function InstagramProfileIntelligence() {
               </article>
               <article className="tpi-kpi-card">
                 <span>Consistency</span>
-                <strong>{Number(summary.consistencyScore || 0).toFixed(0)}</strong>
+                <strong>
+                  {Number(summary.consistencyScore || 0).toFixed(0)}
+                </strong>
                 <em>stabilitas performa</em>
               </article>
               <article className="tpi-kpi-card">
                 <span>Best posting window</span>
-                <strong className="tpi-kpi-text">{summary.bestPostingWindow || "-"}</strong>
+                <strong className="tpi-kpi-text">
+                  {summary.bestPostingWindow || "-"}
+                </strong>
                 <em>rata-rata engagement tertinggi</em>
               </article>
             </section>
@@ -401,7 +633,10 @@ export default function InstagramProfileIntelligence() {
                   <span>rank order</span>
                 </div>
                 <BarChart
-                  data={(summary.engagementSeries || []).map((d) => ({ label: `#${d.rank}`, value: d.engagement }))}
+                  data={(summary.engagementSeries || []).map((d) => ({
+                    label: `#${d.rank}`,
+                    value: d.engagement,
+                  }))}
                   formatValue={compactNumber}
                 />
               </div>
@@ -410,7 +645,10 @@ export default function InstagramProfileIntelligence() {
                   <h3>Avg engagement by format</h3>
                 </div>
                 <BarChart
-                  data={(summary.formatPerformance || []).map((d) => ({ label: d.format, value: d.avgEngagement }))}
+                  data={(summary.formatPerformance || []).map((d) => ({
+                    label: d.format,
+                    value: d.avgEngagement,
+                  }))}
                   formatValue={compactNumber}
                 />
               </div>
@@ -420,14 +658,25 @@ export default function InstagramProfileIntelligence() {
               <div className="tpi-panel">
                 <div className="tpi-panel-head">
                   <h3>Run progress</h3>
-                  <span>{loadingDetail ? "refreshing" : `${reportDetail.events?.length || 0} events`}</span>
+                  <span>
+                    {loadingDetail
+                      ? "refreshing"
+                      : `${reportDetail.events?.length || 0} events`}
+                  </span>
                 </div>
                 <div className="tpi-stage-list">
                   {(reportDetail.events || []).map((event, index) => (
-                    <div className="tpi-stage-item" key={`${event.stage}-${index}`}>
-                      <div className={`tpi-stage-dot tpi-stage-dot-${event.status}`} />
+                    <div
+                      className="tpi-stage-item"
+                      key={`${event.stage}-${index}`}
+                    >
+                      <div
+                        className={`tpi-stage-dot tpi-stage-dot-${event.status}`}
+                      />
                       <div>
-                        <strong>{STAGE_LABELS[event.stage] || event.stage}</strong>
+                        <strong>
+                          {STAGE_LABELS[event.stage] || event.stage}
+                        </strong>
                         <p>{event.message}</p>
                       </div>
                     </div>
@@ -441,17 +690,24 @@ export default function InstagramProfileIntelligence() {
                   <span>{compactTime(report.updated_at)}</span>
                 </div>
                 <p className="tpi-summary-callout">
-                  {summary.executiveSummary || "Summary akan muncul setelah report selesai."}
+                  {summary.executiveSummary ||
+                    "Summary akan muncul setelah report selesai."}
                 </p>
                 <div className="ipi-vs">
                   <div>
                     <span>Reels avg engagement</span>
-                    <strong>{compactNumber(summary.reelsVsStatic?.reelAvgEngagement)}</strong>
+                    <strong>
+                      {compactNumber(summary.reelsVsStatic?.reelAvgEngagement)}
+                    </strong>
                     <em>{summary.reelsVsStatic?.reelCount || 0} reels</em>
                   </div>
                   <div>
                     <span>Static avg engagement</span>
-                    <strong>{compactNumber(summary.reelsVsStatic?.staticAvgEngagement)}</strong>
+                    <strong>
+                      {compactNumber(
+                        summary.reelsVsStatic?.staticAvgEngagement,
+                      )}
+                    </strong>
                     <em>{summary.reelsVsStatic?.staticCount || 0} posts</em>
                   </div>
                 </div>
@@ -461,17 +717,30 @@ export default function InstagramProfileIntelligence() {
                     <strong>
                       {Number(summary.audienceSignals?.avgSentiment || 0) > 0.15
                         ? "Positif"
-                        : Number(summary.audienceSignals?.avgSentiment || 0) < -0.15
+                        : Number(summary.audienceSignals?.avgSentiment || 0) <
+                            -0.15
                           ? "Negatif"
                           : "Netral"}
                     </strong>
                   </div>
                   <div className="ipi-sentiment-bar">
-                    <div className="ipi-sentiment-fill" style={{ width: `${sentimentPct}%` }} />
+                    <div
+                      className="ipi-sentiment-fill"
+                      style={{ width: `${sentimentPct}%` }}
+                    />
                   </div>
                   <div className="ipi-sentiment-meta">
-                    <span>{numberFormat(summary.audienceSignals?.commentsSampled)} komentar disampel</span>
-                    <span>{Math.round((summary.audienceSignals?.verifiedCommenterRatio || 0) * 100)}% verified</span>
+                    <span>
+                      {numberFormat(summary.audienceSignals?.commentsSampled)}{" "}
+                      komentar disampel
+                    </span>
+                    <span>
+                      {Math.round(
+                        (summary.audienceSignals?.verifiedCommenterRatio || 0) *
+                          100,
+                      )}
+                      % verified
+                    </span>
                   </div>
                 </div>
               </div>
@@ -487,30 +756,52 @@ export default function InstagramProfileIntelligence() {
                   <article className="tpi-top-card" key={item.id}>
                     {item.thumbnail_url ? (
                       <div className="tpi-top-thumb">
-                        <img src={item.thumbnail_url} alt={`Post #${item.rank_position}`} referrerPolicy="no-referrer" loading="lazy" />
-                        <span className="tpi-top-rank tpi-top-rank-overlay">#{item.rank_position}</span>
+                        <img
+                          src={item.thumbnail_url}
+                          alt={`Post #${item.rank_position}`}
+                          referrerPolicy="no-referrer"
+                          loading="lazy"
+                        />
+                        <span className="tpi-top-rank tpi-top-rank-overlay">
+                          #{item.rank_position}
+                        </span>
                       </div>
                     ) : (
                       <div className="tpi-top-rank">#{item.rank_position}</div>
                     )}
                     <div className="tpi-top-meta">
                       <span>{dateFormat(item.published_at)}</span>
-                      <span>Score {Number(item.top_score || 0).toFixed(1)}</span>
+                      <span>
+                        Score {Number(item.top_score || 0).toFixed(1)}
+                      </span>
                     </div>
-                    <h4>{item.ai_enrichment?.summary || "Top Instagram post"}</h4>
+                    <h4>
+                      {item.ai_enrichment?.summary || "Top Instagram post"}
+                    </h4>
                     <div className="tpi-stat-row">
                       <span>{compactNumber(item.like_count)} likes</span>
                       <span>{compactNumber(item.comment_count)} comments</span>
                       <span>{percentFormat(item.engagement_rate)}</span>
                     </div>
                     <div className="tpi-chip-group">
-                      {[item.post_type, item.ai_enrichment?.hookStyle, item.ai_enrichment?.topicCluster]
+                      {[
+                        item.post_type,
+                        item.ai_enrichment?.hookStyle,
+                        item.ai_enrichment?.topicCluster,
+                      ]
                         .filter(Boolean)
                         .map((chip) => (
-                          <span className="tpi-chip" key={chip}>{chip}</span>
+                          <span className="tpi-chip" key={chip}>
+                            {chip}
+                          </span>
                         ))}
                     </div>
-                    <a href={item.url} target="_blank" rel="noopener noreferrer" className="tpi-link">
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="tpi-link"
+                    >
                       Open source post
                     </a>
                   </article>
@@ -523,11 +814,16 @@ export default function InstagramProfileIntelligence() {
                 <div className="tpi-panel-head">
                   <h3>Caption length vs engagement</h3>
                 </div>
-                <div className="tpi-cluster-group" style={{ gridTemplateColumns: "1fr" }}>
+                <div
+                  className="tpi-cluster-group"
+                  style={{ gridTemplateColumns: "1fr" }}
+                >
                   <div>
                     {(summary.captionPerformance || []).map((row) => (
                       <div className="tpi-cluster-row" key={row.bucket}>
-                        <span>{row.bucket} · {row.count}</span>
+                        <span>
+                          {row.bucket} · {row.count}
+                        </span>
                         <strong>{compactNumber(row.avgEngagement)}</strong>
                       </div>
                     ))}
@@ -545,10 +841,17 @@ export default function InstagramProfileIntelligence() {
                 </ul>
                 {(summary.topHashtags || []).length > 0 && (
                   <>
-                    <span className="tpi-cluster-label" style={{ marginTop: 18 }}>Top hashtags</span>
+                    <span
+                      className="tpi-cluster-label"
+                      style={{ marginTop: 18 }}
+                    >
+                      Top hashtags
+                    </span>
                     <div className="tpi-chip-group">
                       {summary.topHashtags.slice(0, 8).map((h) => (
-                        <span className="tpi-chip" key={h.tag}>#{h.tag} · {h.count}</span>
+                        <span className="tpi-chip" key={h.tag}>
+                          #{h.tag} · {h.count}
+                        </span>
                       ))}
                     </div>
                   </>

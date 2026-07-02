@@ -1,7 +1,17 @@
 import { useEffect, useEffectEvent, useMemo, useState } from "react";
 import { api } from "../lib/api";
 import { useToast } from "../lib/ToastContext";
+import { useEntity } from "../lib/useEntity";
 import "./TikTokProfileIntelligence.css";
+import "../lib/bridge.css";
+
+// Bridge entity options — module-level to ensure stability
+const CONTACTS_OPTS = {
+  orderBy: "created_at",
+  ascending: false,
+  autoLoad: false,
+};
+const CAMPAIGNS_OPTS = { orderBy: "name", ascending: true, autoLoad: false };
 
 const DEFAULT_FORM = {
   handle: "",
@@ -31,7 +41,8 @@ function numberFormat(value) {
 
 function compactNumber(value) {
   const n = Number(value || 0);
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+  if (n >= 1_000_000)
+    return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}K`;
   return String(n);
 }
@@ -60,7 +71,11 @@ function dateFormat(value) {
   }).format(new Date(value));
 }
 
-function BarChart({ data = [], formatValue = (v) => v, emptyLabel = "Belum ada data." }) {
+function BarChart({
+  data = [],
+  formatValue = (v) => v,
+  emptyLabel = "Belum ada data.",
+}) {
   const max = Math.max(1, ...data.map((d) => Number(d.value) || 0));
   if (!data.length) {
     return <div className="tpi-chart-empty">{emptyLabel}</div>;
@@ -73,7 +88,9 @@ function BarChart({ data = [], formatValue = (v) => v, emptyLabel = "Belum ada d
             <span className="tpi-chart-value">{formatValue(d.value)}</span>
             <div
               className="tpi-chart-bar"
-              style={{ height: `${Math.max(4, (Number(d.value) / max) * 100)}%` }}
+              style={{
+                height: `${Math.max(4, (Number(d.value) / max) * 100)}%`,
+              }}
             />
           </div>
           <span className="tpi-chart-label">{d.label}</span>
@@ -92,6 +109,20 @@ export default function TikTokProfileIntelligence() {
   const [loadingReports, setLoadingReports] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Bridge state
+  const [showSaveContact, setShowSaveContact] = useState(false);
+  const [showCampaignSelect, setShowCampaignSelect] = useState(false);
+  const [selectedCampaignId, setSelectedCampaignId] = useState("");
+  const [bridgeSaving, setBridgeSaving] = useState(false);
+
+  // Bridge hooks
+  const { create: createContact } = useEntity("contacts", CONTACTS_OPTS);
+  const {
+    data: campaigns,
+    refresh: loadCampaigns,
+    update: updateCampaign,
+  } = useEntity("campaigns", CAMPAIGNS_OPTS);
 
   const loadReports = useEffectEvent(async (selectFirst = false) => {
     setLoadingReports(true);
@@ -200,6 +231,59 @@ export default function TikTokProfileIntelligence() {
     }
   }
 
+  // Bridge handlers
+  async function confirmSaveContact() {
+    const handle = reportDetail?.report?.tiktok_handle || "";
+    const name = reportDetail?.profile?.display_name || handle;
+    setBridgeSaving(true);
+    try {
+      await createContact({
+        name,
+        type: "creator",
+        social_handles: { tiktok: handle },
+        tags: ["tiktok", "creator"],
+        status: "active",
+      });
+      toast.success("Creator disimpan ke Contacts");
+      setShowSaveContact(false);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setBridgeSaving(false);
+    }
+  }
+
+  function handleOpenCampaignSelect() {
+    setShowSaveContact(false);
+    setSelectedCampaignId("");
+    setShowCampaignSelect(true);
+    loadCampaigns();
+  }
+
+  async function confirmAssignCampaign() {
+    if (!selectedCampaignId || !reportDetail?.report?.id) return;
+    setBridgeSaving(true);
+    try {
+      const campaign = campaigns.find((c) => c.id === selectedCampaignId);
+      const current = campaign?.metadata || {};
+      const linked = current.linked_reports || [];
+      if (!linked.includes(reportDetail.report.id)) {
+        await updateCampaign(selectedCampaignId, {
+          metadata: {
+            ...current,
+            linked_reports: [...linked, reportDetail.report.id],
+          },
+        });
+      }
+      toast.success("Report ditautkan ke Campaign");
+      setShowCampaignSelect(false);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setBridgeSaving(false);
+    }
+  }
+
   const report = reportDetail?.report;
   const summary = report?.summary || {};
 
@@ -210,8 +294,9 @@ export default function TikTokProfileIntelligence() {
           <span className="tpi-kicker">Apify Intelligence Stack</span>
           <h1 className="tpi-title">TikTok Profile Intelligence</h1>
           <p className="tpi-subtitle">
-            Production workspace untuk menarik video TikTok via Apify, menghitung KPI
-            virality dan intent, lalu menyusun dashboard yang siap dipakai tim growth.
+            Production workspace untuk menarik video TikTok via Apify,
+            menghitung KPI virality dan intent, lalu menyusun dashboard yang
+            siap dipakai tim growth.
           </p>
         </div>
 
@@ -221,7 +306,10 @@ export default function TikTokProfileIntelligence() {
             <input
               value={form.handle}
               onChange={(event) =>
-                setForm((current) => ({ ...current, handle: event.target.value }))
+                setForm((current) => ({
+                  ...current,
+                  handle: event.target.value,
+                }))
               }
               placeholder="contoh: dr.giovanniabraham"
             />
@@ -259,7 +347,10 @@ export default function TikTokProfileIntelligence() {
                 className="tpi-select"
                 value={form.sorting}
                 onChange={(event) =>
-                  setForm((current) => ({ ...current, sorting: event.target.value }))
+                  setForm((current) => ({
+                    ...current,
+                    sorting: event.target.value,
+                  }))
                 }
               >
                 <option value="latest">Terbaru</option>
@@ -289,7 +380,10 @@ export default function TikTokProfileIntelligence() {
               type="checkbox"
               checked={form.excludePinned}
               onChange={(event) =>
-                setForm((current) => ({ ...current, excludePinned: event.target.checked }))
+                setForm((current) => ({
+                  ...current,
+                  excludePinned: event.target.checked,
+                }))
               }
             />
             <span>Kecualikan pinned posts</span>
@@ -302,7 +396,10 @@ export default function TikTokProfileIntelligence() {
                 type="date"
                 value={form.dateFrom}
                 onChange={(event) =>
-                  setForm((current) => ({ ...current, dateFrom: event.target.value }))
+                  setForm((current) => ({
+                    ...current,
+                    dateFrom: event.target.value,
+                  }))
                 }
               />
             </label>
@@ -312,13 +409,20 @@ export default function TikTokProfileIntelligence() {
                 type="date"
                 value={form.dateTo}
                 onChange={(event) =>
-                  setForm((current) => ({ ...current, dateTo: event.target.value }))
+                  setForm((current) => ({
+                    ...current,
+                    dateTo: event.target.value,
+                  }))
                 }
               />
             </label>
           </div>
 
-          <button className="cta-button tpi-submit" type="submit" disabled={submitting}>
+          <button
+            className="cta-button tpi-submit"
+            type="submit"
+            disabled={submitting}
+          >
             {submitting ? "Menjalankan..." : "Run TikTok Intelligence"}
           </button>
         </form>
@@ -326,7 +430,9 @@ export default function TikTokProfileIntelligence() {
         <div className="tpi-history">
           <div className="tpi-history-head">
             <h2>Report history</h2>
-            <span>{loadingReports ? "memuat" : `${reports.length} report`}</span>
+            <span>
+              {loadingReports ? "memuat" : `${reports.length} report`}
+            </span>
           </div>
           <div className="tpi-history-list">
             {reports.map((entry) => (
@@ -338,7 +444,9 @@ export default function TikTokProfileIntelligence() {
               >
                 <div className="tpi-history-top">
                   <strong>@{entry.tiktok_handle}</strong>
-                  <span className={`tpi-badge tpi-badge-${entry.status}`}>{entry.status}</span>
+                  <span className={`tpi-badge tpi-badge-${entry.status}`}>
+                    {entry.status}
+                  </span>
                 </div>
                 <div className="tpi-history-meta">
                   <span>{entry.filters?.maxItems || 0} videos</span>
@@ -361,14 +469,87 @@ export default function TikTokProfileIntelligence() {
             <span className="tpi-kicker">Production vertical ready</span>
             <h2>Run pertama akan membuat signal deck TikTok secara otomatis</h2>
             <p>
-              Begitu run berjalan, workspace ini akan mengisi progress actor, KPI turunan,
-              top movers, pattern clusters, dan workbook export dari satu profil TikTok.
+              Begitu run berjalan, workspace ini akan mengisi progress actor,
+              KPI turunan, top movers, pattern clusters, dan workbook export
+              dari satu profil TikTok.
             </p>
           </div>
         )}
 
         {reportDetail && (
           <>
+            {/* Bridge actions — only show when report is complete */}
+            {reportDetail?.report?.status === "completed" && (
+              <div className="bridge-actions">
+                <button
+                  type="button"
+                  className="bridge-btn"
+                  aria-label="Simpan creator ini sebagai kontak"
+                  onClick={() => {
+                    setShowCampaignSelect(false);
+                    setShowSaveContact(true);
+                  }}
+                >
+                  + Simpan sebagai Kontak
+                </button>
+                <button
+                  type="button"
+                  className="bridge-btn bridge-btn--secondary"
+                  aria-label="Assign report ini ke campaign"
+                  onClick={handleOpenCampaignSelect}
+                >
+                  📋 Assign ke Campaign
+                </button>
+              </div>
+            )}
+            {showSaveContact && (
+              <div className="bridge-panel">
+                <p>
+                  Simpan{" "}
+                  <strong>
+                    {reportDetail?.profile?.display_name ||
+                      reportDetail?.report?.tiktok_handle}
+                  </strong>{" "}
+                  sebagai kreator?
+                </p>
+                <div className="bridge-panel-actions">
+                  <button onClick={confirmSaveContact} disabled={bridgeSaving}>
+                    {bridgeSaving ? "Menyimpan..." : "Simpan"}
+                  </button>
+                  <button onClick={() => setShowSaveContact(false)}>
+                    Batal
+                  </button>
+                </div>
+              </div>
+            )}
+            {showCampaignSelect && (
+              <div className="bridge-panel">
+                <p>Assign ke Campaign:</p>
+                <select
+                  value={selectedCampaignId}
+                  onChange={(e) => setSelectedCampaignId(e.target.value)}
+                  aria-label="Pilih campaign"
+                >
+                  <option value="">-- Pilih Campaign --</option>
+                  {(campaigns || []).map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="bridge-panel-actions">
+                  <button
+                    onClick={confirmAssignCampaign}
+                    disabled={!selectedCampaignId || bridgeSaving}
+                  >
+                    {bridgeSaving ? "Menyimpan..." : "Assign"}
+                  </button>
+                  <button onClick={() => setShowCampaignSelect(false)}>
+                    Batal
+                  </button>
+                </div>
+              </div>
+            )}
             <section className="tpi-command">
               <div className="tpi-command-identity">
                 {summary.profilePicUrl ? (
@@ -387,20 +568,35 @@ export default function TikTokProfileIntelligence() {
                   <span className="tpi-kicker">Signal Deck</span>
                   <h2>@{report.tiktok_handle}</h2>
                   <p>
-                    {dateFormat(report.date_from)} — {dateFormat(report.date_to)} ·{" "}
-                    {(report.filters?.maxItems || reportDetail.items?.length || 0)} target videos
+                    {dateFormat(report.date_from)} —{" "}
+                    {dateFormat(report.date_to)} ·{" "}
+                    {report.filters?.maxItems ||
+                      reportDetail.items?.length ||
+                      0}{" "}
+                    target videos
                   </p>
                   {summary.followerCount ? (
                     <div className="tpi-identity-stats">
-                      <span><strong>{compactNumber(summary.followerCount)}</strong> followers</span>
-                      <span><strong>{compactNumber(summary.profileLikes)}</strong> likes</span>
-                      <span><strong>{compactNumber(summary.followingCount)}</strong> following</span>
+                      <span>
+                        <strong>{compactNumber(summary.followerCount)}</strong>{" "}
+                        followers
+                      </span>
+                      <span>
+                        <strong>{compactNumber(summary.profileLikes)}</strong>{" "}
+                        likes
+                      </span>
+                      <span>
+                        <strong>{compactNumber(summary.followingCount)}</strong>{" "}
+                        following
+                      </span>
                     </div>
                   ) : null}
                 </div>
               </div>
               <div className="tpi-command-actions">
-                <span className={`tpi-badge tpi-badge-${report.status}`}>{report.status}</span>
+                <span className={`tpi-badge tpi-badge-${report.status}`}>
+                  {report.status}
+                </span>
                 <button
                   type="button"
                   className="ghost-button"
@@ -416,7 +612,11 @@ export default function TikTokProfileIntelligence() {
             <section className="tpi-signal-strip">
               <article className="tpi-signal-card">
                 <span>Total videos</span>
-                <strong>{numberFormat(summary.totalVideosAnalyzed || reportDetail.items?.length)}</strong>
+                <strong>
+                  {numberFormat(
+                    summary.totalVideosAnalyzed || reportDetail.items?.length,
+                  )}
+                </strong>
               </article>
               <article className="tpi-signal-card">
                 <span>Total views</span>
@@ -424,7 +624,9 @@ export default function TikTokProfileIntelligence() {
               </article>
               <article className="tpi-signal-card">
                 <span>Avg engagement density</span>
-                <strong>{percentFormat(summary.averageViewToEngagementRate)}</strong>
+                <strong>
+                  {percentFormat(summary.averageViewToEngagementRate)}
+                </strong>
               </article>
               <article className="tpi-signal-card">
                 <span>Virality score</span>
@@ -436,7 +638,9 @@ export default function TikTokProfileIntelligence() {
               </article>
               <article className="tpi-signal-card">
                 <span>Conversation score</span>
-                <strong>{Number(summary.conversationScore || 0).toFixed(1)}</strong>
+                <strong>
+                  {Number(summary.conversationScore || 0).toFixed(1)}
+                </strong>
               </article>
             </section>
 
@@ -448,7 +652,9 @@ export default function TikTokProfileIntelligence() {
               </article>
               <article className="tpi-kpi-card">
                 <span>Posting cadence</span>
-                <strong>{Number(summary.postingCadencePerWeek || 0).toFixed(1)}</strong>
+                <strong>
+                  {Number(summary.postingCadencePerWeek || 0).toFixed(1)}
+                </strong>
                 <em>video / minggu</em>
               </article>
               <article className="tpi-kpi-card">
@@ -458,17 +664,23 @@ export default function TikTokProfileIntelligence() {
               </article>
               <article className="tpi-kpi-card">
                 <span>Consistency</span>
-                <strong>{Number(summary.consistencyScore || 0).toFixed(0)}</strong>
+                <strong>
+                  {Number(summary.consistencyScore || 0).toFixed(0)}
+                </strong>
                 <em>stabilitas performa</em>
               </article>
               <article className="tpi-kpi-card">
                 <span>Duration sweet spot</span>
-                <strong className="tpi-kpi-text">{summary.durationSweetSpot || "-"}</strong>
+                <strong className="tpi-kpi-text">
+                  {summary.durationSweetSpot || "-"}
+                </strong>
                 <em>durasi paling perform</em>
               </article>
               <article className="tpi-kpi-card">
                 <span>Best posting window</span>
-                <strong className="tpi-kpi-text">{summary.bestPostingWindow || "-"}</strong>
+                <strong className="tpi-kpi-text">
+                  {summary.bestPostingWindow || "-"}
+                </strong>
                 <em>rata-rata views tertinggi</em>
               </article>
             </section>
@@ -509,14 +721,25 @@ export default function TikTokProfileIntelligence() {
               <div className="tpi-panel">
                 <div className="tpi-panel-head">
                   <h3>Run progress</h3>
-                  <span>{loadingDetail ? "refreshing" : `${reportDetail.events?.length || 0} events`}</span>
+                  <span>
+                    {loadingDetail
+                      ? "refreshing"
+                      : `${reportDetail.events?.length || 0} events`}
+                  </span>
                 </div>
                 <div className="tpi-stage-list">
                   {(reportDetail.events || []).map((event, index) => (
-                    <div className="tpi-stage-item" key={`${event.stage}-${index}`}>
-                      <div className={`tpi-stage-dot tpi-stage-dot-${event.status}`} />
+                    <div
+                      className="tpi-stage-item"
+                      key={`${event.stage}-${index}`}
+                    >
+                      <div
+                        className={`tpi-stage-dot tpi-stage-dot-${event.status}`}
+                      />
                       <div>
-                        <strong>{STAGE_LABELS[event.stage] || event.stage}</strong>
+                        <strong>
+                          {STAGE_LABELS[event.stage] || event.stage}
+                        </strong>
                         <p>{event.message}</p>
                       </div>
                     </div>
@@ -530,7 +753,8 @@ export default function TikTokProfileIntelligence() {
                   <span>{compactTime(report.updated_at)}</span>
                 </div>
                 <p className="tpi-summary-callout">
-                  {summary.executiveSummary || "Summary akan muncul setelah report selesai."}
+                  {summary.executiveSummary ||
+                    "Summary akan muncul setelah report selesai."}
                 </p>
                 <div className="tpi-chip-group">
                   {(summary.winningPatterns || []).map((chip) => (
@@ -563,14 +787,18 @@ export default function TikTokProfileIntelligence() {
                           referrerPolicy="no-referrer"
                           loading="lazy"
                         />
-                        <span className="tpi-top-rank tpi-top-rank-overlay">#{item.rank_position}</span>
+                        <span className="tpi-top-rank tpi-top-rank-overlay">
+                          #{item.rank_position}
+                        </span>
                       </div>
                     ) : (
                       <div className="tpi-top-rank">#{item.rank_position}</div>
                     )}
                     <div className="tpi-top-meta">
                       <span>{dateFormat(item.published_at)}</span>
-                      <span>Score {Number(item.top_score || 0).toFixed(1)}</span>
+                      <span>
+                        Score {Number(item.top_score || 0).toFixed(1)}
+                      </span>
                     </div>
                     <h4>{item.ai_enrichment?.summary || "Top TikTok video"}</h4>
                     <p>{item.caption || "Caption tidak tersedia."}</p>
@@ -580,7 +808,11 @@ export default function TikTokProfileIntelligence() {
                       <span>{percentFormat(item.save_rate)}</span>
                     </div>
                     <div className="tpi-chip-group">
-                      {[item.ai_enrichment?.hookStyle, item.ai_enrichment?.contentFormat, item.ai_enrichment?.topicCluster]
+                      {[
+                        item.ai_enrichment?.hookStyle,
+                        item.ai_enrichment?.contentFormat,
+                        item.ai_enrichment?.topicCluster,
+                      ]
                         .filter(Boolean)
                         .map((chip) => (
                           <span className="tpi-chip" key={chip}>
@@ -589,11 +821,18 @@ export default function TikTokProfileIntelligence() {
                         ))}
                     </div>
                     <ul className="tpi-reasons">
-                      {(item.ai_enrichment?.reasonsItWorked || []).map((reason) => (
-                        <li key={reason}>{reason}</li>
-                      ))}
+                      {(item.ai_enrichment?.reasonsItWorked || []).map(
+                        (reason) => (
+                          <li key={reason}>{reason}</li>
+                        ),
+                      )}
                     </ul>
-                    <a href={item.url} target="_blank" rel="noopener noreferrer" className="tpi-link">
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="tpi-link"
+                    >
                       Open source video
                     </a>
                   </article>
@@ -658,7 +897,10 @@ export default function TikTokProfileIntelligence() {
                 </div>
                 {(summary.topHashtags || []).length > 0 && (
                   <>
-                    <span className="tpi-cluster-label" style={{ marginTop: 18 }}>
+                    <span
+                      className="tpi-cluster-label"
+                      style={{ marginTop: 18 }}
+                    >
                       Top hashtags
                     </span>
                     <div className="tpi-chip-group">

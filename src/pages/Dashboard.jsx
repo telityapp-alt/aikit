@@ -5,7 +5,7 @@ import { useToast } from "../lib/ToastContext";
 import { supabase } from "../lib/supabase";
 import { api } from "../lib/api";
 import { getModuleComponent } from "../modules/registry";
-import { MASCOTS } from "../lib/mascots";
+import { MASCOT_SCENES } from "../lib/mascots";
 
 /* ── Inline SVG icons ──────────────────────────────────────── */
 function IconGrid() {
@@ -255,8 +255,7 @@ const AUTOMASI_CARDS = [
     pricing: "Pro",
     costPerRun: 0,
     users: 38,
-    image:
-      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=200&fit=crop&auto=format",
+    image: "/automation-covers/competitor-analyzer.webp",
   },
   {
     id: "tiktok-profile-intelligence",
@@ -266,8 +265,7 @@ const AUTOMASI_CARDS = [
     pricing: "Pro",
     costPerRun: 125,
     users: 12,
-    image:
-      "https://images.unsplash.com/photo-1611605698335-8b1569810432?w=400&h=200&fit=crop&auto=format",
+    image: "/automation-covers/tiktok-profile-intelligence.webp",
   },
   {
     id: "instagram-profile-intelligence",
@@ -277,8 +275,7 @@ const AUTOMASI_CARDS = [
     pricing: "Pro",
     costPerRun: 125,
     users: 8,
-    image:
-      "https://images.unsplash.com/photo-1611262588024-d12430b98920?w=400&h=200&fit=crop&auto=format",
+    image: "/automation-covers/instagram-profile-intelligence.webp",
   },
   {
     id: "tiktok-ads-spy",
@@ -288,8 +285,7 @@ const AUTOMASI_CARDS = [
     pricing: "Pro",
     costPerRun: 150,
     users: 5,
-    image:
-      "https://images.unsplash.com/photo-1533750516457-a7f992034fec?w=400&h=200&fit=crop&auto=format",
+    image: "/automation-covers/tiktok-ads-spy.webp",
   },
   {
     id: "meta-ads-spy",
@@ -299,8 +295,7 @@ const AUTOMASI_CARDS = [
     pricing: "Pro",
     costPerRun: 150,
     users: 4,
-    image:
-      "https://images.unsplash.com/photo-1633675254053-d96c7668c3b8?w=400&h=200&fit=crop&auto=format",
+    image: "/automation-covers/meta-ads-spy.webp",
   },
   {
     title: "ATS-Friendly CV Converter",
@@ -368,6 +363,13 @@ const AUTOMASI_CARDS = [
       "https://images.unsplash.com/photo-1543286386-2e659306cd6c?w=400&h=200&fit=crop&auto=format",
   },
 ];
+
+const AUTOMATION_IMAGE_OVERRIDES = Object.fromEntries(
+  AUTOMASI_CARDS.filter((card) => card.id && card.image).map((card) => [
+    card.id,
+    card.image,
+  ]),
+);
 
 /* ── Data: Module (fitur besar / produk penuh) ─────────────── */
 const MODULE_CARDS = [
@@ -470,6 +472,36 @@ const MODULE_CARDS = [
     users: 176,
     image:
       "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400&h=200&fit=crop&auto=format",
+  },
+  {
+    id: "contact-manager",
+    title: "Contact Manager",
+    desc: "Kelola kontak bisnis — customers, leads, creator, vendor, dan kompetitor dalam satu database terpusat.",
+    category: "Marketing",
+    pricing: "Free",
+    users: 0,
+    image:
+      "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=400&h=200&fit=crop&auto=format",
+  },
+  {
+    id: "campaign-manager",
+    title: "Campaign Manager",
+    desc: "Rencanakan dan kelola campaign marketing end-to-end: objective, budget, timeline, dan kontak terlibat.",
+    category: "Marketing",
+    pricing: "Free",
+    users: 0,
+    image:
+      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=200&fit=crop&auto=format",
+  },
+  {
+    id: "content-calendar",
+    title: "Content Calendar",
+    desc: "Rencanakan, jadwalkan, dan pantau konten dari semua platform dalam satu kalender visual.",
+    category: "Marketing",
+    pricing: "Free",
+    users: 0,
+    image:
+      "https://images.unsplash.com/photo-1506784365847-bbad939e9335?w=400&h=200&fit=crop&auto=format",
   },
 ];
 
@@ -604,12 +636,20 @@ function ViewDashboard({ onNavigate, onTopUp }) {
   return (
     <>
       <div className="db-welcome">
-        <h1 className="db-welcome-heading">
-          Selamat Datang, {profile?.full_name || "Grou App"}! 👋
-        </h1>
-        <p className="db-welcome-sub">
-          Siap mengotomasi proses bisnis Anda hari ini?
-        </p>
+        <div className="db-welcome-copy">
+          <h1 className="db-welcome-heading">
+            Selamat Datang, {profile?.full_name || "Grou App"}! 👋
+          </h1>
+          <p className="db-welcome-sub">
+            Siap mengotomasi proses bisnis Anda hari ini?
+          </p>
+        </div>
+        <img
+          src={MASCOT_SCENES.dashboardWelcome}
+          alt=""
+          aria-hidden="true"
+          className="db-welcome-mascot"
+        />
       </div>
 
       <div className="db-stats-row">
@@ -758,7 +798,7 @@ function ViewAutomasi({ onOpenApp }) {
                   pricing: d.pricing,
                   costPerRun: d.cost_per_run,
                   users: 0,
-                  image: d.image,
+                  image: AUTOMATION_IMAGE_OVERRIDES[d.slug] || d.image,
                 }))
               : AUTOMASI_CARDS,
           ),
@@ -854,12 +894,18 @@ function ViewModule({ onOpen }) {
   }, []);
 
   const list = items ?? MODULE_CARDS;
-  const categories = ["All", ...new Set(list.map(i => i.category).filter(Boolean))];
+  const categories = [
+    "All",
+    ...new Set(list.map((i) => i.category).filter(Boolean)),
+  ];
 
-  const filteredList = list.filter(item => {
-    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          (item.desc && item.desc.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesCategory = activeCategory === "All" || item.category === activeCategory;
+  const filteredList = list.filter((item) => {
+    const matchesSearch =
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.desc &&
+        item.desc.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesCategory =
+      activeCategory === "All" || item.category === activeCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -875,21 +921,34 @@ function ViewModule({ onOpen }) {
         </div>
       </div>
 
-      <div className="db-filters" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-        <input 
-          type="text" 
-          placeholder="Cari module..." 
+      <div
+        className="db-filters"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+          marginBottom: "24px",
+        }}
+      >
+        <input
+          type="text"
+          placeholder="Cari module..."
           className="text-input"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          style={{ maxWidth: '400px' }}
+          style={{ maxWidth: "400px" }}
         />
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {categories.map(cat => (
-            <button 
-              key={cat} 
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          {categories.map((cat) => (
+            <button
+              key={cat}
               className={activeCategory === cat ? "cta-button" : "ghost-button"}
-              style={{ fontSize: '12px', padding: '6px 12px', height: 'auto', borderRadius: '16px' }}
+              style={{
+                fontSize: "12px",
+                padding: "6px 12px",
+                height: "auto",
+                borderRadius: "16px",
+              }}
               onClick={() => setActiveCategory(cat)}
             >
               {cat}
@@ -938,11 +997,13 @@ function ViewModuleHost({ slug, onBack }) {
     );
   }
   return (
-    <Suspense fallback={
-      <div className="db-placeholder">
-        <span className="db-placeholder-label">Memuat module...</span>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="db-placeholder">
+          <span className="db-placeholder-label">Memuat module...</span>
+        </div>
+      }
+    >
       <Comp />
     </Suspense>
   );
@@ -1144,7 +1205,7 @@ function ViewAIAgentHome({
       <div className="ai-home-center">
         <div className="ai-home-mascot-wrap" aria-hidden="true">
           <img
-            src={MASCOTS.chat}
+            src={MASCOT_SCENES.aiGreeting}
             alt=""
             className="ai-home-mascot"
           />
@@ -2097,5 +2158,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
-

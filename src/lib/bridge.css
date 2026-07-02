@@ -1,0 +1,123 @@
+/* Bridge action styles — shared across all intelligence modules */
+
+.bridge-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 0 2px;
+  margin-bottom: 4px;
+}
+
+.bridge-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+  border: 1px solid rgba(99, 179, 237, 0.45);
+  background: rgba(99, 179, 237, 0.1);
+  color: #63b3ed;
+  line-height: 1;
+}
+
+.bridge-btn:hover:not(:disabled) {
+  background: rgba(99, 179, 237, 0.2);
+  border-color: rgba(99, 179, 237, 0.7);
+}
+
+.bridge-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.bridge-btn--secondary {
+  border-color: rgba(154, 117, 234, 0.45);
+  background: rgba(154, 117, 234, 0.1);
+  color: #b794f4;
+}
+
+.bridge-btn--secondary:hover:not(:disabled) {
+  background: rgba(154, 117, 234, 0.2);
+  border-color: rgba(154, 117, 234, 0.7);
+}
+
+/* Inline confirmation / campaign-select panel */
+.bridge-panel {
+  background: #1a1d2e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #cbd5e0;
+  max-width: 480px;
+}
+
+.bridge-panel p {
+  margin: 0 0 10px;
+  line-height: 1.45;
+}
+
+.bridge-panel select {
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: #0f1117;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  font-size: 13px;
+  margin-bottom: 10px;
+  appearance: none;
+  cursor: pointer;
+}
+
+.bridge-panel select:focus {
+  outline: none;
+  border-color: rgba(99, 179, 237, 0.5);
+}
+
+.bridge-panel-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.bridge-panel-actions button {
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  border: 1px solid transparent;
+  line-height: 1;
+}
+
+.bridge-panel-actions button:first-child {
+  background: #2b6cb0;
+  color: #fff;
+  border-color: #2b6cb0;
+}
+
+.bridge-panel-actions button:first-child:hover:not(:disabled) {
+  background: #3182ce;
+}
+
+.bridge-panel-actions button:first-child:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.bridge-panel-actions button:last-child {
+  background: transparent;
+  color: #a0aec0;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.bridge-panel-actions button:last-child:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #cbd5e0;
+}

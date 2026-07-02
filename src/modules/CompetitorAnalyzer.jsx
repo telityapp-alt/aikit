@@ -1,7 +1,17 @@
 import { useEffect, useEffectEvent, useMemo, useState } from "react";
 import { api } from "../lib/api";
 import { useToast } from "../lib/ToastContext";
+import { useEntity } from "../lib/useEntity";
 import "./CompetitorAnalyzer.css";
+import "../lib/bridge.css";
+
+// Bridge entity options — module-level to ensure stability
+const CONTACTS_OPTS = {
+  orderBy: "created_at",
+  ascending: false,
+  autoLoad: false,
+};
+const CAMPAIGNS_OPTS = { orderBy: "name", ascending: true, autoLoad: false };
 
 const DEFAULT_FORM = {
   instagramHandle: "",
@@ -66,6 +76,20 @@ export default function CompetitorAnalyzer() {
   const [loadingReports, setLoadingReports] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Bridge state
+  const [showSaveContact, setShowSaveContact] = useState(false);
+  const [showCampaignSelect, setShowCampaignSelect] = useState(false);
+  const [selectedCampaignId, setSelectedCampaignId] = useState("");
+  const [bridgeSaving, setBridgeSaving] = useState(false);
+
+  // Bridge hooks
+  const { create: createContact } = useEntity("contacts", CONTACTS_OPTS);
+  const {
+    data: campaigns,
+    refresh: loadCampaigns,
+    update: updateCampaign,
+  } = useEntity("campaigns", CAMPAIGNS_OPTS);
 
   const loadReports = useEffectEvent(async (selectFirst = false) => {
     setLoadingReports(true);
@@ -155,6 +179,59 @@ export default function CompetitorAnalyzer() {
     }
   }
 
+  // Bridge handlers
+  async function confirmSaveContact() {
+    const handle = reportDetail?.report?.instagram_handle || "";
+    const name = handle;
+    setBridgeSaving(true);
+    try {
+      await createContact({
+        name,
+        type: "competitor",
+        social_handles: { instagram: handle },
+        tags: ["kompetitor", "instagram"],
+        status: "active",
+      });
+      toast.success("Kompetitor disimpan ke Contacts");
+      setShowSaveContact(false);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setBridgeSaving(false);
+    }
+  }
+
+  function handleOpenCampaignSelect() {
+    setShowSaveContact(false);
+    setSelectedCampaignId("");
+    setShowCampaignSelect(true);
+    loadCampaigns();
+  }
+
+  async function confirmAssignCampaign() {
+    if (!selectedCampaignId || !reportDetail?.report?.id) return;
+    setBridgeSaving(true);
+    try {
+      const campaign = campaigns.find((c) => c.id === selectedCampaignId);
+      const current = campaign?.metadata || {};
+      const linked = current.linked_reports || [];
+      if (!linked.includes(reportDetail.report.id)) {
+        await updateCampaign(selectedCampaignId, {
+          metadata: {
+            ...current,
+            linked_reports: [...linked, reportDetail.report.id],
+          },
+        });
+      }
+      toast.success("Report ditautkan ke Campaign");
+      setShowCampaignSelect(false);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setBridgeSaving(false);
+    }
+  }
+
   async function downloadReport() {
     if (!reportDetail?.report?.id) return;
     try {
@@ -178,8 +255,8 @@ export default function CompetitorAnalyzer() {
           <span className="ica-kicker">Instagram Intelligence</span>
           <h1 className="ica-title">Generator Laporan Kompetitor Instagram</h1>
           <p className="ica-subtitle">
-            Shared foundation untuk scrape, analisis top content, komentar,
-            dan export workbook yang siap dipakai tim.
+            Shared foundation untuk scrape, analisis top content, komentar, dan
+            export workbook yang siap dipakai tim.
           </p>
         </div>
 
@@ -272,7 +349,12 @@ export default function CompetitorAnalyzer() {
             <span>Ambil transcript untuk konten video prioritas</span>
           </label>
 
-          <button className="cta-button" type="submit" disabled={submitting} style={{ width: "100%", height: 40, marginTop: 10 }}>
+          <button
+            className="cta-button"
+            type="submit"
+            disabled={submitting}
+            style={{ width: "100%", height: 40, marginTop: 10 }}
+          >
             {submitting ? "Menjalankan..." : "Jalankan report"}
           </button>
         </form>
@@ -280,7 +362,9 @@ export default function CompetitorAnalyzer() {
         <div className="ica-history">
           <div className="ica-history-head">
             <h2>Riwayat report</h2>
-            <span>{loadingReports ? "memuat" : `${reports.length} report`}</span>
+            <span>
+              {loadingReports ? "memuat" : `${reports.length} report`}
+            </span>
           </div>
 
           <div className="ica-history-list">
@@ -327,17 +411,89 @@ export default function CompetitorAnalyzer() {
 
         {reportDetail && (
           <>
+            {/* Bridge actions — only show when report is complete */}
+            {reportDetail?.report?.status === "completed" && (
+              <div className="bridge-actions">
+                <button
+                  type="button"
+                  className="bridge-btn"
+                  aria-label="Simpan kompetitor ini sebagai kontak"
+                  onClick={() => {
+                    setShowCampaignSelect(false);
+                    setShowSaveContact(true);
+                  }}
+                >
+                  + Simpan sebagai Kompetitor
+                </button>
+                <button
+                  type="button"
+                  className="bridge-btn bridge-btn--secondary"
+                  aria-label="Assign report ini ke campaign"
+                  onClick={handleOpenCampaignSelect}
+                >
+                  📋 Assign ke Campaign
+                </button>
+              </div>
+            )}
+            {showSaveContact && (
+              <div className="bridge-panel">
+                <p>
+                  Simpan{" "}
+                  <strong>{reportDetail?.report?.instagram_handle}</strong>{" "}
+                  sebagai kompetitor?
+                </p>
+                <div className="bridge-panel-actions">
+                  <button onClick={confirmSaveContact} disabled={bridgeSaving}>
+                    {bridgeSaving ? "Menyimpan..." : "Simpan"}
+                  </button>
+                  <button onClick={() => setShowSaveContact(false)}>
+                    Batal
+                  </button>
+                </div>
+              </div>
+            )}
+            {showCampaignSelect && (
+              <div className="bridge-panel">
+                <p>Assign ke Campaign:</p>
+                <select
+                  value={selectedCampaignId}
+                  onChange={(e) => setSelectedCampaignId(e.target.value)}
+                  aria-label="Pilih campaign"
+                >
+                  <option value="">-- Pilih Campaign --</option>
+                  {(campaigns || []).map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="bridge-panel-actions">
+                  <button
+                    onClick={confirmAssignCampaign}
+                    disabled={!selectedCampaignId || bridgeSaving}
+                  >
+                    {bridgeSaving ? "Menyimpan..." : "Assign"}
+                  </button>
+                  <button onClick={() => setShowCampaignSelect(false)}>
+                    Batal
+                  </button>
+                </div>
+              </div>
+            )}
             <section className="ica-command">
               <div>
                 <span className="ica-kicker">Report Workspace</span>
                 <h2>@{reportDetail.report.instagram_handle}</h2>
                 <p>
-                  {reportDetail.report.source_tab} · {dateFormat(reportDetail.report.date_from)} sampai{" "}
+                  {reportDetail.report.source_tab} ·{" "}
+                  {dateFormat(reportDetail.report.date_from)} sampai{" "}
                   {dateFormat(reportDetail.report.date_to)}
                 </p>
               </div>
               <div className="ica-command-actions">
-                <span className={`ica-badge ica-badge-${status}`}>{status}</span>
+                <span className={`ica-badge ica-badge-${status}`}>
+                  {status}
+                </span>
                 <button
                   className="ghost-button"
                   onClick={downloadReport}
@@ -353,7 +509,11 @@ export default function CompetitorAnalyzer() {
             <section className="ica-signals">
               <article className="ica-signal-card">
                 <span>Total media</span>
-                <strong>{numberFormat(summary.totalMediaAnalyzed || reportDetail.items?.length)}</strong>
+                <strong>
+                  {numberFormat(
+                    summary.totalMediaAnalyzed || reportDetail.items?.length,
+                  )}
+                </strong>
               </article>
               <article className="ica-signal-card">
                 <span>Avg engagement rate</span>
@@ -361,7 +521,11 @@ export default function CompetitorAnalyzer() {
               </article>
               <article className="ica-signal-card">
                 <span>Top comment theme</span>
-                <strong>{summary.strongestCommentTheme || commentThemes[0]?.[0] || "-"}</strong>
+                <strong>
+                  {summary.strongestCommentTheme ||
+                    commentThemes[0]?.[0] ||
+                    "-"}
+                </strong>
               </article>
               <article className="ica-signal-card">
                 <span>Last update</span>
@@ -373,14 +537,25 @@ export default function CompetitorAnalyzer() {
               <div className="ica-panel">
                 <div className="ica-panel-head">
                   <h3>Progress run</h3>
-                  <span>{loadingDetail ? "refreshing" : `${reportDetail.events?.length || 0} events`}</span>
+                  <span>
+                    {loadingDetail
+                      ? "refreshing"
+                      : `${reportDetail.events?.length || 0} events`}
+                  </span>
                 </div>
                 <div className="ica-stage-list">
                   {(reportDetail.events || []).map((event, index) => (
-                    <div className="ica-stage-item" key={`${event.stage}-${index}`}>
-                      <div className={`ica-stage-dot ica-stage-dot-${event.status}`} />
+                    <div
+                      className="ica-stage-item"
+                      key={`${event.stage}-${index}`}
+                    >
+                      <div
+                        className={`ica-stage-dot ica-stage-dot-${event.status}`}
+                      />
                       <div>
-                        <strong>{STAGE_LABELS[event.stage] || event.stage}</strong>
+                        <strong>
+                          {STAGE_LABELS[event.stage] || event.stage}
+                        </strong>
                         <p>{event.message}</p>
                       </div>
                     </div>
@@ -440,9 +615,11 @@ export default function CompetitorAnalyzer() {
                         ))}
                     </div>
                     <ul className="ica-reasons">
-                      {(item.ai_enrichment?.reasonsItWorked || []).map((reason) => (
-                        <li key={reason}>{reason}</li>
-                      ))}
+                      {(item.ai_enrichment?.reasonsItWorked || []).map(
+                        (reason) => (
+                          <li key={reason}>{reason}</li>
+                        ),
+                      )}
                     </ul>
                   </article>
                 ))}
