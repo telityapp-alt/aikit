@@ -1,9 +1,54 @@
 import { useState } from "react";
 
+function IconPanelOpen() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M4 5h16v14H4zM9 5v14M13 9l4 3-4 3"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
+function IconPanelClose() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M4 5h16v14H4zM15 5v14M11 9l-4 3 4 3"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
+function IconPanelWide() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M4 5h16v14H4zM8 9 5 12l3 3M16 9l3 3-3 3"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
 const CANVAS_MODES = [
-  { id: "collapsed", label: "Min" },
-  { id: "preview", label: "Preview" },
-  { id: "full", label: "Lebar" },
+  { id: "collapsed", label: "Collapse", icon: <IconPanelClose /> },
+  { id: "preview", label: "Preview", icon: <IconPanelOpen /> },
+  { id: "full", label: "Expand", icon: <IconPanelWide /> },
 ];
 
 export default function RightCanvas({
@@ -23,8 +68,14 @@ export default function RightCanvas({
   if (mode === "collapsed") {
     return (
       <aside className="aiw-canvas aiw-canvas--collapsed">
-        <button type="button" className="ghost-button" onClick={() => onModeChange("preview")}>
-          Buka canvas
+        <button
+          type="button"
+          className="ghost-button aiw-canvas-toggle-rail"
+          onClick={() => onModeChange("preview")}
+          aria-label="Buka canvas"
+          title="Buka canvas"
+        >
+          <IconPanelOpen />
         </button>
       </aside>
     );
@@ -33,40 +84,44 @@ export default function RightCanvas({
   return (
     <aside className={`aiw-canvas${mode === "full" ? " aiw-canvas--full" : ""}`}>
       <div className="aiw-canvas-top">
-        <div>
-          <span className="aiw-canvas-eyebrow">Canvas</span>
-          <h3 className="aiw-canvas-title">Output workspace</h3>
+        <div className="aiw-canvas-heading">
+          <h3 className="aiw-canvas-title">Canvas</h3>
         </div>
-        <div className="aiw-canvas-modes">
+        <div className="aiw-canvas-modes" aria-label="Mode canvas">
           {CANVAS_MODES.map((entry) => (
             <button
               key={entry.id}
               type="button"
               className={`aiw-canvas-mode${mode === entry.id ? " active" : ""}`}
               onClick={() => onModeChange(entry.id)}
+              aria-label={entry.label}
+              title={entry.label}
             >
-              {entry.label}
+              {entry.icon}
             </button>
           ))}
         </div>
       </div>
 
       <div className="aiw-canvas-body">
-        <div className="aiw-canvas-panel">
-          <h4 className="aiw-canvas-panel-title">Status saat ini</h4>
+        <section className="aiw-canvas-panel aiw-canvas-panel--hero">
+          <h4 className="aiw-canvas-panel-title">
+            {thread ? thread.title : `${agent.name} canvas`}
+          </h4>
           <p className="aiw-canvas-panel-copy">
             {thread
-              ? `Thread ini milik ${agent.name} dan siap menghasilkan artifact yang bisa dipin, diteruskan, dan diiterasi.`
-              : `Buka atau mulai thread ${agent.name} untuk menaruh output terstruktur di canvas ini.`}
+              ? `${artifacts.length} artifact tersimpan untuk thread ini.`
+              : "Belum ada output tersimpan."}
           </p>
-        </div>
+        </section>
 
-        <div className="aiw-canvas-panel">
-          <h4 className="aiw-canvas-panel-title">Artifact queue</h4>
+        <section className="aiw-canvas-panel">
+          <div className="aiw-canvas-section-head">
+            <h4 className="aiw-canvas-panel-title">Artifacts</h4>
+            <span className="aiw-canvas-count">{artifacts.length}</span>
+          </div>
           {artifacts.length === 0 ? (
-            <p className="aiw-canvas-panel-copy">
-              Belum ada artifact tersimpan. Balasan assistant berikutnya akan otomatis masuk ke canvas ini sebagai output pertama.
-            </p>
+            <p className="aiw-canvas-panel-copy">Belum ada artifact.</p>
           ) : (
             <ul className="aiw-canvas-artifacts">
               {artifacts.map((artifact) => (
@@ -77,48 +132,55 @@ export default function RightCanvas({
               ))}
             </ul>
           )}
-        </div>
+        </section>
 
         {latestArtifact ? (
-          <div className="aiw-canvas-panel aiw-canvas-panel--accent">
-            <h4 className="aiw-canvas-panel-title">Preview terbaru</h4>
+          <section className="aiw-canvas-panel aiw-canvas-panel--accent">
+            <div className="aiw-canvas-section-head">
+              <h4 className="aiw-canvas-panel-title">Preview</h4>
+              <button type="button" className="cta-button aiw-canvas-mini-btn">
+                Buka
+              </button>
+            </div>
             <p className="aiw-canvas-preview-title">{latestArtifact.title}</p>
             <p className="aiw-canvas-panel-copy">
-              {latestArtifact.summary || latestArtifact.content_json?.text || "Artifact siap ditinjau."}
+              {latestArtifact.summary ||
+                latestArtifact.content_json?.text ||
+                "Artifact siap ditinjau."}
             </p>
-          </div>
+          </section>
         ) : (
-          <div className="aiw-canvas-panel aiw-canvas-panel--accent">
-            <h4 className="aiw-canvas-panel-title">Surface berikutnya</h4>
+          <section className="aiw-canvas-panel aiw-canvas-panel--accent">
+            <h4 className="aiw-canvas-panel-title">Next</h4>
             <ul className="aiw-canvas-list">
-              <li>Dokumen draft dan SOP</li>
-              <li>Tabel financial dan analysis snapshot</li>
-              <li>Campaign plan, listing copy, dan knowledge notes</li>
+              <li>Draft dokumen</li>
+              <li>Snapshot analisis</li>
+              <li>Knowledge notes</li>
             </ul>
-          </div>
+          </section>
         )}
 
         {agent.slug === "knowledge" ? (
           <>
-            <div className="aiw-canvas-panel">
+            <section className="aiw-canvas-panel">
               <h4 className="aiw-canvas-panel-title">Tambah knowledge</h4>
               <div className="aiw-knowledge-form">
                 <input
                   className="aiw-knowledge-input"
                   value={draftTitle}
                   onChange={(event) => setDraftTitle(event.target.value)}
-                  placeholder="Judul knowledge"
+                  placeholder="Judul"
                 />
                 <textarea
                   className="aiw-knowledge-textarea"
                   rows={5}
                   value={draftText}
                   onChange={(event) => setDraftText(event.target.value)}
-                  placeholder="Tempel notes, SOP, ringkasan meeting, atau FAQ di sini..."
+                  placeholder="Tempel notes atau dokumen singkat..."
                 />
                 <button
                   type="button"
-                  className="cta-button"
+                  className="cta-button aiw-canvas-submit"
                   disabled={ingestingKnowledge || !draftText.trim()}
                   onClick={async () => {
                     const ok = await onIngestKnowledge?.({
@@ -131,17 +193,20 @@ export default function RightCanvas({
                     }
                   }}
                 >
-                  {ingestingKnowledge ? "Menyimpan..." : "Simpan ke knowledge"}
+                  {ingestingKnowledge ? "Menyimpan..." : "Simpan"}
                 </button>
               </div>
-            </div>
+            </section>
 
-            <div className="aiw-canvas-panel">
-              <h4 className="aiw-canvas-panel-title">Knowledge terbaru</h4>
+            <section className="aiw-canvas-panel">
+              <div className="aiw-canvas-section-head">
+                <h4 className="aiw-canvas-panel-title">Knowledge</h4>
+                <span className="aiw-canvas-count">
+                  {knowledgeDocuments.length}
+                </span>
+              </div>
               {knowledgeDocuments.length === 0 ? (
-                <p className="aiw-canvas-panel-copy">
-                  Belum ada dokumen knowledge. Simpan notes atau upload file teks untuk mulai membangun memory bisnis.
-                </p>
+                <p className="aiw-canvas-panel-copy">Belum ada dokumen knowledge.</p>
               ) : (
                 <ul className="aiw-canvas-artifacts">
                   {knowledgeDocuments.slice(0, 5).map((document) => (
@@ -152,7 +217,7 @@ export default function RightCanvas({
                   ))}
                 </ul>
               )}
-            </div>
+            </section>
           </>
         ) : null}
       </div>

@@ -9,22 +9,32 @@ export default function ThreadList({
   onRename,
   onTogglePin,
   onToggleArchive,
+  loading = false,
 }) {
   return (
     <aside className="aiw-sidebar">
       <div className="aiw-sidebar-top">
         <div className="aiw-sidebar-header">
-          <span className="aiw-sidebar-eyebrow">Threads</span>
           <h2 className="aiw-sidebar-title">{agentName}</h2>
-          <p className="aiw-sidebar-sub">Thread persisten per agent, terpisah dan siap lanjut kapan saja.</p>
+          <p className="aiw-sidebar-sub">{threads.length} thread</p>
         </div>
 
-        <button type="button" className="cta-button aiw-new-thread-btn" onClick={onCreate}>
+        <button
+          type="button"
+          className="cta-button aiw-new-thread-btn"
+          onClick={onCreate}
+        >
           Obrolan Baru
         </button>
 
-        <div className="aiw-thread-list" role="list" aria-label={`Riwayat ${agentName}`}>
-          {threads.length === 0 ? (
+        <div
+          className="aiw-thread-list"
+          role="list"
+          aria-label={`Riwayat ${agentName}`}
+        >
+          {loading ? (
+            <div className="aiw-thread-empty">Memuat daftar thread...</div>
+          ) : threads.length === 0 ? (
             <div className="aiw-thread-empty">
               Belum ada thread untuk agent ini. Mulai percakapan pertama.
             </div>
@@ -40,7 +50,7 @@ export default function ThreadList({
                   onClick={() => onSelect(thread.id)}
                 >
                   <span className="aiw-thread-item-title">
-                    {thread.pinned ? "Pin · " : ""}
+                    {thread.pinned ? "Pinned - " : ""}
                     {thread.title}
                   </span>
                   <span className="aiw-thread-item-meta">
@@ -54,13 +64,25 @@ export default function ThreadList({
                 </button>
                 {thread.id === activeThreadId ? (
                   <div className="aiw-thread-actions">
-                    <button type="button" className="ghost-button" onClick={() => onRename?.(thread)}>
+                    <button
+                      type="button"
+                      className="ghost-button"
+                      onClick={() => onRename?.(thread)}
+                    >
                       Ganti judul
                     </button>
-                    <button type="button" className="ghost-button" onClick={() => onTogglePin?.(thread)}>
+                    <button
+                      type="button"
+                      className="ghost-button"
+                      onClick={() => onTogglePin?.(thread)}
+                    >
                       {thread.pinned ? "Unpin" : "Pin"}
                     </button>
-                    <button type="button" className="ghost-button" onClick={() => onToggleArchive?.(thread)}>
+                    <button
+                      type="button"
+                      className="ghost-button"
+                      onClick={() => onToggleArchive?.(thread)}
+                    >
                       {thread.status === "archived" ? "Aktifkan" : "Arsipkan"}
                     </button>
                   </div>

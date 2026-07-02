@@ -312,7 +312,10 @@ export default function AgentWorkspace({
   }
 
   return (
-    <section className="aiw-shell" style={{ "--agent-accent": agent.accent }}>
+    <section
+      className={`aiw-shell aiw-shell--canvas-${canvasMode}`}
+      style={{ "--agent-accent": agent.accent }}
+    >
       <ThreadList
         threads={threads}
         activeThreadId={activeThreadId}
@@ -322,19 +325,28 @@ export default function AgentWorkspace({
         onRename={handleRenameThread}
         onTogglePin={handleTogglePin}
         onToggleArchive={handleToggleArchive}
+        loading={loadingThreads}
       />
 
       <div className="aiw-main">
         <div className="aiw-topbar">
           <button type="button" className="aiw-home-link" onClick={onBackHome}>
-            AI Agents
+            Kembali ke AI agents
           </button>
+
           <div className="aiw-topbar-copy">
-            <span className="aiw-topbar-eyebrow">{agent.name}</span>
-            <h1 className="aiw-topbar-title">{agent.workspaceTitle}</h1>
+            <h1 className="aiw-topbar-title">{agent.name}</h1>
+            <p className="aiw-topbar-sub">
+              {activeThread?.title || "Obrolan baru"}
+            </p>
           </div>
+
           <div className="aiw-topbar-chip">
-            {loadingThreads || loadingConversation ? "Memuat..." : activeThread ? "Thread aktif" : "Siap mulai"}
+            {loadingThreads || loadingConversation
+              ? "Memuat"
+              : activeThread
+                ? "Aktif"
+                : "Siap"}
           </div>
         </div>
 
