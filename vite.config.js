@@ -7,4 +7,17 @@ export default defineConfig({
   server: {
     historyApiFallback: true,
   },
+  define: {
+    // Publishable keys: safe to embed in the client bundle.
+    // Fallback to hardcoded values so `vite build` always succeeds even
+    // when .env is absent (e.g. CI, Cloudflare build pipeline).
+    "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(
+      process.env.VITE_SUPABASE_URL ||
+        "https://lftgaziycyvxqtlwvxgi.supabase.co",
+    ),
+    "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(
+      process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+        "sb_publishable_pli5g34Fg5iAgNnYduBPdA_1nYW93CO",
+    ),
+  },
 });
