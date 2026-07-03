@@ -1,4 +1,5 @@
 import { corsHeaders, handleError, HttpError, json, readJson } from "./lib/http.js";
+import { requireBinding } from "./lib/env.js";
 import { audit, clientIp, db, getUser, rpc } from "./lib/supabase.js";
 import {
   createCompetitorReportRun,
@@ -115,6 +116,11 @@ async function handleRunRequest(request, env) {
 
   const ip = clientIp(request);
   if (slug === "competitor-analyzer") {
+    requireBinding(
+      env,
+      "RUN_QUEUE",
+      "Binding RUN_QUEUE belum dipasang di deployment Worker production.",
+    );
     const input = validateCompetitorInput(payload.input);
     const run = await createRun(env, user, slug, input, ip);
     const report = await createCompetitorReportRun(env, { user, run, input });
@@ -130,6 +136,11 @@ async function handleRunRequest(request, env) {
   }
 
   if (slug === "tiktok-profile-intelligence") {
+    requireBinding(
+      env,
+      "RUN_QUEUE",
+      "Binding RUN_QUEUE belum dipasang di deployment Worker production.",
+    );
     const input = validateTikTokInput(payload.input);
     const run = await createRun(env, user, slug, input, ip);
     const report = await createTikTokProfileRun(env, { user, run, input });
@@ -145,6 +156,11 @@ async function handleRunRequest(request, env) {
   }
 
   if (slug === "instagram-profile-intelligence") {
+    requireBinding(
+      env,
+      "RUN_QUEUE",
+      "Binding RUN_QUEUE belum dipasang di deployment Worker production.",
+    );
     const input = validateInstagramInput(payload.input);
     const run = await createRun(env, user, slug, input, ip);
     const report = await createInstagramProfileRun(env, { user, run, input });
@@ -160,6 +176,11 @@ async function handleRunRequest(request, env) {
   }
 
   if (slug === "tiktok-ads-spy") {
+    requireBinding(
+      env,
+      "RUN_QUEUE",
+      "Binding RUN_QUEUE belum dipasang di deployment Worker production.",
+    );
     const input = validateTikTokAdsInput(payload.input);
     const run = await createRun(env, user, slug, input, ip);
     const report = await createTikTokAdsRun(env, { user, run, input });
@@ -175,6 +196,11 @@ async function handleRunRequest(request, env) {
   }
 
   if (slug === "meta-ads-spy") {
+    requireBinding(
+      env,
+      "RUN_QUEUE",
+      "Binding RUN_QUEUE belum dipasang di deployment Worker production.",
+    );
     const input = validateMetaAdsInput(payload.input);
     const run = await createRun(env, user, slug, input, ip);
     const report = await createMetaAdsRun(env, { user, run, input });

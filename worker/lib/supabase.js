@@ -1,4 +1,5 @@
 import { HttpError, parseBearer } from "./http.js";
+import { requireEnv } from "./env.js";
 
 export async function getUser(env, request) {
   const token = parseBearer(request);
@@ -6,10 +7,13 @@ export async function getUser(env, request) {
     throw new HttpError(401, "Tidak terautentikasi.");
   }
 
-  const response = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+  const supabaseUrl = requireEnv(env, "SUPABASE_URL");
+  const serviceRoleKey = requireEnv(env, "SUPABASE_SERVICE_ROLE_KEY");
+
+  const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
     headers: {
       Authorization: `Bearer ${token}`,
-      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+      apikey: serviceRoleKey,
     },
   });
 
@@ -26,11 +30,14 @@ export async function getUser(env, request) {
 }
 
 export async function db(env, path, { method = "GET", body, prefer } = {}) {
-  const response = await fetch(`${env.SUPABASE_URL}/rest/v1/${path}`, {
+  const supabaseUrl = requireEnv(env, "SUPABASE_URL");
+  const serviceRoleKey = requireEnv(env, "SUPABASE_SERVICE_ROLE_KEY");
+
+  const response = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
     method,
     headers: {
-      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
       "Content-Type": "application/json",
       ...(prefer ? { Prefer: prefer } : {}),
     },
@@ -40,7 +47,9 @@ export async function db(env, path, { method = "GET", body, prefer } = {}) {
   const payload = await response.text();
   const data = payload ? JSON.parse(payload) : null;
   if (!response.ok) {
-    throw new Error(data?.message || data?.error || `DB error ${response.status}`);
+    throw new Error(
+      `DB ${method} ${path}: ${data?.message || data?.error || `HTTP ${response.status}`}`,
+    );
   }
   return data;
 }
