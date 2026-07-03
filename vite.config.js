@@ -6,6 +6,14 @@ export default defineConfig({
   plugins: [react()],
   server: {
     historyApiFallback: true,
+    proxy: process.env.VITE_LOCAL_API_PROXY
+      ? {
+          "/api": {
+            target: process.env.VITE_LOCAL_API_PROXY,
+            changeOrigin: true,
+          },
+        }
+      : undefined,
   },
   define: {
     // Publishable keys: safe to embed in the client bundle.

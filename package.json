@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:local": "node scripts/dev-local.mjs",
     "dev:worker": "npx wrangler dev",
     "build": "vite build",
     "deploy:dry-run": "npm run build && npx wrangler deploy --dry-run",

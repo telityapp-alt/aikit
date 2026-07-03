@@ -67,6 +67,36 @@ npx wrangler pages dev -- npm run dev   # full stack incl. Pages Functions
 For the AI Agent / runs / top-up endpoints you must run via `wrangler pages dev`
 (or deploy) so `/api/*` Functions execute with `.dev.vars`.
 
+### Recommended localhost flow
+
+Kalau kamu mau test app dari `localhost` sambil tetap ngetes Worker lokal:
+
+```bash
+npm run dev:local
+```
+
+Ini akan:
+
+- menyalakan Worker lokal di `http://127.0.0.1:8787`
+- menyalakan Vite di `http://127.0.0.1:4173`
+- mem-proxy semua request `/api/*` dari Vite ke Worker lokal
+
+Jadi browser cukup buka:
+
+```bash
+http://127.0.0.1:4173
+```
+
+dan frontend tetap bicara ke backend Worker lokal, bukan production.
+
+Catatan:
+
+- `.dev.vars` tetap dipakai untuk secret Worker lokal
+- script ini juga memaksa `XDG_CONFIG_HOME=.wrangler-xdg` agar `wrangler dev`
+  tidak gagal hanya karena folder log default Windows tidak writable
+- port dibuat fixed. Kalau `4173` atau `8787` sedang dipakai proses lain, script akan
+  fail cepat supaya kamu tahu port mana yang harus dibersihkan
+
 ## Deploy (Cloudflare Pages)
 
 1. Connect the repo in Cloudflare Pages.
