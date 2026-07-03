@@ -505,10 +505,16 @@ async function getReportDetail(request, env, reportId) {
     env,
     `instagram_report_events?report_id=eq.${reportId}&select=stage,status,message,payload,created_at&order=created_at.asc`,
   );
-  const comments = await db(
-    env,
-    `platform_content_comments?content_item_id=in.(${items.map((item) => item.content_item_id).join(",") || "null"})&select=content_item_id,author_handle,text,published_at,metrics&limit=250`,
-  );
+  const contentItemIds = items
+    .map((item) => item.content_item_id)
+    .filter(Boolean);
+  const comments =
+    contentItemIds.length > 0
+      ? await db(
+          env,
+          `platform_content_comments?content_item_id=in.(${contentItemIds.join(",")})&select=content_item_id,author_handle,text,published_at,metrics&limit=250`,
+        )
+      : [];
 
   return json(
     {

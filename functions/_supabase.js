@@ -8,13 +8,24 @@ export function json(data, status = 200) {
   });
 }
 
+function getSupabaseAuthKey(env) {
+  return (
+    env.SUPABASE_PUBLISHABLE_KEY ||
+    env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    env.SUPABASE_ANON_KEY ||
+    null
+  );
+}
+
 // Verify a Supabase access token and return the authenticated user (or null).
 export async function getUser(env, token) {
   if (!token) return null;
+  const authKey = getSupabaseAuthKey(env);
+  if (!authKey) return null;
   const res = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
     headers: {
       Authorization: `Bearer ${token}`,
-      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+      apikey: authKey,
     },
   });
   if (!res.ok) return null;

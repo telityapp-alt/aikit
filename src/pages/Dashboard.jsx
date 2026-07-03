@@ -414,7 +414,7 @@ function relativeTime(iso) {
 }
 
 function ViewDashboard({ onNavigate, onOpenModule, onTopUp }) {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const [recent, setRecent] = useState([]);
   const [usageMonth, setUsageMonth] = useState(0);
 

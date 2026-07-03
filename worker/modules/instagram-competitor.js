@@ -499,69 +499,70 @@ export async function processCompetitorRun(env, payload) {
   await patchRun(env, runId, { status: "running" });
   await patchReport(env, reportId, { status: "running" });
 
-  await markStage(env, reportId, runId, "fetching_profile", "Mengambil profil Instagram.");
-  const rawProfile = await getInstagramProfile(env, filter.instagramHandle, filter.region);
-  const profile = normalizeInstagramProfile(rawProfile, filter.instagramHandle);
+  try {
+    await markStage(env, reportId, runId, "fetching_profile", "Mengambil profil Instagram.");
+    const rawProfile = await getInstagramProfile(env, filter.instagramHandle, filter.region);
+    const profile = normalizeInstagramProfile(rawProfile, filter.instagramHandle);
 
-  const [account] = await db(env, "platform_accounts", {
-    method: "POST",
-    prefer: "resolution=merge-duplicates,return=representation",
-    body: {
-      platform: "instagram",
-      handle: profile.handle,
-      platform_user_id: profile.platformUserId,
-      display_name: profile.displayName,
-      profile_url: `https://www.instagram.com/${profile.handle}/`,
-      profile_snapshot: profile.rawPayload,
-      last_synced_at: new Date().toISOString(),
-    },
-  });
-
-  await markStage(env, reportId, runId, "fetching_media_index", "Mengambil daftar konten.");
-  const rawItems = await getInstagramMediaIndex(env, filter);
-  if (!rawItems.length) {
-    throw new HttpError(422, "Tidak ada konten yang ditemukan pada periode tersebut.");
-  }
-
-  const normalizedItems = rawItems.map((item) =>
-    normalizeInstagramMediaItem(item, profile, filter.sourceTab),
-  );
-  normalizedItems.sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
-
-  await markStage(env, reportId, runId, "normalizing_metrics", "Menyusun metrik standar.");
-  for (const item of normalizedItems) {
-    const [contentItem] = await db(env, "platform_content_items", {
+    const [account] = await db(env, "platform_accounts", {
       method: "POST",
       prefer: "resolution=merge-duplicates,return=representation",
       body: {
         platform: "instagram",
-        account_id: account.id,
-        platform_content_id: item.platformContentId,
-        content_type: item.mediaType,
-        url: item.url,
-        shortcode: item.shortcode || null,
-        caption: item.caption,
-        published_at: item.publishedAt,
-        metrics: {
-          likes: item.likeCount,
-          comments: item.commentCount,
-          views: item.viewCount,
-          play_count: item.playCount,
-        },
-        normalized_metrics: {
-          engagement_count: item.engagementCount,
-          engagement_rate: item.engagementRate,
-          follower_count_snapshot: item.followerCountSnapshot,
-          source_tab: item.sourceTab,
-          thumbnail_url: item.thumbnailUrl,
-        },
-        raw_payload: item.rawPayload,
+        handle: profile.handle,
+        platform_user_id: profile.platformUserId,
+        display_name: profile.displayName,
+        profile_url: `https://www.instagram.com/${profile.handle}/`,
+        profile_snapshot: profile.rawPayload,
         last_synced_at: new Date().toISOString(),
       },
     });
-    item.contentItemId = contentItem.id;
-    item.topScore = scoreItem(item);
-  }
+
+    await markStage(env, reportId, runId, "fetching_media_index", "Mengambil daftar konten.");
+    const rawItems = await getInstagramMediaIndex(env, filter);
+    if (!rawItems.length) {
+      throw new HttpError(422, "Tidak ada konten yang ditemukan pada periode tersebut.");
+    }
+
+    const normalizedItems = rawItems.map((item) =>
+      normalizeInstagramMediaItem(item, profile, filter.sourceTab),
+    );
+    normalizedItems.sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
+
+    await markStage(env, reportId, runId, "normalizing_metrics", "Menyusun metrik standar.");
+    for (const item of normalizedItems) {
+      const [contentItem] = await db(env, "platform_content_items", {
+        method: "POST",
+        prefer: "resolution=merge-duplicates,return=representation",
+        body: {
+          platform: "instagram",
+          account_id: account.id,
+          platform_content_id: item.platformContentId,
+          content_type: item.mediaType,
+          url: item.url,
+          shortcode: item.shortcode || null,
+          caption: item.caption,
+          published_at: item.publishedAt,
+          metrics: {
+            likes: item.likeCount,
+            comments: item.commentCount,
+            views: item.viewCount,
+            play_count: item.playCount,
+          },
+          normalized_metrics: {
+            engagement_count: item.engagementCount,
+            engagement_rate: item.engagementRate,
+            follower_count_snapshot: item.followerCountSnapshot,
+            source_tab: item.sourceTab,
+            thumbnail_url: item.thumbnailUrl,
+          },
+          raw_payload: item.rawPayload,
+          last_synced_at: new Date().toISOString(),
+        },
+      });
+      item.contentItemId = contentItem.id;
+      item.topScore = scoreItem(item);
+    }
 
   normalizedItems.sort((a, b) => b.topScore - a.topScore);
   normalizedItems.forEach((item, index) => {
@@ -739,10 +740,34 @@ export async function processCompetitorRun(env, payload) {
     },
   });
 
-  await markStage(env, reportId, runId, "completed", "Report selesai dibuat.", "completed");
-  await audit(env, userId, "instagram-competitor-report.completed", {
-    run_id: runId,
-    report_id: reportId,
-    artifact_id: artifact.id,
-  });
+    await markStage(env, reportId, runId, "completed", "Report selesai dibuat.", "completed");
+    await audit(env, userId, "instagram-competitor-report.completed", {
+      run_id: runId,
+      report_id: reportId,
+      artifact_id: artifact.id,
+    });
+  } catch (error) {
+    const reason = String(error?.message || error).slice(0, 300);
+    console.error("[instagram-competitor] run failed", runId, reason);
+    await markStage(env, reportId, runId, "failed", reason, "failed").catch(() => {});
+    await patchReport(env, reportId, {
+      status: "failed",
+      completed_at: new Date().toISOString(),
+    }).catch(() => {});
+    await patchRun(env, runId, {
+      status: "failed",
+      completed_at: new Date().toISOString(),
+      error: reason,
+    }).catch(() => {});
+    if (run.credits_spent > 0) {
+      await rpc(env, "add_credits", { p_user: userId, p_amount: run.credits_spent }).catch(
+        (refundError) => console.error("[instagram-competitor] refund failed", refundError),
+      );
+    }
+    await audit(env, userId, "instagram-competitor-report.failed", {
+      run_id: runId,
+      report_id: reportId,
+      reason,
+    }).catch(() => {});
+  }
 }

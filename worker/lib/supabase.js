@@ -1,6 +1,15 @@
 import { HttpError, parseBearer } from "./http.js";
 import { requireEnv } from "./env.js";
 
+function getSupabaseAuthKey(env) {
+  return (
+    env.SUPABASE_PUBLISHABLE_KEY ||
+    env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    env.SUPABASE_ANON_KEY ||
+    null
+  );
+}
+
 export async function getUser(env, request) {
   const token = parseBearer(request);
   if (!token) {
@@ -8,12 +17,18 @@ export async function getUser(env, request) {
   }
 
   const supabaseUrl = requireEnv(env, "SUPABASE_URL");
-  const serviceRoleKey = requireEnv(env, "SUPABASE_SERVICE_ROLE_KEY");
+  const authKey = getSupabaseAuthKey(env);
+  if (!authKey) {
+    throw new HttpError(
+      503,
+      "Konfigurasi server SUPABASE_PUBLISHABLE_KEY belum dipasang di environment deployment.",
+    );
+  }
 
   const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
     headers: {
       Authorization: `Bearer ${token}`,
-      apikey: serviceRoleKey,
+      apikey: authKey,
     },
   });
 

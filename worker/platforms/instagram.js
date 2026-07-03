@@ -1,4 +1,5 @@
 import { HttpError } from "../lib/http.js";
+import { runInstagramProfileActor } from "./instagram-apify.js";
 
 const SCRAPECREATORS_BASE_URL = "https://api.scrapecreators.com";
 
@@ -86,10 +87,23 @@ export async function scrapeCreatorsFetch(env, path, params = {}) {
   return data;
 }
 
+function canUseScrapeCreators(env) {
+  return Boolean(env.SCRAPECREATORS_API_KEY);
+}
+
 export async function getInstagramProfile(env, handle, region) {
   const cleaned = cleanHandle(handle);
   if (!cleaned) {
     throw new HttpError(400, "Handle Instagram wajib diisi.");
+  }
+  if (!canUseScrapeCreators(env)) {
+    const actorResult = await runInstagramProfileActor(env, {
+      handle: cleaned,
+      maxItems: 1,
+      mode: "lite",
+      includeComments: false,
+    });
+    return actorResult.profileRaw || actorResult.postItems?.[0] || {};
   }
   return scrapeCreatorsFetch(env, "/v1/instagram/profile", {
     handle: cleaned,
@@ -107,6 +121,17 @@ export async function getInstagramMediaIndex(env, {
   maxPages = 8,
 }) {
   const cleaned = cleanHandle(handle);
+  if (!canUseScrapeCreators(env)) {
+    const actorResult = await runInstagramProfileActor(env, {
+      handle: cleaned,
+      maxItems: 60,
+      mode: "full",
+      dateFrom,
+      dateTo,
+      includeComments: false,
+    });
+    return Array.isArray(actorResult.postItems) ? actorResult.postItems : [];
+  }
   const items = [];
   let cursor = null;
 
@@ -157,6 +182,9 @@ export async function getInstagramMediaIndex(env, {
 }
 
 export async function getInstagramComments(env, postUrl, region, limit = 80) {
+  if (!canUseScrapeCreators(env)) {
+    return [];
+  }
   const comments = [];
   let cursor = null;
 
@@ -177,6 +205,9 @@ export async function getInstagramComments(env, postUrl, region, limit = 80) {
 }
 
 export async function getInstagramTranscript(env, postUrl, region) {
+  if (!canUseScrapeCreators(env)) {
+    return "";
+  }
   try {
     const payload = await scrapeCreatorsFetch(env, "/v2/instagram/media/transcript", {
       url: postUrl,
@@ -193,13 +224,14 @@ export async function getInstagramTranscript(env, postUrl, region) {
 
 export function normalizeInstagramProfile(rawProfile, handle) {
   return {
-    handle: cleanHandle(handle),
+    handle: cleanHandle(handle || pickFirst(rawProfile, ["username"], "")),
     platformUserId: String(
-      pickFirst(rawProfile, ["user.id", "id", "pk", "data.user.id"], ""),
+      pickFirst(rawProfile, ["user.id", "id", "pk", "data.user.id", "ownerId", "fbid"], ""),
     ),
     displayName: pickFirst(rawProfile, [
       "user.full_name",
       "full_name",
+      "fullName",
       "name",
       "data.user.full_name",
     ], handle),
@@ -211,12 +243,15 @@ export function normalizeInstagramProfile(rawProfile, handle) {
     profilePicUrl: pickFirst(rawProfile, [
       "user.profile_pic_url",
       "profile_pic_url",
+      "profilePicUrlHD",
+      "profilePicUrl",
       "data.user.profile_pic_url",
     ], ""),
     followerCount: toNumber(
       pickFirst(rawProfile, [
         "user.follower_count",
         "follower_count",
+        "followersCount",
         "followers",
         "data.user.follower_count",
       ], 0),
@@ -225,6 +260,7 @@ export function normalizeInstagramProfile(rawProfile, handle) {
       pickFirst(rawProfile, [
         "user.following_count",
         "following_count",
+        "followsCount",
         "following",
         "data.user.following_count",
       ], 0),
@@ -233,6 +269,7 @@ export function normalizeInstagramProfile(rawProfile, handle) {
       pickFirst(rawProfile, [
         "user.media_count",
         "media_count",
+        "postsCount",
         "posts_count",
         "data.user.media_count",
       ], 0),
@@ -247,16 +284,16 @@ export function normalizeInstagramMediaItem(raw, profile, sourceTab) {
   const url =
     pickFirst(raw, ["url", "link", "permalink", "code_url"], "").replace(/\?.*$/, "");
   const likeCount = toNumber(
-    pickFirst(raw, ["like_count", "likes", "edge_media_preview_like.count"], 0),
+    pickFirst(raw, ["like_count", "likes", "likesCount", "edge_media_preview_like.count"], 0),
   );
   const commentCount = toNumber(
-    pickFirst(raw, ["comment_count", "comments", "edge_media_to_comment.count"], 0),
+    pickFirst(raw, ["comment_count", "comments", "commentsCount", "edge_media_to_comment.count"], 0),
   );
   const playCount = toNumber(
-    pickFirst(raw, ["play_count", "video_play_count", "view_count", "views"], 0),
+    pickFirst(raw, ["play_count", "video_play_count", "videoPlayCount", "view_count", "views"], 0),
   );
   const viewCount = toNumber(
-    pickFirst(raw, ["view_count", "video_view_count", "play_count", "views"], 0),
+    pickFirst(raw, ["view_count", "video_view_count", "videoViewCount", "videoPlayCount", "play_count", "views"], 0),
   );
   const followerCountSnapshot = profile.followerCount || 0;
   const engagementCount = likeCount + commentCount;
@@ -289,7 +326,7 @@ export function normalizeInstagramMediaItem(raw, profile, sourceTab) {
     ),
     thumbnailUrl: pickFirst(
       raw,
-      ["thumbnail_url", "display_url", "image_url", "cover_url"],
+      ["thumbnail_url", "display_url", "displayUrl", "image_url", "cover_url"],
       "",
     ),
     likeCount,
