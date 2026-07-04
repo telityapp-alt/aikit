@@ -125,7 +125,7 @@ async function handleChatRequest(request, env) {
   }
 
   let systemPrompt =
-    "Kamu adalah aikit AI Agent, asisten berbahasa Indonesia yang membantu produktivitas, bisnis, dan konten. Jawab ringkas dan jelas.";
+    "Kamu adalah Aispy AI Agent, asisten berbahasa Indonesia yang membantu riset pasar, kompetitor, dan business intelligence. Jawab ringkas dan jelas.";
   let modelName = env.ANTHROPIC_MODEL || "claude-sonnet-4-5";
   let cost = 1;
 
@@ -273,7 +273,7 @@ async function handleTopupRequest(request, env) {
         external_id: reference,
         amount,
         payer_email: user.email,
-        description: `Top-up ${amount} kredit aikit`,
+        description: `Top-up ${amount} kredit Aispy`,
         success_redirect_url: `${new URL(request.url).origin}/dashboard/tagihan`,
       }),
     });

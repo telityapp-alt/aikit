@@ -15,7 +15,7 @@ const ZIGZAG_ROWS = [
   {
     eyebrow: "Gratis selamanya",
     title: "Tidak ada biaya tersembunyi, tidak ada masa trial",
-    desc: "Semua modul di aikit tersedia gratis. Buka, pakai, dan simpan datamu — tanpa harus memasukkan kartu kredit atau menunggu periode uji coba habis.",
+    desc: "Semua modul di Aispy tersedia gratis. Buka, pakai, dan simpan datamu — tanpa harus memasukkan kartu kredit atau menunggu periode uji coba habis.",
     bullets: [
       "Akses penuh tanpa batas waktu",
       "Data tersimpan di akunmu",
@@ -52,14 +52,14 @@ const ZIGZAG_ROWS = [
 
 function Wordmark() {
   return (
-    <div className="wordmark" aria-label="aikit wordmark">
+    <div className="wordmark" aria-label="Aispy wordmark">
       <span className="wordmark-mark" aria-hidden="true">
         <i />
         <i />
         <i />
         <i />
       </span>
-      <span className="wordmark-text">aikit</span>
+      <span className="wordmark-text">Aispy</span>
     </div>
   );
 }
@@ -140,11 +140,11 @@ export default function ModulLanding() {
             <div className="hero">
               <div className="hero-copy">
                 <Wordmark />
-                <h1>Mini sistem bisnis yang langsung bisa dipakai hari ini</h1>
+                <h1>Mini sistem intelligence yang langsung bisa dipakai hari ini</h1>
                 <p>
-                  Modul aikit bukan sekadar form — ini sistem kecil yang saling
-                  terhubung. Kelola kontak, kampanye, konten, dan keuangan dalam
-                  satu tempat, tanpa biaya apapun.
+                  Modul Aispy bukan sekadar form ? ini sistem kecil yang saling
+                  terhubung untuk kelola kontak, kampanye, konten, dan operasi
+                  intelligence dalam satu tempat, tanpa biaya apapun.
                 </p>
                 <ul className="hero-highlights" aria-label="Keunggulan modul">
                   {[
@@ -181,7 +181,7 @@ export default function ModulLanding() {
                 <div className="hero-image-shell">
                   <img
                     src={MASCOT_SCENES.dashboardWelcome}
-                    alt="aikit mascot"
+                    alt="Aispy mascot"
                     className="hero-generated-image"
                   />
                 </div>
@@ -302,12 +302,12 @@ export default function ModulLanding() {
           <section className="ml-section ml-section-light">
             <div className="content">
               <div className="ml-section-header">
-                <p className="ml-eyebrow">Kenapa modul aikit berbeda</p>
+                <p className="ml-eyebrow">Kenapa modul Aispy berbeda</p>
                 <h2 className="ml-section-heading">
                   Bukan aplikasi terpisah, ini satu sistem
                 </h2>
                 <p className="ml-section-sub">
-                  Kebanyakan tools gratis itu terisolasi. Modul aikit dirancang
+                  Kebanyakan tools gratis itu terisolasi. Modul Aispy dirancang
                   dari awal buat saling terhubung — data mengalir, bukan
                   dipindah manual.
                 </p>
@@ -439,7 +439,7 @@ export default function ModulLanding() {
                       margin: 0,
                     }}
                   >
-                    Buat akun dan mulai pakai modul bisnis aikit hari ini.
+                    Buat akun dan mulai pakai modul bisnis Aispy hari ini.
                   </p>
                 </div>
                 <div style={{ display: "flex", gap: 12, flexShrink: 0 }}>

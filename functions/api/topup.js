@@ -34,7 +34,7 @@ export async function onRequestPost(context) {
         external_id: reference,
         amount,
         payer_email: user.email,
-        description: `Top-up ${amount} kredit aikit`,
+        description: `Top-up ${amount} kredit Aispy`,
         success_redirect_url: `${new URL(request.url).origin}/dashboard/tagihan`,
       }),
     });

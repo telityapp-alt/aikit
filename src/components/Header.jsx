@@ -135,8 +135,8 @@ function ThemeToggle() {
 
 function HeaderLogo() {
   return (
-    <Link to="/" className="header-logo-link" aria-label="aikit — home">
-      <span className="header-logo-text">aikit</span>
+    <Link to="/" className="header-logo-link" aria-label="Aispy - home">
+      <span className="header-logo-text">Aispy</span>
     </Link>
   );
 }

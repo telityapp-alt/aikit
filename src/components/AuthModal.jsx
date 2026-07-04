@@ -107,14 +107,14 @@ export default function AuthModal({
 
         <div className="mb-5">
           <span className="mb-2 inline-block text-[13px] font-bold tracking-[0.01em] text-amber">
-            aikit
+            Aispy
           </span>
           <h2 className="mb-1.5 m-0 text-2xl font-bold leading-[1.15] tracking-tight-lg text-ink-dark">
             {isForgot
               ? "Reset password"
               : isSignup
                 ? "Buat akun gratis"
-                : "Masuk ke aikit"}
+                : "Masuk ke Aispy"}
           </h2>
           <p className="m-0 text-sm font-medium leading-[1.45] text-ink-soft">
             {isForgot

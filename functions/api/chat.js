@@ -19,7 +19,7 @@ export async function onRequestPost(context) {
   }
 
   // Fetch module config if moduleSlug is provided
-  let systemPrompt = "Kamu adalah aikit AI Agent, asisten berbahasa Indonesia yang membantu produktivitas, bisnis, dan konten. Jawab ringkas dan jelas.";
+  let systemPrompt = "Kamu adalah Aispy AI Agent, asisten berbahasa Indonesia yang membantu riset pasar, kompetitor, dan business intelligence. Jawab ringkas dan jelas.";
   let modelName = "claude-sonnet-4-6";
   let cost = 1;
 

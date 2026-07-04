@@ -37,11 +37,11 @@ const DOCS = {
     sections: [
       {
         h: "Penerimaan ketentuan",
-        p: "Dengan membuat akun dan menggunakan aikit, kamu menyetujui syarat dan ketentuan ini serta Kebijakan Privasi kami.",
+        p: "Dengan membuat akun dan menggunakan Aispy, kamu menyetujui syarat dan ketentuan ini serta Kebijakan Privasi kami.",
       },
       {
         h: "Penggunaan layanan",
-        p: "aikit menyediakan AI tools dengan model bayar per penggunaan. Kamu bertanggung jawab atas data yang kamu masukkan dan cara kamu menggunakan hasilnya.",
+        p: "Aispy menyediakan AI tools dengan model bayar per penggunaan. Kamu bertanggung jawab atas data yang kamu masukkan dan cara kamu menggunakan hasilnya.",
       },
       {
         h: "Kredit dan pembayaran",
@@ -73,7 +73,7 @@ export default function LegalPage({ doc }) {
           to="/"
           className="text-xl font-bold tracking-tight-md text-ink-dark no-underline"
         >
-          aikit
+          Aispy
         </Link>
         <Link
           to="/"

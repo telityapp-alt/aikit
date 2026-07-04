@@ -103,14 +103,14 @@ function IconPeople() {
 /* ── Wordmark (sama persis dengan App.jsx) ───────────────────── */
 function Wordmark() {
   return (
-    <div className="wordmark" aria-label="aikit wordmark">
+    <div className="wordmark" aria-label="Aispy wordmark">
       <span className="wordmark-mark" aria-hidden="true">
         <i />
         <i />
         <i />
         <i />
       </span>
-      <span className="wordmark-text">aikit</span>
+      <span className="wordmark-text">Aispy</span>
     </div>
   );
 }
@@ -175,18 +175,18 @@ export default function AutomasiLanding() {
               {/* Left: copy */}
               <div className="hero-copy">
                 <Wordmark />
-                <h1>Semua pekerjaan berulang, selesai otomatis</h1>
+                <h1>Ratusan AI Spy siap jalan untuk monitoring dan pelacakan</h1>
                 <p>
-                  Pilih dari puluhan automasi siap pakai. Jalankan, dapat
-                  hasilnya — laporan, data, konten — langsung bisa diunduh atau
-                  diintegrasikan ke workflow kamu.
+                  Pilih dari puluhan automasi intelijen siap pakai. Jalankan,
+                  lalu dapat hasilnya ? laporan, data, insight, dan monitoring
+                  kompetitor ? langsung bisa diunduh atau masuk ke workflow tim.
                 </p>
                 <ul className="hero-highlights" aria-label="Keunggulan utama">
                   {[
                     "Tidak perlu belajar koding apapun",
                     "Hasil berformat bisnis — Excel, laporan, insight",
                     "Bayar hanya saat dipakai, tidak ada biaya bulanan",
-                    "Katalog terus bertambah setiap minggu",
+                    "Katalog AI Spy terus bertambah setiap minggu",
                   ].map((item) => (
                     <li key={item}>
                       <CheckIcon />
@@ -217,7 +217,7 @@ export default function AutomasiLanding() {
                 <div className="hero-image-shell">
                   <img
                     src={MASCOT_SCENES.landingHero}
-                    alt="aikit mascot bekerja dengan laptop"
+                    alt="Aispy mascot bekerja dengan laptop"
                     className="hero-generated-image"
                   />
                 </div>
@@ -391,7 +391,7 @@ export default function AutomasiLanding() {
           <section className="al-section al-section-warm">
             <div className="content">
               <div className="al-section-header">
-                <p className="al-eyebrow">Kenapa aikit</p>
+                <p className="al-eyebrow">Kenapa Aispy</p>
                 <h2 className="al-section-heading">
                   Dirancang untuk langsung pakai
                 </h2>

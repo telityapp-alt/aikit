@@ -38,7 +38,7 @@ export default function ResetPassword() {
       <div className="relative w-[min(420px,100%)] rounded-[18px] border border-border-warm bg-cream px-7 pb-6 pt-[30px] shadow-modal">
         <div className="mb-5">
           <span className="mb-2 inline-block text-[13px] font-bold tracking-[0.01em] text-amber">
-            aikit
+            Aispy
           </span>
           <h2 className="m-0 mb-1.5 text-2xl font-bold leading-[1.15] tracking-tight-lg text-ink-dark">
             Atur password baru

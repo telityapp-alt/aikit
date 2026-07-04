@@ -55,7 +55,7 @@ export default function ProductDetail() {
           to="/"
           className="text-xl font-bold tracking-tight-md text-ink-dark no-underline"
         >
-          aikit
+          Aispy
         </Link>
         <Link
           to="/"

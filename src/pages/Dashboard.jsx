@@ -1587,7 +1587,7 @@ export default function Dashboard() {
     <div className="db-shell">
       <aside className="db-sidebar">
         <div className="db-sidebar-logo">
-          <span className="db-wordmark">aikit</span>
+          <span className="db-wordmark">Aispy</span>
         </div>
 
         <nav aria-label="Main navigation">

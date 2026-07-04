@@ -19,42 +19,41 @@ import { MASCOT_SCENES } from "./lib/mascots";
 
 const tabs = [
   {
-    id: "business",
-    label: "For Business",
+    id: "market",
+    label: "Market Spy",
     accent: "#377cf6",
     image: "/tab-analytics.png",
-    title:
-      "Riset pasar, analisis kompetitor, dan insight pelanggan — semua otomatis",
+    title: "Cari peluang pasar, lacak kompetitor, dan baca demand lebih cepat",
     description:
-      "aikit membantu pemilik bisnis dan tim marketing mengambil keputusan lebih cepat dengan data nyata dari sosmed, marketplace, dan maps — tanpa harus hire analis.",
+      "Aispy membantu tim bisnis membaca sinyal pasar dari sosmed, marketplace, maps, dan review publik - jadi keputusan tidak lagi pakai feeling.",
     stat: "10x lebih cepat dari riset manual",
     eyebrow: "Business intelligence",
     primaryLinks: [
-      "Riset pasar",
-      "Analisis kompetitor",
-      "Review scraper",
-      "Price tracker",
+      "Opportunity scan",
+      "Competitor tracker",
+      "Review intelligence",
+      "Price monitor",
     ],
     secondaryLinks: [
-      "Lead generation",
+      "Demand mapping",
       "Sentimen pelanggan",
       "Trend monitoring",
-      "Laporan otomatis",
+      "Laporan mingguan",
     ],
     bulletGroups: [
       {
-        heading: "Riset",
+        heading: "Sinyal",
         items: [
-          "Data kompetitor real-time",
+          "Pergerakan kompetitor real-time",
           "Review & sentimen pasar",
-          "Price benchmarking",
+          "Benchmark harga dan positioning",
         ],
       },
       {
         heading: "Analisis",
         items: [
           "Ringkasan AI otomatis",
-          "Identifikasi peluang",
+          "Identifikasi celah pasar",
           "Pola keluhan pelanggan",
         ],
       },
@@ -63,87 +62,85 @@ const tabs = [
         items: [
           "Ekspor Excel siap lapor",
           "Share ke tim langsung",
-          "Rekomendasi strategi",
+          "Rekomendasi langkah berikutnya",
         ],
       },
     ],
   },
   {
-    id: "jobseeker",
-    label: "For Job Seeker",
+    id: "ads",
+    label: "Ads Spy",
     accent: "#37d7c8",
     image: "/tab-onboarding.png",
-    title:
-      "Tingkatkan peluang lolos interview dengan bantuan AI dari CV sampai offer",
+    title: "Bedah iklan kompetitor, hook kreatif, dan CTA yang sedang menang",
     description:
-      "aikit membantu job seeker tampil lebih profesional — dari review CV, riset perusahaan, sampai simulasi interview — supaya kamu masuk dengan persiapan terbaik.",
-    stat: "3x lebih siap masuk interview",
-    eyebrow: "Career toolkit",
+      "Gunakan AI Spy untuk memantau ads library, pola visual, angle penawaran, dan pressure point yang terus dipakai pemain di kategori kamu.",
+    stat: "3x lebih cepat baca pola kreatif",
+    eyebrow: "Creative intelligence",
     primaryLinks: [
-      "CV Reviewer",
-      "Cover Letter",
-      "Riset Perusahaan",
-      "Simulasi Interview",
+      "Meta Ads Spy",
+      "TikTok Ads Spy",
+      "Hook analyzer",
+      "CTA tracker",
     ],
     secondaryLinks: [
-      "Optimasi LinkedIn",
-      "Salary benchmark",
-      "Job desc analyzer",
-      "Portfolio reviewer",
+      "Offer breakdown",
+      "Creative clustering",
+      "Landing angle map",
+      "Winning pattern log",
     ],
     bulletGroups: [
       {
-        heading: "Persiapan",
+        heading: "Capture",
         items: [
-          "Review CV dengan skor AI",
-          "Tulis cover letter otomatis",
-          "Riset budaya perusahaan",
+          "Pantau iklan kompetitor",
+          "Arsip hook dan visual",
+          "Kelompokkan berdasarkan offer",
         ],
       },
       {
-        heading: "Latihan",
+        heading: "Decode",
         items: [
-          "Simulasi pertanyaan HR",
-          "Feedback jawaban kamu",
-          "Tips negosiasi gaji",
+          "Lihat pola CTA dominan",
+          "Baca angle yang diulang",
+          "Temukan gap creative",
         ],
       },
       {
-        heading: "Optimasi",
+        heading: "Act",
         items: [
-          "ATS score checker",
-          "Keyword dari job desc",
-          "Saran perbaikan per section",
+          "Brief tim creative lebih cepat",
+          "Validasi pesan iklan",
+          "Masuk pasar dengan lebih tajam",
         ],
       },
     ],
   },
   {
-    id: "creator",
-    label: "For Creator",
+    id: "social",
+    label: "Social Spy",
     accent: "#f3ba3f",
     image: "/tab-debug.png",
-    title:
-      "Buat konten lebih cepat, temukan tren lebih awal, grow lebih konsisten",
+    title: "Pantau tren, konten pesaing, dan suara pasar sebelum orang lain sadar",
     description:
-      "aikit adalah toolkit wajib creator — generate caption, analisis kompetitor, cari hashtag trending, dan ringkas video panjang jadi skrip siap pakai.",
-    stat: "5x lebih cepat produksi konten",
-    eyebrow: "Creator toolkit",
+      "Aispy merangkum pergeseran tren, hashtag, komentar, dan format konten yang sedang naik supaya tim kamu bisa bergerak lebih cepat dari kompetitor.",
+    stat: "5x lebih cepat temukan insight konten",
+    eyebrow: "Social intelligence",
     primaryLinks: [
-      "Caption generator",
+      "Trend scanner",
       "Hashtag spy",
-      "TikTok analyzer",
-      "YouTube summarizer",
+      "Comment mining",
+      "Creator tracker",
     ],
     secondaryLinks: [
-      "Hook writer",
-      "Thread generator",
-      "Konten kalender",
-      "Repurpose konten",
+      "Hook library",
+      "Format breakdown",
+      "Audience reaction",
+      "Content gap map",
     ],
     bulletGroups: [
       {
-        heading: "Ideasi",
+        heading: "Observe",
         items: [
           "Tren & topik viral",
           "Angle konten baru",
@@ -151,64 +148,63 @@ const tabs = [
         ],
       },
       {
-        heading: "Produksi",
+        heading: "Interpret",
         items: [
-          "Caption & hook otomatis",
-          "Skrip video siap pakai",
-          "Thread & carousel copy",
+          "Ringkasan komentar penting",
+          "Pola engagement per format",
+          "Signal intent dari audiens",
         ],
       },
       {
-        heading: "Distribusi",
+        heading: "Move",
         items: [
           "Hashtag optimal per platform",
-          "Waktu posting terbaik",
-          "Repurpose ke multi-platform",
+          "Prioritas eksperimen konten",
+          "Repurpose insight ke campaign",
         ],
       },
     ],
   },
   {
-    id: "personal",
-    label: "For Personal",
+    id: "ops",
+    label: "Ops Spy",
     accent: "#b461f3",
     image: "/tab-rollout.png",
-    title:
-      "AI tools untuk kehidupan sehari-hari yang lebih produktif dan efisien",
+    title: "Bangun radar intelijen untuk kategori, akun, dan sinyal yang kamu incar",
     description:
-      "aikit bukan cuma untuk bisnis — ada ratusan tools untuk bantu kamu belajar, menulis, merencanakan, dan menyelesaikan pekerjaan sehari-hari lebih cepat.",
-    stat: "Hemat 2–3 jam kerja per hari",
-    eyebrow: "Personal productivity",
-    primaryLinks: ["Summarizer", "Email writer", "Translator", "Study helper"],
+      "Dari monitoring mingguan sampai pelaporan otomatis, Aispy bikin workflow intelligence tetap rapi, terukur, dan siap dibagikan ke tim atau klien.",
+    stat: "Hemat 2-3 jam kerja per hari",
+    eyebrow: "Intelligence operations",
+    primaryLinks: ["Weekly monitor", "Alert watcher", "Report builder", "Signal inbox"],
     secondaryLinks: [
-      "Grammar checker",
-      "Meeting notes",
-      "To-do planner",
-      "Idea generator",
+      "Summary digest",
+      "Team handoff",
+      "Insight archive",
+      "Opportunity board",
     ],
     bulletGroups: [
       {
-        heading: "Belajar",
+        heading: "Monitor",
         items: [
-          "Rangkum artikel & video",
-          "Jelaskan konsep rumit",
-          "Buat flashcard otomatis",
+          "Pantau keyword dan akun penting",
+          "Jadwalkan pengambilan data",
+          "Simpan histori perubahan",
         ],
       },
       {
-        heading: "Kerja",
+        heading: "Report",
         items: [
-          "Tulis email & laporan",
-          "Ringkas meeting notes",
-          "Terjemahan akurat",
+          "Ringkasan mingguan otomatis",
+          "Laporan siap share ke klien",
+          "Ekspor insight lintas channel",
         ],
       },
       {
-        heading: "Harian",
+        heading: "Scale",
         items: [
-          "Rencanakan hari kamu",
-          "Generate ide kreatif",
-          "Cek grammar & ejaan",
+          "Tambah spy sesuai use case",
+          "Standarisasi workflow tim",
+          "Kurangi kerja manual berulang",
         ],
       },
     ],
@@ -216,17 +212,17 @@ const tabs = [
 ];
 
 const trustLogos = [
-  "Produktivitas",
-  "Bisnis",
-  "Marketing",
-  "Riset",
-  "Personal",
+  "Competitor tracking",
+  "Market intelligence",
+  "Social listening",
+  "Opportunity scan",
+  "Monitoring ops",
 ];
 
 const heroHighlights = [
-  "Ratusan AI tools, satu platform",
-  "Pay-per-use, tanpa langganan paksa",
-  "Untuk kerja, bisnis, dan kehidupan sehari-hari",
+  "Ratusan AI Spy, satu platform",
+  "Lacak kompetitor, peluang, dan sinyal pasar",
+  "Business intelligence tanpa setup ribet",
 ];
 
 function IconPeople() {
@@ -314,14 +310,14 @@ function CheckIcon() {
 
 function Wordmark() {
   return (
-    <div className="wordmark" aria-label="aikit wordmark">
+    <div className="wordmark" aria-label="Aispy wordmark">
       <span className="wordmark-mark" aria-hidden="true">
         <i />
         <i />
         <i />
         <i />
       </span>
-      <span className="wordmark-text">aikit</span>
+      <span className="wordmark-text">Aispy</span>
     </div>
   );
 }
@@ -473,16 +469,16 @@ function App() {
           <section className="hero">
             <div className="hero-copy">
               <Wordmark />
-              <h1>Ratusan AI tools siap pakai, untuk semua kebutuhan kamu</h1>
+              <h1>Ratusan AI Spy siap pakai untuk cari peluang dan lacak pasar</h1>
               <p>
-                aikit adalah platform pay-per-use dengan ratusan AI tools — dari
-                produktivitas kerja, riset bisnis, analisis sosmed, sampai
-                kebutuhan sehari-hari. Tinggal pilih tool, jalankan, dapat
-                hasilnya.
+                Aispy adalah platform pay-per-use berisi ratusan AI Spy untuk
+                kompetitor, pasar, ads, review, dan social intelligence.
+                Tinggal pilih spy, jalankan, lalu dapat insight yang siap dipakai.
               </p>
               <p>
-                Tidak perlu langganan mahal atau setup teknis. Bayar hanya saat
-                kamu pakai, ekspor hasilnya, langsung jalan.
+                Bukan another AI slop. Fokusnya jelas: bantu tim bisnis membaca
+                apa yang sedang terjadi di lapangan tanpa langganan mahal atau
+                setup teknis.
               </p>
 
               <ul className="hero-highlights" aria-label="Key benefits">
@@ -541,7 +537,7 @@ function App() {
               <div className="hero-image-shell">
                 <img
                   src={MASCOT_SCENES.landingHero}
-                  alt="aikit lightning mascot working with a laptop"
+                  alt="Aispy lightning mascot working with a laptop"
                   className="hero-generated-image"
                 />
               </div>
@@ -888,7 +884,7 @@ function App() {
                 aria-hidden="true"
                 className="site-footer-mascot"
               />
-              <span className="site-footer-brand">aikit</span>
+              <span className="site-footer-brand">Aispy</span>
             </div>
             <nav className="site-footer-links" aria-label="Footer">
               <Link to="/privacy">Kebijakan Privasi</Link>
@@ -896,7 +892,7 @@ function App() {
               <a href="mailto:support@aikit.id">Dukungan</a>
             </nav>
             <span className="site-footer-copy">
-              © 2026 aikit. Semua hak dilindungi.
+              © 2026 Aispy. Semua hak dilindungi.
             </span>
           </div>
         </footer>
