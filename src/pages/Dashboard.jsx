@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, Suspense } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { MODULE_CARDS, MODULE_CARD_MAP } from "../lib/moduleCards";
 import { AUTOMATION_CARDS } from "../lib/automationCards";
+import { getAutomationComponent } from "../automations/registry";
 import { useAuth } from "../lib/AuthContext";
 import { useToast } from "../lib/ToastContext";
 import { supabase } from "../lib/supabase";
@@ -203,8 +204,8 @@ function IconActivity() {
 function IconPlay() {
   return (
     <svg
-      width="14"
-      height="14"
+      width="18"
+      height="18"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -220,20 +221,28 @@ function IconPlay() {
 
 function IconSignOut() {
   return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <polyline points="16 17 21 12 16 7" />
-      <line x1="21" y1="12" x2="9" y2="12" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+      <polyline points="16 17 21 12 16 7"></polyline>
+      <line x1="21" y1="12" x2="9" y2="12"></line>
+    </svg>
+  );
+}
+
+function IconDiamond({ size = 18, color = "currentColor", opacity = 1 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={opacity}>
+      <path d="M6 3h12l4 6-10 13L2 9Z" />
+      <path d="M11 3 8 9l4 13 4-13-3-6" />
+      <path d="M2 9h20" />
+    </svg>
+  );
+}
+
+function IconStar({ size = 18, color = "currentColor", opacity = 1 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={opacity}>
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
     </svg>
   );
 }
@@ -746,11 +755,11 @@ function ViewModule({ onOpen }) {
 
 /* ── View: Module host (renders a specific mini-app) ───────── */
 function ViewModuleHost({ slug, onBack }) {
-  const Comp = getModuleComponent(slug);
+  const Comp = getModuleComponent(slug) || getAutomationComponent(slug);
   if (!Comp) {
     return (
       <div className="db-placeholder">
-        <span className="db-placeholder-label">Module belum tersedia</span>
+        <span className="db-placeholder-label">Tool belum tersedia</span>
         <p className="db-placeholder-sub">
           Mini-app untuk "{slug}" sedang dalam pengembangan.
         </p>
@@ -759,23 +768,23 @@ function ViewModuleHost({ slug, onBack }) {
           style={{ marginTop: "14px" }}
           onClick={onBack}
         >
-          Kembali ke daftar Module
+          Kembali ke daftar
         </button>
       </div>
     );
   }
-  return (
-    <Suspense
-      fallback={
-        <div className="db-placeholder">
-          <span className="db-placeholder-label">Memuat module...</span>
-        </div>
-      }
-    >
-      <Comp />
-    </Suspense>
-  );
-}
+    return (
+      <Suspense
+        fallback={
+          <div className="db-placeholder">
+            <span className="db-placeholder-label">Memuat module...</span>
+          </div>
+        }
+      >
+        <Comp onBack={onBack} />
+      </Suspense>
+    );
+  }
 
 /* ── AI Agent icons ───────────────────────────────────────── */
 
@@ -1208,9 +1217,11 @@ function ViewTagihan() {
   const isSuperAdmin = profile?.is_super_admin === true;
   const toast = useToast();
   const [tx, setTx] = useState([]);
+  const [runs, setRuns] = useState([]);
+  const [activeTab, setActiveTab] = useState("payment"); // "payment" | "usage"
   const [busy, setBusy] = useState(false);
 
-  const load = () =>
+  const load = async () => {
     supabase
       .from("transactions")
       .select("*")
@@ -1218,15 +1229,24 @@ function ViewTagihan() {
       .limit(20)
       .then(({ data }) => setTx(data || []));
 
+    supabase
+      .from("runs")
+      .select("*")
+      .gt("credits_spent", 0)
+      .order("created_at", { ascending: false })
+      .limit(20)
+      .then(({ data }) => setRuns(data || []));
+  };
+
   useEffect(() => {
     load();
   }, []);
 
-  async function topUp() {
+  async function handlePayment(plan) {
     setBusy(true);
     try {
-      const res = await api.topUp(50000);
-      toast.info(res?.note || "Top-up dibuat (stub).");
+      const res = await api.post("/api/topup", { plan });
+      if (res?.note) toast.info(res.note);
       if (res?.invoiceUrl) window.open(res.invoiceUrl, "_blank", "noopener");
       load();
     } catch (e) {
@@ -1236,88 +1256,265 @@ function ViewTagihan() {
     }
   }
 
+  const subscriptionActive = profile?.subscription_tier === 'pro' && new Date(profile?.subscription_expires_at) > new Date();
+
   return (
     <>
       <div className="db-view-header">
         <div>
-          <h1 className="db-view-title">Tagihan</h1>
+          <h1 className="db-view-title">Tagihan & Langganan</h1>
           <p className="db-view-sub">
-            Saldo kredit dan riwayat transaksi kamu.
+            Kelola saldo kredit, langganan bulanan, dan riwayat transaksimu.
           </p>
         </div>
       </div>
+      
       <div className="db-stats-row">
         <div className="db-stat-card">
           <div className="db-stat-top">
             <span className="db-stat-value">
               {isSuperAdmin ? "Unlimited" : profile?.credits_balance ?? 0}
             </span>
-            <span className="db-stat-label">Saldo kredit</span>
+            <span className="db-stat-label">Saldo Kredit Tersedia</span>
           </div>
-          <button
-            className="cta-button"
-            style={{
-              alignSelf: "flex-start",
-              fontSize: "13px",
-              height: "34px",
-              padding: "0 16px",
-            }}
-            onClick={topUp}
-            disabled={busy}
-          >
-            {busy ? "Memproses..." : "Isi Saldo"}
-          </button>
+          <div style={{ marginTop: "auto", fontSize: "13px", color: "var(--text-muted)" }}>
+            1 Kredit = Rp 1
+          </div>
+        </div>
+        <div className="db-stat-card">
+          <div className="db-stat-top">
+            <span className="db-stat-value" style={{ color: subscriptionActive ? "var(--amber)" : "var(--text-heading)" }}>
+              {isSuperAdmin ? "Pro (Admin)" : subscriptionActive ? "Pro Active" : "Free"}
+            </span>
+            <span className="db-stat-label">Status Langganan</span>
+          </div>
+          <div style={{ marginTop: "auto", fontSize: "13px", color: "var(--text-muted)" }}>
+            {subscriptionActive 
+              ? `Berlaku s/d ${new Date(profile.subscription_expires_at).toLocaleDateString("id-ID")}` 
+              : "Upgrade untuk fitur tak terbatas"}
+          </div>
         </div>
       </div>
 
-      <section>
+      <section style={{ marginTop: 40 }}>
         <div className="db-section-header">
-          <h2 className="db-section-title">Riwayat Transaksi</h2>
+          <h2 className="db-section-title">Beli Paket Kredit</h2>
         </div>
-        <div className="db-activity-list">
-          {tx.length === 0 ? (
-            <div className="db-activity-item">
-              <div className="db-activity-icon" aria-hidden="true">
-                <IconReceipt />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 24 }}>
+          {/* Credit Package 1 */}
+          <article className="library-card" style={{ display: "flex", flexDirection: "column" }}>
+            <div className="library-card-hero" style={{ height: 120, background: "linear-gradient(135deg, #f5ecd9 0%, #fffdf8 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <IconDiamond size={48} color="var(--amber)" opacity={0.2} />
+            </div>
+            <div className="library-card-ribbon">
+              <strong>Paket Basic</strong>
+              <span>Top-Up</span>
+            </div>
+            <div className="library-card-meta" style={{ display: "flex", flexDirection: "column", flex: 1, padding: "10px 12px 12px" }}>
+              <p style={{ WebkitLineClamp: 2, WebkitBoxOrient: "vertical", display: "-webkit-box", overflow: "hidden" }}>
+                Dapatkan 50.000 kredit untuk menjalankan berbagai automasi dan fitur AI.
+              </p>
+              <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text-heading)", margin: "16px 0" }}>
+                Rp 50.000
               </div>
-              <div className="db-activity-body">
-                <div className="db-activity-row">
-                  <span className="db-activity-title">Belum ada transaksi</span>
-                </div>
+              <div style={{ marginTop: "auto" }}>
+                <button type="button" className="cta-button" style={{ width: "100%", fontSize: 13, height: 34 }} onClick={() => handlePayment("basic")} disabled={busy}>
+                  {busy ? "Memproses..." : "Beli Sekarang"}
+                </button>
               </div>
             </div>
-          ) : (
-            tx.map((t) => (
-              <div className="db-activity-item" key={t.id}>
+          </article>
+          
+          {/* Credit Package 2 */}
+          <article className="library-card" style={{ display: "flex", flexDirection: "column" }}>
+            <div className="library-card-hero" style={{ height: 120, background: "linear-gradient(135deg, #f5ecd9 0%, #fffdf8 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <IconDiamond size={48} color="var(--amber)" opacity={0.5} />
+            </div>
+            <div className="library-card-ribbon">
+              <strong>Paket Standar</strong>
+              <span>Top-Up</span>
+            </div>
+            <div className="library-card-meta" style={{ display: "flex", flexDirection: "column", flex: 1, padding: "10px 12px 12px" }}>
+              <p style={{ WebkitLineClamp: 2, WebkitBoxOrient: "vertical", display: "-webkit-box", overflow: "hidden" }}>
+                Dapatkan 100.000 kredit. Pilihan tepat untuk penggunaan rutin.
+              </p>
+              <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text-heading)", margin: "16px 0" }}>
+                Rp 100.000
+              </div>
+              <div style={{ marginTop: "auto" }}>
+                <button type="button" className="cta-button" style={{ width: "100%", fontSize: 13, height: 34 }} onClick={() => handlePayment("standard")} disabled={busy}>
+                  {busy ? "Memproses..." : "Beli Sekarang"}
+                </button>
+              </div>
+            </div>
+          </article>
+          
+          {/* Credit Package 3 */}
+          <article className="library-card" style={{ display: "flex", flexDirection: "column", borderColor: "var(--amber-border)" }}>
+            <div className="library-card-hero" style={{ height: 120, background: "linear-gradient(135deg, #f6a61e 0%, #cf860d 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <IconDiamond size={48} color="#fff" opacity={0.8} />
+            </div>
+            <div className="library-card-ribbon">
+              <strong>Paket Sultan</strong>
+              <span>Top-Up</span>
+            </div>
+            <div className="library-card-meta" style={{ display: "flex", flexDirection: "column", flex: 1, padding: "10px 12px 12px" }}>
+              <p style={{ WebkitLineClamp: 2, WebkitBoxOrient: "vertical", display: "-webkit-box", overflow: "hidden" }}>
+                Dapatkan 250.000 kredit. Stok melimpah untuk kebutuhan skala besar.
+              </p>
+              <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text-heading)", margin: "16px 0" }}>
+                Rp 250.000
+              </div>
+              <div style={{ marginTop: "auto" }}>
+                <button type="button" className="cta-button" style={{ width: "100%", fontSize: 13, height: 34 }} onClick={() => handlePayment("sultan")} disabled={busy}>
+                  {busy ? "Memproses..." : "Beli Sekarang"}
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+      
+      <section style={{ marginTop: 40 }}>
+        <div className="db-section-header">
+          <h2 className="db-section-title">Langganan Bulanan</h2>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 24 }}>
+          {/* Pro Subscription */}
+          <article className="library-card" style={{ display: "flex", flexDirection: "column" }}>
+            <div className="library-card-hero" style={{ height: 120, background: "var(--bg-page)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <IconStar size={48} color="var(--amber)" opacity={0.8} />
+            </div>
+            <div className="library-card-ribbon">
+              <strong>Pro Monthly</strong>
+              <span>Langganan</span>
+            </div>
+            <div className="library-card-meta" style={{ display: "flex", flexDirection: "column", flex: 1, padding: "10px 12px 12px" }}>
+              <p style={{ WebkitLineClamp: 2, WebkitBoxOrient: "vertical", display: "-webkit-box", overflow: "hidden" }}>
+                Akses semua fitur premium tanpa batas selama 30 hari penuh. Diskon spesial.
+              </p>
+              <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text-heading)", margin: "16px 0" }}>
+                Rp 99.000 <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-muted)", textDecoration: "line-through" }}>Rp 150.000</span>
+              </div>
+              <div style={{ marginTop: "auto" }}>
+                <button type="button" className="cta-button" style={{ width: "100%", fontSize: 13, height: 34 }} onClick={() => handlePayment("pro_monthly")} disabled={busy || subscriptionActive}>
+                  {subscriptionActive ? "Sudah Aktif" : busy ? "Memproses..." : "Langganan Sekarang"}
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section style={{ marginTop: 40 }}>
+        <div style={{ display: "flex", gap: "24px", marginBottom: "20px", borderBottom: "1px solid var(--border)" }}>
+          <button 
+            type="button"
+            onClick={() => setActiveTab("payment")} 
+            style={{ 
+              background: "none", border: "none", padding: "0 0 10px 0", cursor: "pointer",
+              fontSize: "16px", fontWeight: activeTab === "payment" ? 800 : 600, 
+              color: activeTab === "payment" ? "var(--text-heading)" : "var(--text-faint)",
+              borderBottom: activeTab === "payment" ? "2px solid var(--amber)" : "2px solid transparent",
+              transform: "translateY(1px)"
+            }}>
+            Riwayat Pembayaran
+          </button>
+          <button 
+            type="button"
+            onClick={() => setActiveTab("usage")} 
+            style={{ 
+              background: "none", border: "none", padding: "0 0 10px 0", cursor: "pointer",
+              fontSize: "16px", fontWeight: activeTab === "usage" ? 800 : 600, 
+              color: activeTab === "usage" ? "var(--text-heading)" : "var(--text-faint)",
+              borderBottom: activeTab === "usage" ? "2px solid var(--amber)" : "2px solid transparent",
+              transform: "translateY(1px)"
+            }}>
+            Riwayat Penggunaan
+          </button>
+        </div>
+
+        {activeTab === "payment" && (
+          <div className="db-activity-list">
+            {tx.length === 0 ? (
+              <div className="db-activity-item">
                 <div className="db-activity-icon" aria-hidden="true">
                   <IconReceipt />
                 </div>
                 <div className="db-activity-body">
                   <div className="db-activity-row">
-                    <span className="db-activity-title">
-                      {t.kind === "topup"
-                        ? "Isi Saldo"
-                        : t.kind === "spend"
-                          ? "Penggunaan"
-                          : "Penyesuaian"}{" "}
-                      · {t.amount} kredit
-                    </span>
-                    <div className="db-activity-meta">
-                      <span
-                        className={`db-chip ${t.status === "completed" ? "db-chip-green" : t.status === "failed" ? "db-chip-blue" : "db-chip-amber"}`}
-                      >
-                        {t.status}
-                      </span>
-                      <span className="db-activity-time">
-                        {relativeTime(t.created_at)}
-                      </span>
-                    </div>
+                    <span className="db-activity-title">Belum ada transaksi</span>
                   </div>
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            ) : (
+              tx.map((t) => (
+                <div className="db-activity-item" key={t.id}>
+                  <div className="db-activity-icon" aria-hidden="true">
+                    <IconReceipt />
+                  </div>
+                  <div className="db-activity-body">
+                    <div className="db-activity-row">
+                      <span className="db-activity-title">
+                        {t.kind === "topup" ? "Top-Up/Langganan" : "Lainnya"}{" "}
+                        · Rp {t.amount?.toLocaleString("id-ID")}
+                      </span>
+                      <div className="db-activity-meta">
+                        <span className={`db-chip ${t.status === "completed" ? "db-chip-green" : t.status === "failed" ? "db-chip-blue" : "db-chip-amber"}`}>
+                          {t.status}
+                        </span>
+                        <span className="db-activity-time">
+                          {relativeTime(t.created_at)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {activeTab === "usage" && (
+          <div className="db-activity-list">
+            {runs.length === 0 ? (
+              <div className="db-activity-item">
+                <div className="db-activity-icon" aria-hidden="true">
+                  <IconZap />
+                </div>
+                <div className="db-activity-body">
+                  <div className="db-activity-row">
+                    <span className="db-activity-title">Belum ada penggunaan kredit</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              runs.map((r) => (
+                <div className="db-activity-item" key={r.id}>
+                  <div className="db-activity-icon" aria-hidden="true">
+                    <IconZap />
+                  </div>
+                  <div className="db-activity-body">
+                    <div className="db-activity-row">
+                      <span className="db-activity-title">
+                        {r.title || r.automation_slug || "Automasi"}{" "}
+                        · -{r.credits_spent} kredit
+                      </span>
+                      <div className="db-activity-meta">
+                        <span className={`db-chip ${r.status === "completed" ? "db-chip-green" : r.status === "failed" ? "db-chip-blue" : "db-chip-amber"}`}>
+                          {r.status}
+                        </span>
+                        <span className="db-activity-time">
+                          {relativeTime(r.created_at)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </section>
     </>
   );
@@ -1636,7 +1833,7 @@ export default function Dashboard() {
 
       <main className="db-main">
         <div
-          className={`db-main-inner${activeNav === "ai-agent" ? " db-main-inner--wide" : ""}`}
+          className={`db-main-inner${activeNav === "ai-agent" && aiAgentSlug ? " db-main-inner--wide" : ""}`}
         >
           {renderView()}
         </div>

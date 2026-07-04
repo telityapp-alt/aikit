@@ -23,7 +23,7 @@ export default function ChatMessageList({ messages, agent, onUseStarter }) {
           />
         </div>
         <div className="aiw-empty-card">
-          <h2 className="aiw-empty-title">Mulai obrolan</h2>
+          <h2 className="aiw-empty-title"><strong>Mulai obrolan</strong></h2>
           <p className="aiw-empty-sub">
             Pilih prompt cepat atau tulis kebutuhanmu langsung.
           </p>

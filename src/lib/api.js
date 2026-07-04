@@ -9,17 +9,46 @@ async function getAccessToken() {
   return session?.access_token || null;
 }
 
+function isLocalDevHost() {
+  if (typeof window === "undefined") return false;
+  const { hostname, port, protocol } = window.location;
+  return (
+    protocol.startsWith("http") &&
+    (hostname === "127.0.0.1" || hostname === "localhost") &&
+    (port === "4173" || port === "5173")
+  );
+}
+
+function localDevApiHint(status) {
+  if (!isLocalDevHost()) return null;
+  if (status !== 404 && status !== 502 && status !== 503) return null;
+
+  return [
+    "Local API belum terhubung ke Worker.",
+    "Jalankan `npm run dev:local` / `npm run dev:full`, atau jalankan `npm run dev:worker` di port 8787 saat Vite dev aktif.",
+  ].join(" ");
+}
+
 async function apiFetch(path, { method = "POST", body } = {}) {
   const accessToken = await getAccessToken();
-
-  const res = await fetch(path, {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  let res;
+  try {
+    res = await fetch(path, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch (error) {
+    if (isLocalDevHost()) {
+      throw new Error(
+        "Tidak bisa menjangkau local Worker. Jalankan `npm run dev:local` / `npm run dev:full`, atau hidupkan `npm run dev:worker` di port 8787.",
+      );
+    }
+    throw error;
+  }
 
   const text = await res.text();
   let data = null;
@@ -30,7 +59,11 @@ async function apiFetch(path, { method = "POST", body } = {}) {
   }
 
   if (!res.ok) {
-    const message = data?.error || data?.message || `Request gagal (${res.status})`;
+    const message =
+      localDevApiHint(res.status) ||
+      data?.error ||
+      data?.message ||
+      `Request gagal (${res.status})`;
     throw new Error(message);
   }
   return data;

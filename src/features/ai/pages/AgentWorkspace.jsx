@@ -7,6 +7,25 @@ import ChatMessageList from "../components/ChatMessageList";
 import ChatComposer from "../components/ChatComposer";
 import RightCanvas from "../components/RightCanvas";
 
+function IconArrowLeft() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <line x1="19" y1="12" x2="5" y2="12" />
+      <polyline points="12 19 5 12 12 5" />
+    </svg>
+  );
+}
+
 export default function AgentWorkspace({
   agentSlug,
   activeThreadId,
@@ -330,14 +349,14 @@ export default function AgentWorkspace({
 
       <div className="aiw-main">
         <div className="aiw-topbar">
-          <button type="button" className="aiw-home-link" onClick={onBackHome}>
-            Kembali ke AI agents
+          <button type="button" className="aiw-home-link" onClick={onBackHome} aria-label="Kembali ke AI agents" title="Kembali">
+            <IconArrowLeft />
           </button>
 
           <div className="aiw-topbar-copy">
-            <h1 className="aiw-topbar-title">{agent.name}</h1>
+            <h1 className="aiw-topbar-title"><strong>{agent.name}</strong></h1>
             <p className="aiw-topbar-sub">
-              {activeThread?.title || "Obrolan baru"}
+              <strong>{activeThread?.title || "Obrolan baru"}</strong>
             </p>
           </div>
 

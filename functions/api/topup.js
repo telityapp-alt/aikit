@@ -1,9 +1,14 @@
 import { db, json, audit, clientIp } from "../_supabase.js";
 
-// POST /api/topup  { amount }
-// Creates a pending credit top-up. If XENDIT_SECRET_KEY is set, opens a real
-// Xendit invoice; otherwise returns a stub invoice URL. Credits are granted
-// only when the Xendit webhook confirms payment (see webhooks/xendit.js).
+const PLANS = {
+  basic: { amount: 50000, type: "topup", description: "Top-up 50.000 kredit" },
+  standard: { amount: 100000, type: "topup", description: "Top-up 100.000 kredit" },
+  sultan: { amount: 250000, type: "topup", description: "Top-up 250.000 kredit" },
+  pro_monthly: { amount: 99000, type: "subscription", tier: "pro", duration_days: 30, description: "Langganan Pro (1 Bulan)" },
+};
+
+// POST /api/topup  { plan: "basic" }
+// Creates a pending payment link via Pakasir API using a strict backend plan map.
 export async function onRequestPost(context) {
   const { request, data, env } = context;
   const user = data.user;
@@ -15,38 +20,51 @@ export async function onRequestPost(context) {
   } catch {
     return json({ error: "Body tidak valid." }, 400);
   }
-  const amount = Number(payload?.amount);
-  if (!amount || amount <= 0) {
-    return json({ error: "Jumlah top-up tidak valid." }, 400);
+  
+  const planId = payload?.plan;
+  const selectedPlan = PLANS[planId];
+
+  if (!selectedPlan) {
+    return json({ error: "Paket tidak valid." }, 400);
   }
 
-  const reference = `topup_${user.id.slice(0, 8)}_${Date.now()}`;
+  const { amount, type, description, tier, duration_days } = selectedPlan;
+  const metadata = type === "subscription" 
+    ? { type, tier, duration_days, expected_amount: amount } 
+    : { type, expected_amount: amount };
+
+  const reference = `${type}_${user.id.slice(0, 8)}_${Date.now()}`;
   let invoiceUrl;
   let live = false;
 
-  if (env.XENDIT_SECRET_KEY) {
-    // Real Xendit invoice (1 credit = Rp1 for simplicity).
-    const auth = btoa(`${env.XENDIT_SECRET_KEY}:`);
-    const res = await fetch("https://api.xendit.co/v2/invoices", {
+  if (env.PAKASIR_API_KEY) {
+    // Pakasir API Integration
+    const res = await fetch("https://api.pakasir.com/v1/transaction", {
       method: "POST",
-      headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/json" },
+      headers: { 
+        "Authorization": `Bearer ${env.PAKASIR_API_KEY}`, 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
       body: JSON.stringify({
-        external_id: reference,
-        amount,
-        payer_email: user.email,
-        description: `Top-up ${amount} kredit Aispy`,
-        success_redirect_url: `${new URL(request.url).origin}/dashboard/tagihan`,
+        project_slug: env.PAKASIR_PROJECT_SLUG || "default",
+        order_id: reference,
+        amount: amount,
+        customer_name: user.full_name || "Customer",
+        customer_email: user.email,
+        description: description,
+        return_url: `${new URL(request.url).origin}/dashboard/tagihan`
       }),
     });
     if (!res.ok) {
       const t = await res.text();
-      return json({ error: `Xendit error: ${t.slice(0, 200)}` }, 502);
+      return json({ error: `Pakasir error: ${t.slice(0, 200)}` }, 502);
     }
     const inv = await res.json();
-    invoiceUrl = inv.invoice_url;
+    invoiceUrl = inv?.data?.payment_url || inv?.payment_url;
     live = true;
   } else {
-    invoiceUrl = `https://checkout.example/stub/${reference}`;
+    invoiceUrl = `https://checkout.pakasir.example/stub/${reference}`;
   }
 
   const [tx] = await db(env, "transactions", {
@@ -54,24 +72,25 @@ export async function onRequestPost(context) {
     prefer: "return=representation",
     body: {
       user_id: user.id,
-      kind: "topup",
-      amount,
+      kind: type === "topup" ? "topup" : "spend",
+      amount: amount, 
       status: "pending",
-      provider: "xendit",
+      provider: "pakasir",
       reference,
       invoice_url: invoiceUrl,
-      metadata: { live },
+      metadata: { ...metadata, live },
     },
   });
 
-  await audit(env, user.id, "topup.created", { reference, amount, live }, ip);
+  await audit(env, user.id, "payment.created", { reference, planId, amount, type, live }, ip);
 
   return json({
     transaction: tx,
     invoiceUrl,
     live,
     note: live
-      ? "Invoice Xendit dibuat. Selesaikan pembayaran untuk menambah kredit."
-      : "Stub pembayaran — set XENDIT_SECRET_KEY untuk mengaktifkan gateway nyata.",
+      ? "Link pembayaran Pakasir dibuat. Selesaikan pembayaran Anda."
+      : "Stub pembayaran — set PAKASIR_API_KEY untuk mengaktifkan gateway nyata.",
   });
 }
+

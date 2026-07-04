@@ -100,20 +100,6 @@ function IconPeople() {
   );
 }
 
-/* ── Wordmark (sama persis dengan App.jsx) ───────────────────── */
-function Wordmark() {
-  return (
-    <div className="wordmark" aria-label="Aispy wordmark">
-      <span className="wordmark-mark" aria-hidden="true">
-        <i />
-        <i />
-        <i />
-        <i />
-      </span>
-      <span className="wordmark-text">Aispy</span>
-    </div>
-  );
-}
 
 /* ── Marquee strip component ─────────────────────────────────── */
 function MarqueeStrip() {
@@ -174,7 +160,6 @@ export default function AutomasiLanding() {
             <div className="hero">
               {/* Left: copy */}
               <div className="hero-copy">
-                <Wordmark />
                 <h1>Ratusan AI Spy siap jalan untuk monitoring dan pelacakan</h1>
                 <p>
                   Pilih dari puluhan automasi intelijen siap pakai. Jalankan,

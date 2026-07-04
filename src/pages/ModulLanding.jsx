@@ -50,19 +50,6 @@ const ZIGZAG_ROWS = [
   },
 ];
 
-function Wordmark() {
-  return (
-    <div className="wordmark" aria-label="Aispy wordmark">
-      <span className="wordmark-mark" aria-hidden="true">
-        <i />
-        <i />
-        <i />
-        <i />
-      </span>
-      <span className="wordmark-text">Aispy</span>
-    </div>
-  );
-}
 
 function CheckIcon() {
   return (
@@ -139,7 +126,6 @@ export default function ModulLanding() {
           <section className="content">
             <div className="hero">
               <div className="hero-copy">
-                <Wordmark />
                 <h1>Mini sistem intelligence yang langsung bisa dipakai hari ini</h1>
                 <p>
                   Modul Aispy bukan sekadar form ? ini sistem kecil yang saling

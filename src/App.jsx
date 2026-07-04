@@ -308,19 +308,6 @@ function CheckIcon() {
   );
 }
 
-function Wordmark() {
-  return (
-    <div className="wordmark" aria-label="Aispy wordmark">
-      <span className="wordmark-mark" aria-hidden="true">
-        <i />
-        <i />
-        <i />
-        <i />
-      </span>
-      <span className="wordmark-text">Aispy</span>
-    </div>
-  );
-}
 
 function CardGlyphs() {
   return (
@@ -468,7 +455,6 @@ function App() {
         <main className="content">
           <section className="hero">
             <div className="hero-copy">
-              <Wordmark />
               <h1>Ratusan AI Spy siap pakai untuk cari peluang dan lacak pasar</h1>
               <p>
                 Aispy adalah platform pay-per-use berisi ratusan AI Spy untuk

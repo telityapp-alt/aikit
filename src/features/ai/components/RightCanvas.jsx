@@ -30,6 +30,14 @@ function IconPanelClose() {
   );
 }
 
+function IconArrowRight() {
+  return (
+    <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" style={{ flexShrink: 0, opacity: 0.5 }}>
+      <path d="M5 12h14M12 5l7 7-7 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
 function IconPanelWide() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -85,7 +93,7 @@ export default function RightCanvas({
     <aside className={`aiw-canvas${mode === "full" ? " aiw-canvas--full" : ""}`}>
       <div className="aiw-canvas-top">
         <div className="aiw-canvas-heading">
-          <h3 className="aiw-canvas-title">Canvas</h3>
+          <h3 className="aiw-canvas-title"><strong>Canvas</strong></h3>
         </div>
         <div className="aiw-canvas-modes" aria-label="Mode canvas">
           {CANVAS_MODES.map((entry) => (
@@ -106,7 +114,7 @@ export default function RightCanvas({
       <div className="aiw-canvas-body">
         <section className="aiw-canvas-panel aiw-canvas-panel--hero">
           <h4 className="aiw-canvas-panel-title">
-            {thread ? thread.title : `${agent.name} canvas`}
+            <strong>{thread ? thread.title : `${agent.name} canvas`}</strong>
           </h4>
           <p className="aiw-canvas-panel-copy">
             {thread
@@ -117,7 +125,7 @@ export default function RightCanvas({
 
         <section className="aiw-canvas-panel">
           <div className="aiw-canvas-section-head">
-            <h4 className="aiw-canvas-panel-title">Artifacts</h4>
+            <h4 className="aiw-canvas-panel-title"><strong>Artifacts</strong></h4>
             <span className="aiw-canvas-count">{artifacts.length}</span>
           </div>
           {artifacts.length === 0 ? (
@@ -151,11 +159,11 @@ export default function RightCanvas({
           </section>
         ) : (
           <section className="aiw-canvas-panel aiw-canvas-panel--accent">
-            <h4 className="aiw-canvas-panel-title">Next</h4>
+            <h4 className="aiw-canvas-panel-title"><strong>Next</strong></h4>
             <ul className="aiw-canvas-list">
-              <li>Draft dokumen</li>
-              <li>Snapshot analisis</li>
-              <li>Knowledge notes</li>
+              <li style={{ display: "flex", alignItems: "center", gap: "8px" }}><IconArrowRight /> Draft dokumen</li>
+              <li style={{ display: "flex", alignItems: "center", gap: "8px" }}><IconArrowRight /> Snapshot analisis</li>
+              <li style={{ display: "flex", alignItems: "center", gap: "8px" }}><IconArrowRight /> Knowledge notes</li>
             </ul>
           </section>
         )}

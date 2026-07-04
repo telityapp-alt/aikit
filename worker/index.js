@@ -1,6 +1,7 @@
 import { corsHeaders, handleError, HttpError, json, readJson } from "./lib/http.js";
 import {
   audit,
+  automationAudit,
   automationDb,
   clientIp,
   db,
@@ -8,6 +9,7 @@ import {
   isSuperAdmin,
   rpc,
 } from "./lib/supabase.js";
+import { getAutomationExecutor } from "./automations/registry.js";
 import {
   handleAiKnowledgeIngest,
   handleAiKnowledgeList,
@@ -43,8 +45,8 @@ async function rateLimit(env, userId) {
   }
 }
 
-async function createRun(env, user, slug, input, ip) {
-  const automationRows = await db(
+async function createAutomationRun(env, user, slug, input, ip) {
+  const automationRows = await automationDb(
     env,
     `automations?slug=eq.${encodeURIComponent(slug)}&is_active=eq.true&select=*`,
   );
@@ -69,31 +71,176 @@ async function createRun(env, user, slug, input, ip) {
     }
   }
 
-  const [run] = await db(env, "runs", {
-    method: "POST",
-    prefer: "return=representation",
-    body: {
-      user_id: user.id,
-      automation_id: automation.id,
-      automation_slug: automation.slug,
-      title: automation.title,
-      status: "queued",
-      input,
-      credits_spent: chargedCost,
-    },
-  });
+  let run;
+  try {
+    [run] = await automationDb(env, "runs", {
+      method: "POST",
+      prefer: "return=representation",
+      body: {
+        workspace_user_id: user.id,
+        workspace_email: user.email || null,
+        automation_id: automation.id,
+        automation_slug: automation.slug,
+        title: automation.title,
+        status: "queued",
+        input,
+        credits_spent: chargedCost,
+      },
+    });
+  } catch (error) {
+    const message = String(error.message);
+    if (!message.includes("workspace_user_id") && !message.includes("workspace_email")) {
+      throw error;
+    }
 
-  await audit(env, user.id, "run.created", {
+    [run] = await automationDb(env, "runs", {
+      method: "POST",
+      prefer: "return=representation",
+      body: {
+        user_id: user.id,
+        automation_id: automation.id,
+        automation_slug: automation.slug,
+        title: automation.title,
+        status: "queued",
+        input,
+        credits_spent: chargedCost,
+      },
+    });
+  }
+
+  await automationAudit(env, user.id, "run.queued", {
     slug,
     run_id: run.id,
     cost: chargedCost,
     list_price_credits: cost,
     super_admin_bypass: isSuperAdmin(user),
   }, ip);
-  return run;
+  return { run, automation, chargedCost };
 }
 
-async function handleRunRequest(request, env) {
+async function refundAutomationCredits(env, userId, amount) {
+  if (!amount || amount <= 0) return;
+  await rpc(env, "add_credits", { p_user: userId, p_amount: amount }).catch(console.error);
+}
+
+async function processAutomationRun(env, user, run, automation, chargedCost, ip) {
+  const executor = getAutomationExecutor(run.automation_slug);
+  if (!executor) {
+    await automationDb(env, `runs?id=eq.${run.id}`, {
+      method: "PATCH",
+      body: {
+        status: "failed",
+        error: `Automation ${run.automation_slug} belum punya executor.`,
+        completed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    });
+    await refundAutomationCredits(env, user.id, chargedCost);
+    return;
+  }
+
+  try {
+    const startedAt = new Date().toISOString();
+    try {
+      await automationDb(env, `runs?id=eq.${run.id}`, {
+        method: "PATCH",
+        body: {
+          status: "running",
+          started_at: startedAt,
+          updated_at: startedAt,
+        },
+      });
+    } catch (error) {
+      const message = String(error.message);
+      if (!message.includes("updated_at") && !message.includes("started_at")) {
+        throw error;
+      }
+      await automationDb(env, `runs?id=eq.${run.id}`, {
+        method: "PATCH",
+        body: {
+          status: "running",
+        },
+      });
+    }
+    await automationAudit(env, user.id, "run.running", {
+      run_id: run.id,
+      slug: run.automation_slug,
+      title: automation.title,
+    }, ip);
+
+    const result = await executor.execute(env, run.input);
+    const terminalTime = new Date().toISOString();
+    const nextStatus = result?.status || "completed";
+    const patch = {
+      status: nextStatus,
+      output: result?.output || null,
+      error: null,
+      updated_at: terminalTime,
+    };
+
+    if (nextStatus === "completed" || nextStatus === "failed" || nextStatus === "cancelled") {
+      patch.completed_at = terminalTime;
+    }
+
+    try {
+      await automationDb(env, `runs?id=eq.${run.id}`, {
+        method: "PATCH",
+        body: patch,
+      });
+    } catch (error) {
+      if (!String(error.message).includes("updated_at")) {
+        throw error;
+      }
+      const legacyPatch = { ...patch };
+      delete legacyPatch.updated_at;
+      await automationDb(env, `runs?id=eq.${run.id}`, {
+        method: "PATCH",
+        body: legacyPatch,
+      });
+    }
+
+    await automationAudit(env, user.id, `run.${nextStatus}`, {
+      run_id: run.id,
+      slug: run.automation_slug,
+      summary: result?.output?.summary || null,
+      snapshot_id: result?.output?.snapshot_id || null,
+    }, ip);
+  } catch (error) {
+    const failedAt = new Date().toISOString();
+      const failBody = {
+        status: "failed",
+        error: error.message || "Automation run gagal.",
+        output: error.details ? { provider_error: error.details } : null,
+        completed_at: failedAt,
+        updated_at: failedAt,
+      };
+      try {
+        await automationDb(env, `runs?id=eq.${run.id}`, {
+          method: "PATCH",
+          body: failBody,
+        });
+      } catch (patchError) {
+        if (!String(patchError.message).includes("updated_at")) {
+          throw patchError;
+        }
+        delete failBody.updated_at;
+        await automationDb(env, `runs?id=eq.${run.id}`, {
+          method: "PATCH",
+          body: failBody,
+        }).catch(console.error);
+      }
+
+    await automationAudit(env, user.id, "run.failed", {
+      run_id: run.id,
+      slug: run.automation_slug,
+      error: error.message || "Automation run gagal.",
+    }, ip);
+    await refundAutomationCredits(env, user.id, chargedCost);
+    throw error;
+  }
+}
+
+async function handleRunRequest(request, env, ctx) {
   const user = await getUser(env, request);
   await rateLimit(env, user.id);
 
@@ -103,15 +250,17 @@ async function handleRunRequest(request, env) {
     throw new HttpError(400, "slug wajib diisi.");
   }
 
-  const comingSoon = new Set([
-    "google-maps-leads-brightdata",
-    "tokopedia-search-brightdata",
-  ]);
-  if (comingSoon.has(slug)) {
-    throw new HttpError(409, `Automation ${slug} sedang dipersiapkan ulang.`);
+  const executor = getAutomationExecutor(slug);
+  if (!executor) {
+    throw new HttpError(409, `Automation ${slug} belum aktif di worker automation baru.`);
   }
 
-  throw new HttpError(400, `Slug ${slug} belum tersedia di worker automation baru.`);
+  const input = executor.validateInput(payload?.input || {});
+  const ip = clientIp(request);
+  const { run, automation, chargedCost } = await createAutomationRun(env, user, slug, input, ip);
+  ctx.waitUntil(processAutomationRun(env, user, run, automation, chargedCost, ip));
+
+  return json({ run }, 200, corsHeaders());
 }
 
 async function handleChatRequest(request, env) {
@@ -379,13 +528,31 @@ async function listAutomationCatalog(request, env) {
       env,
       "automations?is_active=eq.true&select=slug,title,description,type,pricing,cost_per_run,image,sort_order&order=sort_order.asc",
     );
-    return json({ automations, source: "automation-db" }, 200, corsHeaders());
-  } catch (error) {
+    return json(
+      {
+        automations: automations.filter(
+          (automation) => automation.slug !== "google-maps-leads-brightdata",
+        ),
+        source: "automation-db",
+      },
+      200,
+      corsHeaders(),
+    );
+  } catch {
     const automations = await db(
       env,
       "automations?is_active=eq.true&select=slug,title,description,type,pricing,cost_per_run,image,sort_order&order=sort_order.asc",
     );
-    return json({ automations, source: "legacy-db" }, 200, corsHeaders());
+    return json(
+      {
+        automations: automations.filter(
+          (automation) => automation.slug !== "google-maps-leads-brightdata",
+        ),
+        source: "legacy-db",
+      },
+      200,
+      corsHeaders(),
+    );
   }
 }
 
@@ -453,7 +620,7 @@ function isApiPath(pathname) {
   return pathname.startsWith("/api/");
 }
 
-async function handleApi(request, env) {
+async function handleApi(request, env, ctx) {
   const url = new URL(request.url);
 
   if (request.method === "OPTIONS") {
@@ -461,7 +628,7 @@ async function handleApi(request, env) {
   }
 
   if (url.pathname === "/api/runs" && request.method === "POST") {
-    return handleRunRequest(request, env);
+    return handleRunRequest(request, env, ctx);
   }
 
   if (url.pathname === "/api/chat" && request.method === "POST") {
@@ -536,11 +703,11 @@ async function handleApi(request, env) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     try {
       const url = new URL(request.url);
       if (isApiPath(url.pathname)) {
-        return await handleApi(request, env);
+        return await handleApi(request, env, ctx);
       }
 
       const assetResponse = await env.ASSETS.fetch(request);

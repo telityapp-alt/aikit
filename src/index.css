@@ -3880,8 +3880,8 @@
     display: grid;
     grid-template-columns: 250px minmax(0, 1fr) 308px;
     gap: 0;
-    min-height: calc(100dvh - 88px);
-    height: calc(100dvh - 88px);
+    min-height: 100dvh;
+    height: 100dvh;
 }
 
 .aiw-shell--canvas-collapsed {
@@ -3900,7 +3900,7 @@
 .aiw-main,
 .aiw-canvas {
     min-height: 0;
-    height: calc(100dvh - 88px);
+    height: 100dvh;
 }
 
 .aiw-sidebar {
@@ -4634,7 +4634,7 @@
     }
 
     .aiw-main {
-        min-height: calc(100vh - 88px);
+        min-height: 100vh;
     }
 
     .aiw-message-bubble {
