@@ -1,4 +1,4 @@
-import { clientIp, db, getUser, rpc } from "../lib/supabase.js";
+import { clientIp, db, getUser, isSuperAdmin, rpc } from "../lib/supabase.js";
 import { HttpError, corsHeaders, json, readJson } from "../lib/http.js";
 import { getAgent, resolveModelRoute } from "./registry.js";
 
@@ -376,10 +376,11 @@ async function executeAiTurn({ request, env, user, payload }) {
 
   const route = resolveModelRoute(agent.modelAlias, env);
   const cost = agent.costPerMessage ?? 1;
+  const chargedCost = isSuperAdmin(user) ? 0 : cost;
 
-  if (cost > 0) {
+  if (chargedCost > 0) {
     try {
-      await rpc(env, "spend_credits", { p_user: user.id, p_amount: cost });
+      await rpc(env, "spend_credits", { p_user: user.id, p_amount: chargedCost });
     } catch (error) {
       if (String(error.message).includes("INSUFFICIENT_CREDITS")) {
         throw new HttpError(402, "Saldo kredit tidak cukup.");
@@ -506,14 +507,14 @@ async function executeAiTurn({ request, env, user, payload }) {
       usage = result?.usage || null;
       providerRequestId = result?.id || null;
       latencyMs = Date.now() - startedAt;
-    } else if (cost > 0) {
-      await rpc(env, "add_credits", { p_user: user.id, p_amount: cost }).catch(
+    } else if (chargedCost > 0) {
+      await rpc(env, "add_credits", { p_user: user.id, p_amount: chargedCost }).catch(
         console.error,
       );
     }
   } catch (error) {
-    if (cost > 0) {
-      await rpc(env, "add_credits", { p_user: user.id, p_amount: cost }).catch(
+    if (chargedCost > 0) {
+      await rpc(env, "add_credits", { p_user: user.id, p_amount: chargedCost }).catch(
         console.error,
       );
     }
@@ -576,7 +577,7 @@ async function executeAiTurn({ request, env, user, payload }) {
       output_tokens: usage?.output_tokens ?? null,
       cache_read_tokens: usage?.cache_read_input_tokens ?? null,
       cache_write_tokens: usage?.cache_creation_input_tokens ?? null,
-      cost_credits: cost,
+      cost_credits: chargedCost,
       duration_ms: latencyMs,
       status: "completed",
       metadata: {

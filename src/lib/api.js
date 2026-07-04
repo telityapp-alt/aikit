@@ -36,84 +36,19 @@ async function apiFetch(path, { method = "POST", body } = {}) {
   return data;
 }
 
-async function downloadFile(path, filename) {
-  const accessToken = await getAccessToken();
-  const res = await fetch(path, {
-    method: "GET",
-    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    let data = null;
-    try {
-      data = text ? JSON.parse(text) : null;
-    } catch {
-      data = { raw: text };
-    }
-    throw new Error(
-      data?.error || data?.message || `Download gagal (${res.status})`,
-    );
-  }
-
-  const blob = await res.blob();
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  URL.revokeObjectURL(url);
-}
-
 export const api = {
   runAutomation: (slug, input) =>
     apiFetch("/api/runs", { body: { slug, input } }),
-  getInstagramCompetitorReports: () =>
-    apiFetch("/api/instagram-competitor-reports", { method: "GET" }),
-  getInstagramCompetitorReport: (reportId) =>
-    apiFetch(`/api/instagram-competitor-reports/${reportId}`, {
-      method: "GET",
-    }),
-  downloadInstagramCompetitorReport: (reportId, handle = "report") =>
-    downloadFile(
-      `/api/instagram-competitor-reports/${reportId}/download`,
-      `instagram-competitor-report-${handle}.xlsx`,
-    ),
-  getTikTokProfileReports: () =>
-    apiFetch("/api/tiktok-profile-reports", { method: "GET" }),
-  getTikTokProfileReport: (reportId) =>
-    apiFetch(`/api/tiktok-profile-reports/${reportId}`, {
-      method: "GET",
-    }),
-  downloadTikTokProfileReport: (reportId, handle = "report") =>
-    downloadFile(
-      `/api/tiktok-profile-reports/${reportId}/download`,
-      `tiktok-profile-intelligence-${handle}.xlsx`,
-    ),
-  getInstagramProfileReports: () =>
-    apiFetch("/api/instagram-profile-reports", { method: "GET" }),
-  getInstagramProfileReport: (reportId) =>
-    apiFetch(`/api/instagram-profile-reports/${reportId}`, { method: "GET" }),
-  downloadInstagramProfileReport: (reportId, handle = "report") =>
-    downloadFile(
-      `/api/instagram-profile-reports/${reportId}/download`,
-      `instagram-profile-intelligence-${handle}.xlsx`,
-    ),
-  getTikTokAdsReports: () =>
-    apiFetch("/api/tiktok-ads-reports", { method: "GET" }),
-  getTikTokAdsReport: (reportId) =>
-    apiFetch(`/api/tiktok-ads-reports/${reportId}`, { method: "GET" }),
-  downloadTikTokAdsReport: (reportId, label = "report") =>
-    downloadFile(
-      `/api/tiktok-ads-reports/${reportId}/download`,
-      `tiktok-ads-spy-${label}.xlsx`,
-    ),
-  getMetaAdsReports: () => apiFetch("/api/meta-ads-reports", { method: "GET" }),
-  getMetaAdsReport: (reportId) =>
-    apiFetch(`/api/meta-ads-reports/${reportId}`, { method: "GET" }),
-  downloadMetaAdsReport: (reportId, label = "report") =>
-    downloadFile(`/api/meta-ads-reports/${reportId}/download`, `meta-ads-spy-${label}.xlsx`),
+  getAutomationCatalog: () =>
+    apiFetch("/api/automation-catalog", { method: "GET" }),
+  getRecentAutomationRuns: () =>
+    apiFetch("/api/automation-runs/recent", { method: "GET" }),
+  getAutomationRunStatus: (runId) =>
+    apiFetch(`/api/automation-runs/${runId}`, { method: "GET" }),
+  getAutomationFiles: () =>
+    apiFetch("/api/automation-files", { method: "GET" }),
   sendChat: (chatId, message, moduleSlug) =>
     apiFetch("/api/chat", { body: { chatId, message, moduleSlug } }),
   topUp: (amount) => apiFetch("/api/topup", { body: { amount } }),
 };
+

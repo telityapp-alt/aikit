@@ -1,4 +1,4 @@
-import { db, json, rpc } from "../_supabase.js";
+import { db, json, rpc, isSuperAdmin } from "../_supabase.js";
 
 // POST /api/chat  { chatId, message, moduleSlug }
 // Persists the user's message, calls Anthropic for a reply, persists the reply.
@@ -33,10 +33,12 @@ export async function onRequestPost(context) {
     }
   }
 
+  const chargedCost = isSuperAdmin(user) ? 0 : cost;
+
   // Deduct credits
-  if (cost > 0) {
+  if (chargedCost > 0) {
     try {
-      await rpc(env, "spend_credits", { p_user: user.id, p_amount: cost });
+      await rpc(env, "spend_credits", { p_user: user.id, p_amount: chargedCost });
     } catch (e) {
       if (String(e.message).includes("INSUFFICIENT_CREDITS")) {
         return json({ error: "Saldo kredit tidak cukup." }, 402);
@@ -99,8 +101,8 @@ export async function onRequestPost(context) {
       reply = result?.content?.[0]?.text || "(tidak ada respons)";
     } catch (apiErr) {
       // Refund credits on failure
-      if (cost > 0) {
-        await rpc(env, "add_credits", { p_user: user.id, p_amount: cost }).catch(console.error);
+      if (chargedCost > 0) {
+        await rpc(env, "add_credits", { p_user: user.id, p_amount: chargedCost }).catch(console.error);
       }
       return json({ error: `AI error: ${String(apiErr.message).slice(0, 200)}` }, 502);
     }
@@ -108,8 +110,8 @@ export async function onRequestPost(context) {
     reply =
       "AI Agent siap, tapi ANTHROPIC_API_KEY belum dipasang di environment. Tambahkan key-nya untuk mengaktifkan jawaban nyata.";
     // Refund credits since it's a dry run
-    if (cost > 0) {
-      await rpc(env, "add_credits", { p_user: user.id, p_amount: cost }).catch(console.error);
+    if (chargedCost > 0) {
+      await rpc(env, "add_credits", { p_user: user.id, p_amount: chargedCost }).catch(console.error);
     }
   }
 

@@ -15,10 +15,9 @@
   },
   "vars": {
     "ANTHROPIC_MODEL": "claude-sonnet-4-5",
-    "APIFY_TIKTOK_ACTOR_ID": "GdWCkxBtKWOsKjdch",
-    "APIFY_INSTAGRAM_ACTOR_ID": "shu8hvrXbJbY3Eb9W",
-    "APIFY_TIKTOK_ADS_ACTOR_ID": "AovGexsTSmlalAFzp",
-    "APIFY_META_ADS_ACTOR_ID": "XtaWFhbtfxyzqrFmd"
+    "SUPABASE_URL": "https://lftgaziycyvxqtlwvxgi.supabase.co",
+    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_pli5g34Fg5iAgNnYduBPdA_1nYW93CO",
+    "AUTOMATION_SUPABASE_URL": "https://lftgaziycyvxqtlwvxgi.supabase.co"
   },
   "queues": {
     "producers": [

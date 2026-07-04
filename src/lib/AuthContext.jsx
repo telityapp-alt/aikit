@@ -63,10 +63,17 @@ export function AuthProvider({ children }) {
     [loadProfile, session],
   );
 
+  const mergedProfile = profile
+    ? {
+        ...profile,
+        is_super_admin: session?.user?.app_metadata?.role === "super_admin",
+      }
+    : profile;
+
   const value = {
     session,
     user: session?.user ?? null,
-    profile,
+    profile: mergedProfile,
     loading,
     signIn,
     signUp,

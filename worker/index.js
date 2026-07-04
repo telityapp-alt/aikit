@@ -1,31 +1,13 @@
 import { corsHeaders, handleError, HttpError, json, readJson } from "./lib/http.js";
-import { requireBinding } from "./lib/env.js";
-import { audit, clientIp, db, getUser, rpc } from "./lib/supabase.js";
 import {
-  createCompetitorReportRun,
-  processCompetitorRun,
-  validateCompetitorInput,
-} from "./modules/instagram-competitor.js";
-import {
-  createTikTokProfileRun,
-  processTikTokProfileRun,
-  validateTikTokInput,
-} from "./modules/tiktok-profile-intelligence.js";
-import {
-  createInstagramProfileRun,
-  processInstagramProfileRun,
-  validateInstagramInput,
-} from "./modules/instagram-profile-intelligence.js";
-import {
-  createTikTokAdsRun,
-  processTikTokAdsRun,
-  validateTikTokAdsInput,
-} from "./modules/tiktok-ads-spy.js";
-import {
-  createMetaAdsRun,
-  processMetaAdsRun,
-  validateMetaAdsInput,
-} from "./modules/meta-ads-spy.js";
+  audit,
+  automationDb,
+  clientIp,
+  db,
+  getUser,
+  isSuperAdmin,
+  rpc,
+} from "./lib/supabase.js";
 import {
   handleAiKnowledgeIngest,
   handleAiKnowledgeList,
@@ -72,11 +54,12 @@ async function createRun(env, user, slug, input, ip) {
   }
 
   const cost = automation.cost_per_run || 0;
-  if (cost > 0) {
+  const chargedCost = isSuperAdmin(user) ? 0 : cost;
+  if (chargedCost > 0) {
     try {
       await rpc(env, "spend_credits", {
         p_user: user.id,
-        p_amount: cost,
+        p_amount: chargedCost,
       });
     } catch (error) {
       if (String(error.message).includes("INSUFFICIENT_CREDITS")) {
@@ -96,11 +79,17 @@ async function createRun(env, user, slug, input, ip) {
       title: automation.title,
       status: "queued",
       input,
-      credits_spent: cost,
+      credits_spent: chargedCost,
     },
   });
 
-  await audit(env, user.id, "run.created", { slug, run_id: run.id, cost }, ip);
+  await audit(env, user.id, "run.created", {
+    slug,
+    run_id: run.id,
+    cost: chargedCost,
+    list_price_credits: cost,
+    super_admin_bypass: isSuperAdmin(user),
+  }, ip);
   return run;
 }
 
@@ -114,108 +103,15 @@ async function handleRunRequest(request, env) {
     throw new HttpError(400, "slug wajib diisi.");
   }
 
-  const ip = clientIp(request);
-  if (slug === "competitor-analyzer") {
-    requireBinding(
-      env,
-      "RUN_QUEUE",
-      "Binding RUN_QUEUE belum dipasang di deployment Worker production.",
-    );
-    const input = validateCompetitorInput(payload.input);
-    const run = await createRun(env, user, slug, input, ip);
-    const report = await createCompetitorReportRun(env, { user, run, input });
-
-    await env.RUN_QUEUE.send({
-      kind: "instagram-competitor-report",
-      runId: run.id,
-      reportId: report.id,
-      userId: user.id,
-    });
-
-    return json({ run, report }, 202, corsHeaders());
+  const comingSoon = new Set([
+    "google-maps-leads-brightdata",
+    "tokopedia-search-brightdata",
+  ]);
+  if (comingSoon.has(slug)) {
+    throw new HttpError(409, `Automation ${slug} sedang dipersiapkan ulang.`);
   }
 
-  if (slug === "tiktok-profile-intelligence") {
-    requireBinding(
-      env,
-      "RUN_QUEUE",
-      "Binding RUN_QUEUE belum dipasang di deployment Worker production.",
-    );
-    const input = validateTikTokInput(payload.input);
-    const run = await createRun(env, user, slug, input, ip);
-    const report = await createTikTokProfileRun(env, { user, run, input });
-
-    await env.RUN_QUEUE.send({
-      kind: "tiktok-profile-intelligence",
-      runId: run.id,
-      reportId: report.id,
-      userId: user.id,
-    });
-
-    return json({ run, report }, 202, corsHeaders());
-  }
-
-  if (slug === "instagram-profile-intelligence") {
-    requireBinding(
-      env,
-      "RUN_QUEUE",
-      "Binding RUN_QUEUE belum dipasang di deployment Worker production.",
-    );
-    const input = validateInstagramInput(payload.input);
-    const run = await createRun(env, user, slug, input, ip);
-    const report = await createInstagramProfileRun(env, { user, run, input });
-
-    await env.RUN_QUEUE.send({
-      kind: "instagram-profile-intelligence",
-      runId: run.id,
-      reportId: report.id,
-      userId: user.id,
-    });
-
-    return json({ run, report }, 202, corsHeaders());
-  }
-
-  if (slug === "tiktok-ads-spy") {
-    requireBinding(
-      env,
-      "RUN_QUEUE",
-      "Binding RUN_QUEUE belum dipasang di deployment Worker production.",
-    );
-    const input = validateTikTokAdsInput(payload.input);
-    const run = await createRun(env, user, slug, input, ip);
-    const report = await createTikTokAdsRun(env, { user, run, input });
-
-    await env.RUN_QUEUE.send({
-      kind: "tiktok-ads-spy",
-      runId: run.id,
-      reportId: report.id,
-      userId: user.id,
-    });
-
-    return json({ run, report }, 202, corsHeaders());
-  }
-
-  if (slug === "meta-ads-spy") {
-    requireBinding(
-      env,
-      "RUN_QUEUE",
-      "Binding RUN_QUEUE belum dipasang di deployment Worker production.",
-    );
-    const input = validateMetaAdsInput(payload.input);
-    const run = await createRun(env, user, slug, input, ip);
-    const report = await createMetaAdsRun(env, { user, run, input });
-
-    await env.RUN_QUEUE.send({
-      kind: "meta-ads-spy",
-      runId: run.id,
-      reportId: report.id,
-      userId: user.id,
-    });
-
-    return json({ run, report }, 202, corsHeaders());
-  }
-
-  throw new HttpError(400, `Slug ${slug} belum didukung oleh Worker.`);
+  throw new HttpError(400, `Slug ${slug} belum tersedia di worker automation baru.`);
 }
 
 async function handleChatRequest(request, env) {
@@ -245,9 +141,10 @@ async function handleChatRequest(request, env) {
     }
   }
 
-  if (cost > 0) {
+  const chargedCost = isSuperAdmin(user) ? 0 : cost;
+  if (chargedCost > 0) {
     try {
-      await rpc(env, "spend_credits", { p_user: user.id, p_amount: cost });
+      await rpc(env, "spend_credits", { p_user: user.id, p_amount: chargedCost });
     } catch (error) {
       if (String(error.message).includes("INSUFFICIENT_CREDITS")) {
         throw new HttpError(402, "Saldo kredit tidak cukup.");
@@ -310,8 +207,8 @@ async function handleChatRequest(request, env) {
       const result = await response.json();
       reply = result?.content?.[0]?.text || "(tidak ada respons)";
     } catch (error) {
-      if (cost > 0) {
-        await rpc(env, "add_credits", { p_user: user.id, p_amount: cost }).catch(
+      if (chargedCost > 0) {
+        await rpc(env, "add_credits", { p_user: user.id, p_amount: chargedCost }).catch(
           console.error,
         );
       }
@@ -320,8 +217,8 @@ async function handleChatRequest(request, env) {
   } else {
     reply =
       "AI Agent siap, tapi ANTHROPIC_API_KEY belum dipasang di environment Worker.";
-    if (cost > 0) {
-      await rpc(env, "add_credits", { p_user: user.id, p_amount: cost }).catch(
+    if (chargedCost > 0) {
+      await rpc(env, "add_credits", { p_user: user.id, p_amount: chargedCost }).catch(
         console.error,
       );
     }
@@ -473,370 +370,83 @@ async function handleXenditWebhook(request, env) {
   return json({ ok: true, ignored: status }, 200, corsHeaders());
 }
 
-async function listReports(request, env) {
+async function listAutomationCatalog(request, env) {
   const user = await getUser(env, request);
   await rateLimit(env, user.id);
 
-  const reports = await db(
-    env,
-    `instagram_competitor_reports?user_id=eq.${user.id}&select=id,run_id,instagram_handle,source_tab,date_from,date_to,status,summary,created_at,completed_at,updated_at,excel_artifact_id&order=created_at.desc&limit=25`,
-  );
-
-  return json({ reports }, 200, corsHeaders());
+  try {
+    const automations = await automationDb(
+      env,
+      "automations?is_active=eq.true&select=slug,title,description,type,pricing,cost_per_run,image,sort_order&order=sort_order.asc",
+    );
+    return json({ automations, source: "automation-db" }, 200, corsHeaders());
+  } catch (error) {
+    const automations = await db(
+      env,
+      "automations?is_active=eq.true&select=slug,title,description,type,pricing,cost_per_run,image,sort_order&order=sort_order.asc",
+    );
+    return json({ automations, source: "legacy-db" }, 200, corsHeaders());
+  }
 }
 
-async function getReportDetail(request, env, reportId) {
+async function listRecentAutomationRuns(request, env) {
   const user = await getUser(env, request);
   await rateLimit(env, user.id);
 
-  const [report] = await db(
-    env,
-    `instagram_competitor_reports?id=eq.${reportId}&user_id=eq.${user.id}&select=*`,
-  );
-  if (!report) {
-    throw new HttpError(404, "Report tidak ditemukan.");
+  try {
+    const runs = await automationDb(
+      env,
+      `runs?workspace_user_id=eq.${encodeURIComponent(user.id)}&select=id,title,status,created_at,completed_at,automation_slug,output&order=created_at.desc&limit=10`,
+    );
+    return json({ runs, source: "automation-db" }, 200, corsHeaders());
+  } catch {
+    const runs = await db(
+      env,
+      `runs?user_id=eq.${user.id}&select=id,title,status,created_at,completed_at,automation_slug,output&order=created_at.desc&limit=10`,
+    );
+    return json({ runs, source: "legacy-db" }, 200, corsHeaders());
   }
-
-  const items = await db(
-    env,
-    `instagram_competitor_report_items?report_id=eq.${reportId}&select=*&order=rank_position.asc`,
-  );
-  const events = await db(
-    env,
-    `instagram_report_events?report_id=eq.${reportId}&select=stage,status,message,payload,created_at&order=created_at.asc`,
-  );
-  const contentItemIds = items
-    .map((item) => item.content_item_id)
-    .filter(Boolean);
-  const comments =
-    contentItemIds.length > 0
-      ? await db(
-          env,
-          `platform_content_comments?content_item_id=in.(${contentItemIds.join(",")})&select=content_item_id,author_handle,text,published_at,metrics&limit=250`,
-        )
-      : [];
-
-  return json(
-    {
-      report,
-      items,
-      events,
-      comments,
-    },
-    200,
-    corsHeaders(),
-  );
 }
 
-async function downloadReport(request, env, reportId) {
+async function getAutomationRunStatus(request, env, runId) {
   const user = await getUser(env, request);
   await rateLimit(env, user.id);
 
-  const [report] = await db(
-    env,
-    `instagram_competitor_reports?id=eq.${reportId}&user_id=eq.${user.id}&select=id,instagram_handle,excel_artifact_id`,
-  );
-  if (!report?.excel_artifact_id) {
-    throw new HttpError(404, "File Excel belum tersedia.");
+  try {
+    const [run] = await automationDb(
+      env,
+      `runs?id=eq.${runId}&workspace_user_id=eq.${encodeURIComponent(user.id)}&select=id,status,created_at,completed_at,automation_slug,output,error`,
+    );
+    if (!run) throw new HttpError(404, "Run tidak ditemukan.");
+    return json({ run, source: "automation-db" }, 200, corsHeaders());
+  } catch (error) {
+    if (error instanceof HttpError && error.status === 404) throw error;
+    const [run] = await db(
+      env,
+      `runs?id=eq.${runId}&user_id=eq.${user.id}&select=id,status,created_at,completed_at,automation_slug,output,error`,
+    );
+    if (!run) throw new HttpError(404, "Run tidak ditemukan.");
+    return json({ run, source: "legacy-db" }, 200, corsHeaders());
   }
-
-  const [artifact] = await db(
-    env,
-    `generated_artifacts?id=eq.${report.excel_artifact_id}&select=*`,
-  );
-  if (!artifact?.path) {
-    throw new HttpError(404, "Artifact tidak ditemukan.");
-  }
-
-  const object = await env.REPORTS_BUCKET.get(artifact.path);
-  if (!object) {
-    throw new HttpError(404, "File report tidak ditemukan di storage.");
-  }
-
-  const headers = new Headers();
-  object.writeHttpMetadata(headers);
-  headers.set("etag", object.httpEtag);
-  headers.set("cache-control", "private, no-store");
-
-  return new Response(object.body, { headers });
 }
 
-async function listTikTokReports(request, env) {
+async function listAutomationFiles(request, env) {
   const user = await getUser(env, request);
   await rateLimit(env, user.id);
 
-  const reports = await db(
-    env,
-    `tiktok_profile_reports?user_id=eq.${user.id}&select=id,run_id,tiktok_handle,status,date_from,date_to,filters,summary,created_at,completed_at,updated_at,artifact_id&order=created_at.desc&limit=25`,
-  );
-
-  return json({ reports }, 200, corsHeaders());
-}
-
-async function getTikTokReportDetail(request, env, reportId) {
-  const user = await getUser(env, request);
-  await rateLimit(env, user.id);
-
-  const [report] = await db(
-    env,
-    `tiktok_profile_reports?id=eq.${reportId}&user_id=eq.${user.id}&select=*`,
-  );
-  if (!report) {
-    throw new HttpError(404, "Report TikTok tidak ditemukan.");
+  try {
+    const runs = await automationDb(
+      env,
+      `runs?workspace_user_id=eq.${encodeURIComponent(user.id)}&select=id,title,output,status,created_at&not=output.is.null&order=created_at.desc&limit=30`,
+    );
+    return json({ runs, source: "automation-db" }, 200, corsHeaders());
+  } catch {
+    const runs = await db(
+      env,
+      `runs?user_id=eq.${user.id}&select=id,title,output,status,created_at&not=output.is.null&order=created_at.desc&limit=30`,
+    );
+    return json({ runs, source: "legacy-db" }, 200, corsHeaders());
   }
-
-  const items = await db(
-    env,
-    `tiktok_profile_report_items?report_id=eq.${reportId}&select=*&order=rank_position.asc`,
-  );
-  const events = await db(
-    env,
-    `tiktok_report_events?report_id=eq.${reportId}&select=stage,status,message,payload,created_at&order=created_at.asc`,
-  );
-
-  return json(
-    {
-      report,
-      items,
-      events,
-    },
-    200,
-    corsHeaders(),
-  );
-}
-
-async function downloadTikTokReport(request, env, reportId) {
-  const user = await getUser(env, request);
-  await rateLimit(env, user.id);
-
-  const [report] = await db(
-    env,
-    `tiktok_profile_reports?id=eq.${reportId}&user_id=eq.${user.id}&select=id,tiktok_handle,artifact_id`,
-  );
-  if (!report?.artifact_id) {
-    throw new HttpError(404, "File TikTok report belum tersedia.");
-  }
-
-  const [artifact] = await db(
-    env,
-    `generated_artifacts?id=eq.${report.artifact_id}&select=*`,
-  );
-  if (!artifact?.path) {
-    throw new HttpError(404, "Artifact TikTok tidak ditemukan.");
-  }
-
-  const object = await env.REPORTS_BUCKET.get(artifact.path);
-  if (!object) {
-    throw new HttpError(404, "File TikTok report tidak ditemukan di storage.");
-  }
-
-  const headers = new Headers();
-  object.writeHttpMetadata(headers);
-  headers.set("etag", object.httpEtag);
-  headers.set("cache-control", "private, no-store");
-
-  return new Response(object.body, { headers });
-}
-
-async function listInstagramReports(request, env) {
-  const user = await getUser(env, request);
-  await rateLimit(env, user.id);
-
-  const reports = await db(
-    env,
-    `instagram_profile_reports?user_id=eq.${user.id}&select=id,run_id,instagram_handle,status,date_from,date_to,filters,summary,created_at,completed_at,updated_at,artifact_id&order=created_at.desc&limit=25`,
-  );
-
-  return json({ reports }, 200, corsHeaders());
-}
-
-async function getInstagramReportDetail(request, env, reportId) {
-  const user = await getUser(env, request);
-  await rateLimit(env, user.id);
-
-  const [report] = await db(
-    env,
-    `instagram_profile_reports?id=eq.${reportId}&user_id=eq.${user.id}&select=*`,
-  );
-  if (!report) {
-    throw new HttpError(404, "Report Instagram tidak ditemukan.");
-  }
-
-  const items = await db(
-    env,
-    `instagram_profile_report_items?report_id=eq.${reportId}&select=*&order=rank_position.asc`,
-  );
-  const events = await db(
-    env,
-    `instagram_pi_events?report_id=eq.${reportId}&select=stage,status,message,payload,created_at&order=created_at.asc`,
-  );
-
-  return json({ report, items, events }, 200, corsHeaders());
-}
-
-async function downloadInstagramReport(request, env, reportId) {
-  const user = await getUser(env, request);
-  await rateLimit(env, user.id);
-
-  const [report] = await db(
-    env,
-    `instagram_profile_reports?id=eq.${reportId}&user_id=eq.${user.id}&select=id,instagram_handle,artifact_id`,
-  );
-  if (!report?.artifact_id) {
-    throw new HttpError(404, "File Instagram report belum tersedia.");
-  }
-
-  const [artifact] = await db(
-    env,
-    `generated_artifacts?id=eq.${report.artifact_id}&select=*`,
-  );
-  if (!artifact?.path) {
-    throw new HttpError(404, "Artifact Instagram tidak ditemukan.");
-  }
-
-  const object = await env.REPORTS_BUCKET.get(artifact.path);
-  if (!object) {
-    throw new HttpError(404, "File Instagram report tidak ditemukan di storage.");
-  }
-
-  const headers = new Headers();
-  object.writeHttpMetadata(headers);
-  headers.set("etag", object.httpEtag);
-  headers.set("cache-control", "private, no-store");
-
-  return new Response(object.body, { headers });
-}
-
-async function listTikTokAdsReports(request, env) {
-  const user = await getUser(env, request);
-  await rateLimit(env, user.id);
-
-  const reports = await db(
-    env,
-    `tiktok_ads_reports?user_id=eq.${user.id}&select=id,run_id,query,region,status,date_from,date_to,filters,summary,created_at,completed_at,updated_at,artifact_id&order=created_at.desc&limit=25`,
-  );
-
-  return json({ reports }, 200, corsHeaders());
-}
-
-async function getTikTokAdsReportDetail(request, env, reportId) {
-  const user = await getUser(env, request);
-  await rateLimit(env, user.id);
-
-  const [report] = await db(
-    env,
-    `tiktok_ads_reports?id=eq.${reportId}&user_id=eq.${user.id}&select=*`,
-  );
-  if (!report) {
-    throw new HttpError(404, "Report TikTok Ads tidak ditemukan.");
-  }
-
-  const items = await db(
-    env,
-    `tiktok_ads_report_items?report_id=eq.${reportId}&select=*&order=rank_position.asc`,
-  );
-  const events = await db(
-    env,
-    `tiktok_ads_events?report_id=eq.${reportId}&select=stage,status,message,payload,created_at&order=created_at.asc`,
-  );
-
-  return json({ report, items, events }, 200, corsHeaders());
-}
-
-async function downloadTikTokAdsReport(request, env, reportId) {
-  const user = await getUser(env, request);
-  await rateLimit(env, user.id);
-
-  const [report] = await db(
-    env,
-    `tiktok_ads_reports?id=eq.${reportId}&user_id=eq.${user.id}&select=id,query,artifact_id`,
-  );
-  if (!report?.artifact_id) {
-    throw new HttpError(404, "File TikTok Ads report belum tersedia.");
-  }
-
-  const [artifact] = await db(env, `generated_artifacts?id=eq.${report.artifact_id}&select=*`);
-  if (!artifact?.path) {
-    throw new HttpError(404, "Artifact TikTok Ads tidak ditemukan.");
-  }
-
-  const object = await env.REPORTS_BUCKET.get(artifact.path);
-  if (!object) {
-    throw new HttpError(404, "File TikTok Ads report tidak ditemukan di storage.");
-  }
-
-  const headers = new Headers();
-  object.writeHttpMetadata(headers);
-  headers.set("etag", object.httpEtag);
-  headers.set("cache-control", "private, no-store");
-
-  return new Response(object.body, { headers });
-}
-
-async function listMetaAdsReports(request, env) {
-  const user = await getUser(env, request);
-  await rateLimit(env, user.id);
-
-  const reports = await db(
-    env,
-    `meta_ads_reports?user_id=eq.${user.id}&select=id,run_id,query,country,status,date_from,date_to,filters,summary,created_at,completed_at,updated_at,artifact_id&order=created_at.desc&limit=25`,
-  );
-
-  return json({ reports }, 200, corsHeaders());
-}
-
-async function getMetaAdsReportDetail(request, env, reportId) {
-  const user = await getUser(env, request);
-  await rateLimit(env, user.id);
-
-  const [report] = await db(
-    env,
-    `meta_ads_reports?id=eq.${reportId}&user_id=eq.${user.id}&select=*`,
-  );
-  if (!report) {
-    throw new HttpError(404, "Report Meta Ads tidak ditemukan.");
-  }
-
-  const items = await db(
-    env,
-    `meta_ads_report_items?report_id=eq.${reportId}&select=*&order=rank_position.asc`,
-  );
-  const events = await db(
-    env,
-    `meta_ads_events?report_id=eq.${reportId}&select=stage,status,message,payload,created_at&order=created_at.asc`,
-  );
-
-  return json({ report, items, events }, 200, corsHeaders());
-}
-
-async function downloadMetaAdsReport(request, env, reportId) {
-  const user = await getUser(env, request);
-  await rateLimit(env, user.id);
-
-  const [report] = await db(
-    env,
-    `meta_ads_reports?id=eq.${reportId}&user_id=eq.${user.id}&select=id,query,artifact_id`,
-  );
-  if (!report?.artifact_id) {
-    throw new HttpError(404, "File Meta Ads report belum tersedia.");
-  }
-
-  const [artifact] = await db(env, `generated_artifacts?id=eq.${report.artifact_id}&select=*`);
-  if (!artifact?.path) {
-    throw new HttpError(404, "Artifact Meta Ads tidak ditemukan.");
-  }
-
-  const object = await env.REPORTS_BUCKET.get(artifact.path);
-  if (!object) {
-    throw new HttpError(404, "File Meta Ads report tidak ditemukan di storage.");
-  }
-
-  const headers = new Headers();
-  object.writeHttpMetadata(headers);
-  headers.set("etag", object.httpEtag);
-  headers.set("cache-control", "private, no-store");
-
-  return new Response(object.body, { headers });
 }
 
 function isApiPath(pathname) {
@@ -856,6 +466,18 @@ async function handleApi(request, env) {
 
   if (url.pathname === "/api/chat" && request.method === "POST") {
     return handleChatRequest(request, env);
+  }
+
+  if (url.pathname === "/api/automation-catalog" && request.method === "GET") {
+    return listAutomationCatalog(request, env);
+  }
+
+  if (url.pathname === "/api/automation-runs/recent" && request.method === "GET") {
+    return listRecentAutomationRuns(request, env);
+  }
+
+  if (url.pathname === "/api/automation-files" && request.method === "GET") {
+    return listAutomationFiles(request, env);
   }
 
   if (url.pathname === "/api/ai/threads" && request.method === "GET") {
@@ -905,88 +527,9 @@ async function handleApi(request, env) {
     return handleXenditWebhook(request, env);
   }
 
-  if (url.pathname === "/api/instagram-competitor-reports" && request.method === "GET") {
-    return listReports(request, env);
-  }
-
-  if (url.pathname === "/api/tiktok-profile-reports" && request.method === "GET") {
-    return listTikTokReports(request, env);
-  }
-
-  if (url.pathname === "/api/instagram-profile-reports" && request.method === "GET") {
-    return listInstagramReports(request, env);
-  }
-
-  const igReportDetailMatch = url.pathname.match(
-    /^\/api\/instagram-profile-reports\/([^/]+)$/,
-  );
-  if (igReportDetailMatch && request.method === "GET") {
-    return getInstagramReportDetail(request, env, igReportDetailMatch[1]);
-  }
-
-  const igReportDownloadMatch = url.pathname.match(
-    /^\/api\/instagram-profile-reports\/([^/]+)\/download$/,
-  );
-  if (igReportDownloadMatch && request.method === "GET") {
-    return downloadInstagramReport(request, env, igReportDownloadMatch[1]);
-  }
-
-  if (url.pathname === "/api/tiktok-ads-reports" && request.method === "GET") {
-    return listTikTokAdsReports(request, env);
-  }
-
-  const adsReportDetailMatch = url.pathname.match(/^\/api\/tiktok-ads-reports\/([^/]+)$/);
-  if (adsReportDetailMatch && request.method === "GET") {
-    return getTikTokAdsReportDetail(request, env, adsReportDetailMatch[1]);
-  }
-
-  const adsReportDownloadMatch = url.pathname.match(
-    /^\/api\/tiktok-ads-reports\/([^/]+)\/download$/,
-  );
-  if (adsReportDownloadMatch && request.method === "GET") {
-    return downloadTikTokAdsReport(request, env, adsReportDownloadMatch[1]);
-  }
-
-  if (url.pathname === "/api/meta-ads-reports" && request.method === "GET") {
-    return listMetaAdsReports(request, env);
-  }
-
-  const metaAdsDetailMatch = url.pathname.match(/^\/api\/meta-ads-reports\/([^/]+)$/);
-  if (metaAdsDetailMatch && request.method === "GET") {
-    return getMetaAdsReportDetail(request, env, metaAdsDetailMatch[1]);
-  }
-
-  const metaAdsDownloadMatch = url.pathname.match(/^\/api\/meta-ads-reports\/([^/]+)\/download$/);
-  if (metaAdsDownloadMatch && request.method === "GET") {
-    return downloadMetaAdsReport(request, env, metaAdsDownloadMatch[1]);
-  }
-
-  const reportDetailMatch = url.pathname.match(
-    /^\/api\/instagram-competitor-reports\/([^/]+)$/,
-  );
-  if (reportDetailMatch && request.method === "GET") {
-    return getReportDetail(request, env, reportDetailMatch[1]);
-  }
-
-  const reportDownloadMatch = url.pathname.match(
-    /^\/api\/instagram-competitor-reports\/([^/]+)\/download$/,
-  );
-  if (reportDownloadMatch && request.method === "GET") {
-    return downloadReport(request, env, reportDownloadMatch[1]);
-  }
-
-  const tiktokReportDetailMatch = url.pathname.match(
-    /^\/api\/tiktok-profile-reports\/([^/]+)$/,
-  );
-  if (tiktokReportDetailMatch && request.method === "GET") {
-    return getTikTokReportDetail(request, env, tiktokReportDetailMatch[1]);
-  }
-
-  const tiktokReportDownloadMatch = url.pathname.match(
-    /^\/api\/tiktok-profile-reports\/([^/]+)\/download$/,
-  );
-  if (tiktokReportDownloadMatch && request.method === "GET") {
-    return downloadTikTokReport(request, env, tiktokReportDownloadMatch[1]);
+  const automationRunStatusMatch = url.pathname.match(/^\/api\/automation-runs\/([^/]+)$/);
+  if (automationRunStatusMatch && request.method === "GET") {
+    return getAutomationRunStatus(request, env, automationRunStatusMatch[1]);
   }
 
   throw new HttpError(404, "API route tidak ditemukan.");
@@ -1016,21 +559,6 @@ export default {
   async queue(batch, env) {
     for (const message of batch.messages) {
       try {
-        if (message.body?.kind === "instagram-competitor-report") {
-          await processCompetitorRun(env, message.body);
-        }
-        if (message.body?.kind === "tiktok-profile-intelligence") {
-          await processTikTokProfileRun(env, message.body);
-        }
-        if (message.body?.kind === "instagram-profile-intelligence") {
-          await processInstagramProfileRun(env, message.body);
-        }
-        if (message.body?.kind === "tiktok-ads-spy") {
-          await processTikTokAdsRun(env, message.body);
-        }
-        if (message.body?.kind === "meta-ads-spy") {
-          await processMetaAdsRun(env, message.body);
-        }
         message.ack();
       } catch (error) {
         console.error("[worker] queue job failed", error);
@@ -1039,3 +567,4 @@ export default {
     }
   },
 };
+

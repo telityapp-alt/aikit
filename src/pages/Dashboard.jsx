@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, Suspense } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { MODULE_CARDS, MODULE_CARD_MAP } from "../lib/moduleCards";
+import { AUTOMATION_CARDS } from "../lib/automationCards";
 import { useAuth } from "../lib/AuthContext";
 import { useToast } from "../lib/ToastContext";
 import { supabase } from "../lib/supabase";
@@ -250,58 +251,7 @@ const NAV_ITEMS = [
 ];
 
 /* ── Data: Automasi (product per-run) ──────────────────────── */
-const AUTOMASI_CARDS = [
-  {
-    id: "competitor-analyzer",
-    title: "Generator Laporan Kompetitor Instagram",
-    desc: "Ambil data Posts atau Reels kompetitor, analisis top content dan komentar, lalu download report Excel yang siap dipakai tim.",
-    type: "App",
-    pricing: "Pay per run",
-    costPerRun: 0,
-    users: 38,
-    image: "/automation-covers/competitor-analyzer.webp",
-  },
-  {
-    id: "tiktok-profile-intelligence",
-    title: "TikTok Profile Intelligence",
-    desc: "Tarik video TikTok, hitung KPI virality dan intent, lalu baca dashboard insight yang siap dipakai tim growth.",
-    type: "App",
-    pricing: "Pay per run",
-    costPerRun: 125,
-    users: 12,
-    image: "/automation-covers/tiktok-profile-intelligence.webp",
-  },
-  {
-    id: "instagram-profile-intelligence",
-    title: "Instagram Profile Intelligence",
-    desc: "Tarik data profil Instagram, hitung KPI engagement & format, lalu baca dashboard insight siap pakai tim growth.",
-    type: "App",
-    pricing: "Pay per run",
-    costPerRun: 125,
-    users: 8,
-    image: "/automation-covers/instagram-profile-intelligence.webp",
-  },
-  {
-    id: "tiktok-ads-spy",
-    title: "TikTok Ads Spy",
-    desc: "Spy iklan kompetitor di TikTok Ads Library — creative gallery, share-of-voice, targeting & region intelligence.",
-    type: "App",
-    pricing: "Pay per run",
-    costPerRun: 150,
-    users: 5,
-    image: "/automation-covers/tiktok-ads-spy.webp",
-  },
-  {
-    id: "meta-ads-spy",
-    title: "Meta Ads Spy",
-    desc: "Spy iklan kompetitor di Meta Ads Library (Facebook + Instagram) — creative gallery, ad copy, format & platform mix, longevity & influencer partnerships.",
-    type: "App",
-    pricing: "Pay per run",
-    costPerRun: 150,
-    users: 4,
-    image: "/automation-covers/meta-ads-spy.webp",
-  },
-];
+const AUTOMASI_CARDS = AUTOMATION_CARDS;
 
 const AUTOMATION_IMAGE_OVERRIDES = Object.fromEntries(
   AUTOMASI_CARDS.filter((card) => card.id && card.image).map((card) => [
@@ -395,13 +345,10 @@ function ProductCard({
 async function pollRun(runId, timeoutMs = 30000) {
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
-    const { data } = await supabase
-      .from("runs")
-      .select("status")
-      .eq("id", runId)
-      .maybeSingle();
-    if (data && (data.status === "completed" || data.status === "failed")) {
-      return data.status;
+    const result = await api.getAutomationRunStatus(runId);
+    const status = result?.run?.status;
+    if (status && (status === "completed" || status === "failed")) {
+      return status;
     }
     await new Promise((r) => setTimeout(r, 1400));
   }
@@ -415,28 +362,32 @@ function relativeTime(iso) {
 
 function ViewDashboard({ onNavigate, onOpenModule, onTopUp }) {
   const { user, profile } = useAuth();
+  const isSuperAdmin = profile?.is_super_admin === true;
   const [recent, setRecent] = useState([]);
   const [usageMonth, setUsageMonth] = useState(0);
 
   useEffect(() => {
-    supabase
-      .from("runs")
-      .select("id,title,status,created_at")
-      .order("created_at", { ascending: false })
-      .limit(5)
-      .then(({ data }) => setRecent(data || []));
+    api
+      .getRecentAutomationRuns()
+      .then(({ runs }) => {
+        const nextRuns = runs || [];
+        setRecent(nextRuns.slice(0, 5));
 
-    const startMonth = new Date();
-    startMonth.setDate(1);
-    startMonth.setHours(0, 0, 0, 0);
-    supabase
-      .from("runs")
-      .select("id", { count: "exact", head: true })
-      .gte("created_at", startMonth.toISOString())
-      .then(({ count }) => setUsageMonth(count || 0));
+        const startMonth = new Date();
+        startMonth.setDate(1);
+        startMonth.setHours(0, 0, 0, 0);
+        setUsageMonth(
+          nextRuns.filter((run) => new Date(run.created_at) >= startMonth).length,
+        );
+      })
+      .catch(() => {
+        setRecent([]);
+        setUsageMonth(0);
+      });
   }, []);
 
   const balance = profile?.credits_balance ?? 0;
+  const balanceLabel = isSuperAdmin ? "Unlimited" : balance;
 
   return (
     <>
@@ -465,8 +416,8 @@ function ViewDashboard({ onNavigate, onOpenModule, onTopUp }) {
       <div className="db-stats-row">
         <div className="db-stat-card">
           <div className="db-stat-top">
-            <span className="db-stat-value">{balance}</span>
-            <span className="db-stat-label">Saldo</span>
+            <span className="db-stat-value">{balanceLabel}</span>
+            <span className="db-stat-label">{isSuperAdmin ? "Super Admin" : "Saldo"}</span>
           </div>
           <button
             className="cta-button"
@@ -593,12 +544,9 @@ function ViewAutomasi({ onOpenApp }) {
   const [busyId, setBusyId] = useState(null);
 
   useEffect(() => {
-    supabase
-      .from("automations")
-      .select("*")
-      .eq("is_active", true)
-      .order("sort_order")
-      .then(({ data }) => {
+    api
+      .getAutomationCatalog()
+      .then(({ automations }) => {
         setItems(
           ((dbList) => {
             const appCards = AUTOMASI_CARDS.filter((c) => c.type === "App");
@@ -606,8 +554,8 @@ function ViewAutomasi({ onOpenApp }) {
             const missing = appCards.filter((c) => !dbIds.has(c.id));
             return [...missing, ...dbList];
           })(
-            data && data.length
-              ? data.map((d) => ({
+            automations && automations.length
+              ? automations.map((d) => ({
                   id: d.slug,
                   title: d.title,
                   desc: d.description,
@@ -620,7 +568,8 @@ function ViewAutomasi({ onOpenApp }) {
               : AUTOMASI_CARDS,
           ),
         );
-      });
+      })
+      .catch(() => setItems(AUTOMASI_CARDS));
   }, []);
 
   async function run(slug, title) {
@@ -1256,6 +1205,7 @@ function ChangePasswordCard() {
 /* ── View: Tagihan (credits + transactions) ────────────────── */
 function ViewTagihan() {
   const { profile } = useAuth();
+  const isSuperAdmin = profile?.is_super_admin === true;
   const toast = useToast();
   const [tx, setTx] = useState([]);
   const [busy, setBusy] = useState(false);
@@ -1300,7 +1250,7 @@ function ViewTagihan() {
         <div className="db-stat-card">
           <div className="db-stat-top">
             <span className="db-stat-value">
-              {profile?.credits_balance ?? 0}
+              {isSuperAdmin ? "Unlimited" : profile?.credits_balance ?? 0}
             </span>
             <span className="db-stat-label">Saldo kredit</span>
           </div>
@@ -1379,13 +1329,10 @@ function ViewFile() {
   const [runs, setRuns] = useState([]);
 
   useEffect(() => {
-    supabase
-      .from("runs")
-      .select("id,title,output,status,created_at")
-      .not("output", "is", null)
-      .order("created_at", { ascending: false })
-      .limit(30)
-      .then(({ data }) => setRuns(data || []));
+    api
+      .getAutomationFiles()
+      .then(({ runs: nextRuns }) => setRuns(nextRuns || []))
+      .catch(() => setRuns([]));
   }, []);
 
   function download(run) {
@@ -1669,7 +1616,7 @@ export default function Dashboard() {
               {profile?.full_name || "Grou App"}
             </div>
             <div className="db-sidebar-user-role">
-              {profile?.workspace_name || "Workspace"}
+              {profile?.is_super_admin ? "Super Admin" : profile?.workspace_name || "Workspace"}
             </div>
           </div>
           <button
@@ -1697,3 +1644,4 @@ export default function Dashboard() {
     </div>
   );
 }
+

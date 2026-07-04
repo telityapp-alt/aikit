@@ -1,4 +1,4 @@
-import { db, rpc, json, audit, clientIp } from "../_supabase.js";
+import { db, rpc, json, audit, clientIp, isSuperAdmin } from "../_supabase.js";
 
 // POST /api/runs  { slug, input }
 // Async model: validate → charge credits → create run → return immediately
@@ -27,10 +27,11 @@ export async function onRequestPost(context) {
   if (!automation) return json({ error: "Automation tidak ditemukan." }, 404);
 
   const cost = automation.cost_per_run || 0;
+  const chargedCost = isSuperAdmin(user) ? 0 : cost;
 
-  if (cost > 0) {
+  if (chargedCost > 0) {
     try {
-      await rpc(env, "spend_credits", { p_user: user.id, p_amount: cost });
+      await rpc(env, "spend_credits", { p_user: user.id, p_amount: chargedCost });
     } catch (e) {
       if (String(e.message).includes("INSUFFICIENT_CREDITS")) {
         return json({ error: "Saldo kredit tidak cukup." }, 402);
@@ -49,11 +50,17 @@ export async function onRequestPost(context) {
       title: automation.title,
       status: "running",
       input,
-      credits_spent: cost,
+      credits_spent: chargedCost,
     },
   });
 
-  await audit(env, user.id, "run.created", { slug, run_id: run.id, cost }, ip);
+  await audit(env, user.id, "run.created", {
+    slug,
+    run_id: run.id,
+    cost: chargedCost,
+    list_price_credits: cost,
+    super_admin_bypass: isSuperAdmin(user),
+  }, ip);
 
   // Continue processing after the response is sent.
   context.waitUntil(processRun(env, run, automation, input, user.id, cost, ip));

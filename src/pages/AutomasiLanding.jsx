@@ -2,69 +2,17 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import { useAuth } from "../lib/AuthContext";
+import { AUTOMATION_CARDS } from "../lib/automationCards";
 import { MASCOT_SCENES } from "../lib/mascots";
 import AuthModal from "../components/AuthModal";
 
 /* ── Data ────────────────────────────────────────────────────── */
-const AUTOMASI_CARDS = [
-  {
-    id: "competitor-analyzer",
-    title: "Generator Laporan Kompetitor Instagram",
-    desc: "Ambil data Posts atau Reels kompetitor, analisis top content dan komentar, lalu download report Excel yang siap dipakai tim.",
-    type: "App",
-    pricing: "Pay per run",
-    costPerRun: 0,
-    users: 38,
-    image: "/automation-covers/competitor-analyzer.webp",
-    category: "Riset",
-  },
-  {
-    id: "tiktok-profile-intelligence",
-    title: "TikTok Profile Intelligence",
-    desc: "Tarik video TikTok, hitung KPI virality dan intent, lalu baca dashboard insight yang siap dipakai tim growth.",
-    type: "App",
-    pricing: "Pay per run",
-    costPerRun: 125,
-    users: 12,
-    image: "/automation-covers/tiktok-profile-intelligence.webp",
-    category: "Riset",
-  },
-  {
-    id: "instagram-profile-intelligence",
-    title: "Instagram Profile Intelligence",
-    desc: "Tarik data profil Instagram, hitung KPI engagement & format, lalu baca dashboard insight siap pakai tim growth.",
-    type: "App",
-    pricing: "Pay per run",
-    costPerRun: 125,
-    users: 8,
-    image: "/automation-covers/instagram-profile-intelligence.webp",
-    category: "Riset",
-  },
-  {
-    id: "tiktok-ads-spy",
-    title: "TikTok Ads Spy",
-    desc: "Spy iklan kompetitor di TikTok Ads Library — creative gallery, share-of-voice, targeting & region intelligence.",
-    type: "App",
-    pricing: "Pay per run",
-    costPerRun: 150,
-    users: 5,
-    image: "/automation-covers/tiktok-ads-spy.webp",
-    category: "Iklan",
-  },
-  {
-    id: "meta-ads-spy",
-    title: "Meta Ads Spy",
-    desc: "Spy iklan kompetitor di Meta Ads Library (Facebook + Instagram) — creative gallery, ad copy, format & platform mix, longevity & influencer partnerships.",
-    type: "App",
-    pricing: "Pay per run",
-    costPerRun: 150,
-    users: 4,
-    image: "/automation-covers/meta-ads-spy.webp",
-    category: "Iklan",
-  },
-];
+const AUTOMASI_CARDS = AUTOMATION_CARDS.map((card) => ({
+  ...card,
+  category: card.details?.category || "Lainnya",
+}));
 
-const CATEGORIES = ["Semua", "Riset", "Iklan"];
+const CATEGORIES = ["Semua", ...new Set(AUTOMASI_CARDS.map((card) => card.category))];
 
 /* Semua cover images untuk marquee strip — duplikat untuk seamless loop */
 const MARQUEE_IMAGES = [...AUTOMASI_CARDS, ...AUTOMASI_CARDS];
@@ -602,3 +550,4 @@ export default function AutomasiLanding() {
     </div>
   );
 }
+

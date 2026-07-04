@@ -10,6 +10,17 @@ function getSupabaseAuthKey(env) {
   );
 }
 
+export function isSuperAdmin(user) {
+  const role =
+    user?.app_metadata?.role ||
+    user?.user_metadata?.role ||
+    user?.app_metadata?.app_role ||
+    user?.user_metadata?.app_role ||
+    null;
+
+  return role === "super_admin";
+}
+
 export async function getUser(env, request) {
   const token = parseBearer(request);
   if (!token) {
@@ -73,6 +84,49 @@ export async function rpc(env, fn, args) {
   return db(env, `rpc/${fn}`, { method: "POST", body: args });
 }
 
+function getAutomationRestConfig(env) {
+  const supabaseUrl = env.AUTOMATION_SUPABASE_URL || env.SUPABASE_URL;
+  const serviceRoleKey =
+    env.AUTOMATION_SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new HttpError(
+      503,
+      "Konfigurasi automation Supabase belum lengkap. Pasang AUTOMATION_SUPABASE_URL dan AUTOMATION_SUPABASE_SERVICE_ROLE_KEY.",
+    );
+  }
+
+  return { supabaseUrl, serviceRoleKey };
+}
+
+export async function automationDb(env, path, { method = "GET", body, prefer } = {}) {
+  const { supabaseUrl, serviceRoleKey } = getAutomationRestConfig(env);
+
+  const response = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
+    method,
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      "Content-Type": "application/json",
+      ...(prefer ? { Prefer: prefer } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  const payload = await response.text();
+  const data = payload ? JSON.parse(payload) : null;
+  if (!response.ok) {
+    throw new Error(
+      `Automation DB ${method} ${path}: ${data?.message || data?.error || `HTTP ${response.status}`}`,
+    );
+  }
+  return data;
+}
+
+export async function automationRpc(env, fn, args) {
+  return automationDb(env, `rpc/${fn}`, { method: "POST", body: args });
+}
+
 export async function audit(env, userId, action, metadata = {}, ip = null) {
   try {
     await db(env, "audit_logs", {
@@ -86,6 +140,22 @@ export async function audit(env, userId, action, metadata = {}, ip = null) {
     });
   } catch (error) {
     console.error("[worker] audit failed", error);
+  }
+}
+
+export async function automationAudit(env, workspaceUserId, action, metadata = {}, ip = null) {
+  try {
+    await automationDb(env, "automation_audit_logs", {
+      method: "POST",
+      body: {
+        workspace_user_id: workspaceUserId,
+        action,
+        metadata,
+        ip,
+      },
+    });
+  } catch (error) {
+    console.error("[worker] automation audit failed", error);
   }
 }
 
