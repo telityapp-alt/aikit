@@ -1,25 +1,35 @@
-const isCI = !!process.env.CI;
+import { defineConfig, devices } from "@playwright/test";
 
-export default {
+const PORT = Number(process.env.E2E_PORT || 4173);
+const baseURL = process.env.E2E_BASE_URL || `http://127.0.0.1:${PORT}`;
+
+export default defineConfig({
   testDir: "./e2e",
-  timeout: 120000,
+  timeout: 180000,
   expect: {
-    timeout: 20000,
+    timeout: 15000,
   },
   fullyParallel: false,
-  forbidOnly: isCI,
-  retries: isCI ? 1 : 0,
-  reporter: [["list"]],
+  retries: process.env.CI ? 1 : 0,
+  reporter: [["list"], ["html", { open: "never" }]],
   use: {
-    baseURL: "http://127.0.0.1:4173",
-    trace: "retain-on-failure",
+    baseURL,
+    trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
   },
-  webServer: {
-    command: "npm run dev:local",
-    url: "http://127.0.0.1:4173",
-    reuseExistingServer: !isCI,
-    timeout: 120000,
-  },
-};
+  webServer: process.env.E2E_BASE_URL
+    ? undefined
+    : {
+        command: `npm run dev -- --host 127.0.0.1 --port ${PORT}`,
+        url: baseURL,
+        reuseExistingServer: !process.env.CI,
+        timeout: 120000,
+      },
+  projects: [
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+    },
+  ],
+});

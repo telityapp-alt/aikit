@@ -9,6 +9,7 @@ import { supabase } from "../lib/supabase";
 import { api } from "../lib/api";
 import { fmt } from "../lib/format";
 import { getModuleComponent, getModuleEntry } from "../modules/registry";
+import { APP_CARDS, getAppComponent, getAppEntry } from "../apps/registry";
 import { MASCOT_SCENES } from "../lib/mascots";
 import AIAgentsHome from "../features/ai/pages/AIAgentsHome";
 import AgentWorkspace from "../features/ai/pages/AgentWorkspace";
@@ -253,6 +254,7 @@ const NAV_ITEMS = [
   { id: "ai-agent", label: "AI Agents", icon: <IconSparkle /> },
   { id: "automasi", label: "Automasi", icon: <IconZap /> },
   { id: "module", label: "Module", icon: <IconLayers /> },
+  { id: "apps", label: "Apps", icon: <IconLayers /> },
   { id: "file", label: "File", icon: <IconFile /> },
   { id: "tagihan", label: "Tagihan", icon: <IconReceipt /> },
   { id: "pengaturan", label: "Pengaturan", icon: <IconGear /> },
@@ -367,6 +369,113 @@ async function pollRun(runId, timeoutMs = 30000) {
 /* ── View: Dashboard (home) ────────────────────────────────── */
 function relativeTime(iso) {
   return fmt.relativeTime(iso);
+}
+
+function formatNumber(value) {
+  const numeric = Number(value || 0);
+  return Number.isFinite(numeric) ? numeric.toLocaleString() : "0";
+}
+
+function InstagramProfilesFileCard({ run, onDownload }) {
+  const summary = run?.output?.summary || {};
+  const profiles = Array.isArray(run?.output?.profiles) ? run.output.profiles : [];
+  const topProfiles = [...profiles]
+    .sort((a, b) => Number(b?.followers || 0) - Number(a?.followers || 0))
+    .slice(0, 3);
+
+  return (
+    <div className="db-activity-item" key={run.id}>
+      <div className="db-activity-icon" aria-hidden="true">
+        <IconFile />
+      </div>
+      <div className="db-activity-body" style={{ gap: "14px", display: "grid" }}>
+        <div className="db-activity-row">
+          <span className="db-activity-title">{run.title}</span>
+          <div className="db-activity-meta" style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+            <span
+              className={`db-chip ${run.status === "completed" ? "db-chip-green" : run.status === "failed" ? "db-chip-amber" : "db-chip-blue"}`}
+            >
+              {run.status}
+            </span>
+            <span className="db-activity-time">{relativeTime(run.created_at)}</span>
+            <button
+              className="ghost-button"
+              style={{ fontSize: "12px", height: "28px", padding: "0 12px" }}
+              onClick={() => onDownload(run)}
+            >
+              Unduh JSON
+            </button>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          <span className="db-chip db-chip-blue">{formatNumber(summary.total_profiles)} profiles</span>
+          <span className="db-chip db-chip-green">{formatNumber(summary.verified_profiles)} verified</span>
+          <span className="db-chip db-chip-blue">{formatNumber(summary.business_profiles)} business</span>
+          <span className="db-chip db-chip-amber">{formatNumber(summary.with_email)} with email</span>
+          <span className="db-chip db-chip-blue">{formatNumber(summary.with_external_url)} with link</span>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+            gap: "10px",
+          }}
+        >
+          <div className="db-stat-card">
+            <div className="db-stat-top">
+              <span className="db-stat-value">{formatNumber(summary.total_followers)}</span>
+              <span className="db-stat-label">Total followers</span>
+            </div>
+          </div>
+          <div className="db-stat-card">
+            <div className="db-stat-top">
+              <span className="db-stat-value">{formatNumber(summary.average_followers)}</span>
+              <span className="db-stat-label">Avg followers</span>
+            </div>
+          </div>
+          <div className="db-stat-card">
+            <div className="db-stat-top">
+              <span className="db-stat-value">{formatNumber(summary.total_posts_captured)}</span>
+              <span className="db-stat-label">Posts captured</span>
+            </div>
+          </div>
+        </div>
+
+        {topProfiles.length ? (
+          <div>
+            <div className="db-activity-row" style={{ marginBottom: "8px" }}>
+              <span className="db-activity-title">Top profiles</span>
+            </div>
+            <div className="db-activity-list">
+              {topProfiles.map((profile) => (
+                <div className="db-activity-item" key={`${run.id}:${profile.source_url || profile.username}`}>
+                  <div className="db-activity-body">
+                    <div className="db-activity-row">
+                      <span className="db-activity-title">
+                        {profile.display_name || profile.full_name || profile.username || "-"}
+                      </span>
+                      <div className="db-activity-meta">
+                        {profile.is_verified ? <span className="db-chip db-chip-green">Verified</span> : null}
+                        {profile.is_business_account ? <span className="db-chip db-chip-blue">Business</span> : null}
+                      </div>
+                    </div>
+                    <p className="db-activity-snippet">
+                      @{profile.username || "-"} | Followers: {formatNumber(profile.followers)} | Posts: {formatNumber(profile.posts_count)}
+                    </p>
+                    {profile.biography ? (
+                      <p className="db-activity-snippet">{profile.biography}</p>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
 }
 
 function ViewDashboard({ onNavigate, onOpenModule, onTopUp }) {
@@ -773,18 +882,86 @@ function ViewModuleHost({ slug, onBack }) {
       </div>
     );
   }
+  return (
+    <Suspense
+      fallback={
+        <div className="db-placeholder">
+          <span className="db-placeholder-label">Memuat module...</span>
+        </div>
+      }
+    >
+      <Comp onBack={onBack} />
+    </Suspense>
+  );
+}
+
+function ViewApps({ onOpen }) {
+  return (
+    <>
+      <div className="db-view-header">
+        <div>
+          <h1 className="db-view-title">Apps</h1>
+          <p className="db-view-sub">
+            Workspace fondasional yang jadi backbone lintas module dan automasi.
+          </p>
+        </div>
+      </div>
+
+      <div className="db-product-grid">
+        {APP_CARDS.map((item) => (
+          <ProductCard
+            key={item.id}
+            title={item.title}
+            desc={item.desc}
+            typeBadge={item.category}
+            pricingBadge={item.pricing}
+            users={item.users}
+            ctaLabel="Buka"
+            image={item.image}
+            onCta={() => onOpen(item.id)}
+          />
+        ))}
+      </div>
+    </>
+  );
+}
+
+function ViewAppHost({ slug, routeSegments, onBack }) {
+  const Comp = getAppComponent(slug);
+  const entry = getAppEntry(slug);
+
+  if (!Comp) {
     return (
-      <Suspense
-        fallback={
-          <div className="db-placeholder">
-            <span className="db-placeholder-label">Memuat module...</span>
-          </div>
-        }
-      >
-        <Comp onBack={onBack} />
-      </Suspense>
+      <div className="db-placeholder">
+        <span className="db-placeholder-label">App belum tersedia</span>
+        <p className="db-placeholder-sub">
+          Workspace untuk "{slug}" sedang dalam pengembangan.
+        </p>
+        <button
+          className="ghost-button"
+          style={{ marginTop: "14px" }}
+          onClick={onBack}
+        >
+          Kembali ke daftar
+        </button>
+      </div>
     );
   }
+
+  return (
+    <Suspense
+      fallback={
+        <div className="db-placeholder">
+          <span className="db-placeholder-label">
+            Memuat {entry?.title || "app"}...
+          </span>
+        </div>
+      }
+    >
+      <Comp routeSegments={routeSegments} onBack={onBack} />
+    </Suspense>
+  );
+}
 
 /* ── AI Agent icons ───────────────────────────────────────── */
 
@@ -1571,34 +1748,39 @@ function ViewFile() {
             </div>
           </div>
         ) : (
-          runs.map((r) => (
-            <div className="db-activity-item" key={r.id}>
-              <div className="db-activity-icon" aria-hidden="true">
-                <IconFile />
-              </div>
-              <div className="db-activity-body">
-                <div className="db-activity-row">
-                  <span className="db-activity-title">{r.title}</span>
-                  <div className="db-activity-meta">
-                    <span className="db-activity-time">
-                      {relativeTime(r.created_at)}
-                    </span>
-                    <button
-                      className="ghost-button"
-                      style={{
-                        fontSize: "12px",
-                        height: "28px",
-                        padding: "0 12px",
-                      }}
-                      onClick={() => download(r)}
-                    >
-                      Unduh
-                    </button>
+          runs.map((r) =>
+            r.automation_slug === "instagram-profiles-brightdata" &&
+            r.output?.summary ? (
+              <InstagramProfilesFileCard key={r.id} run={r} onDownload={download} />
+            ) : (
+              <div className="db-activity-item" key={r.id}>
+                <div className="db-activity-icon" aria-hidden="true">
+                  <IconFile />
+                </div>
+                <div className="db-activity-body">
+                  <div className="db-activity-row">
+                    <span className="db-activity-title">{r.title}</span>
+                    <div className="db-activity-meta">
+                      <span className="db-activity-time">
+                        {relativeTime(r.created_at)}
+                      </span>
+                      <button
+                        className="ghost-button"
+                        style={{
+                          fontSize: "12px",
+                          height: "28px",
+                          padding: "0 12px",
+                        }}
+                        onClick={() => download(r)}
+                      >
+                        Unduh
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))
+            ),
+          )
         )}
       </div>
     </>
@@ -1692,6 +1874,9 @@ export default function Dashboard() {
     .filter(Boolean);
   const activeNav = segments[0] || "dashboard";
   const moduleSlug = activeNav === "module" ? segments[1] : null;
+  const appSlug = activeNav === "apps" ? segments[1] : null;
+  const appRouteSegments = activeNav === "apps" ? segments.slice(2) : [];
+  const isCrmApp = activeNav === "apps" && appSlug === "crm";
   const aiAgentSlug = activeNav === "ai-agent" ? segments[1] : null;
   const aiThreadId = activeNav === "ai-agent" ? segments[2] : null;
   // Automasi = small tools that still live inside the Automasi dashboard tab
@@ -1714,13 +1899,20 @@ export default function Dashboard() {
     }
   }
 
+  function resolveModulePath(slug) {
+    if (slug === "contact-manager") {
+      return "/dashboard/apps/crm/overview";
+    }
+    return `/dashboard/module/${slug}`;
+  }
+
   function renderView() {
     switch (activeNav) {
       case "dashboard":
         return (
           <ViewDashboard
             onNavigate={handleNavClick}
-            onOpenModule={(slug) => navigate(`/dashboard/module/${slug}`)}
+            onOpenModule={(slug) => navigate(resolveModulePath(slug))}
             onTopUp={handleTopUp}
           />
         );
@@ -1743,8 +1935,18 @@ export default function Dashboard() {
           />
         ) : (
           <ViewModule
-            onOpen={(slug) => navigate(`/dashboard/module/${slug}`)}
+            onOpen={(slug) => navigate(resolveModulePath(slug))}
           />
+        );
+      case "apps":
+        return appSlug ? (
+          <ViewAppHost
+            slug={appSlug}
+            routeSegments={appRouteSegments}
+            onBack={() => navigate("/dashboard/apps")}
+          />
+        ) : (
+          <ViewApps onOpen={(slug) => navigate(`/dashboard/apps/${slug}`)} />
         );
       case "ai-agent":
         return aiAgentSlug ? (
@@ -1831,9 +2033,9 @@ export default function Dashboard() {
         </div>
       </aside>
 
-      <main className="db-main">
+      <main className={`db-main${isCrmApp ? " db-main--crm" : ""}`}>
         <div
-          className={`db-main-inner${activeNav === "ai-agent" && aiAgentSlug ? " db-main-inner--wide" : ""}`}
+          className={`db-main-inner${activeNav === "ai-agent" && aiAgentSlug ? " db-main-inner--wide" : ""}${isCrmApp ? " db-main-inner--crm" : ""}`}
         >
           {renderView()}
         </div>

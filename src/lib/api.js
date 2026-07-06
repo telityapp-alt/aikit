@@ -21,7 +21,7 @@ function isLocalDevHost() {
 
 function localDevApiHint(status) {
   if (!isLocalDevHost()) return null;
-  if (status !== 404 && status !== 502 && status !== 503) return null;
+  if (status !== 404 && status !== 500 && status !== 502 && status !== 503) return null;
 
   return [
     "Local API belum terhubung ke Worker.",

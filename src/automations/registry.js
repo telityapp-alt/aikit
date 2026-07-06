@@ -1,9 +1,12 @@
 import { lazy } from "react";
 
 export const AUTOMATION_REGISTRY = {
+  "instagram-profile-intelligence": {
+    component: lazy(() => import("./InstagramProfileScanner.jsx")),
+    type: "url-collection",
+  },
   "instagram-profiles-brightdata": {
-    component: lazy(() => import("./InstagramProfilesBrightData.jsx")),
-    provider: "brightdata",
+    component: lazy(() => import("./InstagramProfileScanner.jsx")),
     type: "url-collection",
   },
 };

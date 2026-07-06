@@ -1,8 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-const localApiProxy =
-  process.env.VITE_LOCAL_API_PROXY || "http://127.0.0.1:8787";
+// Only enable the local API proxy for the dedicated full-stack dev flow.
+// Plain `npm run dev` should not silently proxy to a Worker that may not exist.
+const localApiProxy = process.env.VITE_LOCAL_API_PROXY || null;
 
 // https://vite.dev/config/
 export default defineConfig({

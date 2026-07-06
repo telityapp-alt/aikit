@@ -28,6 +28,14 @@ const API_RATE_LIMIT = {
   window: 60,
 };
 
+const AUTOMATION_PUBLIC_ALIASES = {
+  "instagram-profile-intelligence": "instagram-profiles-brightdata",
+};
+
+function resolveAutomationSlug(slug) {
+  return AUTOMATION_PUBLIC_ALIASES[slug] || slug;
+}
+
 async function rateLimit(env, userId) {
   try {
     const allowed = await rpc(env, "rate_limit_check", {
@@ -46,9 +54,10 @@ async function rateLimit(env, userId) {
 }
 
 async function createAutomationRun(env, user, slug, input, ip) {
+  const resolvedSlug = resolveAutomationSlug(slug);
   const automationRows = await automationDb(
     env,
-    `automations?slug=eq.${encodeURIComponent(slug)}&is_active=eq.true&select=*`,
+    `automations?slug=eq.${encodeURIComponent(resolvedSlug)}&is_active=eq.true&select=*`,
   );
   const automation = automationRows?.[0];
   if (!automation) {
@@ -72,24 +81,31 @@ async function createAutomationRun(env, user, slug, input, ip) {
   }
 
   let run;
+  const queuedAt = new Date().toISOString();
   try {
     [run] = await automationDb(env, "runs", {
       method: "POST",
       prefer: "return=representation",
       body: {
+        user_id: user.id,
         workspace_user_id: user.id,
         workspace_email: user.email || null,
         automation_id: automation.id,
-        automation_slug: automation.slug,
-        title: automation.title,
+        automation_slug: slug,
+        title: slug === "instagram-profile-intelligence" ? "Instagram Profile Intelligence" : automation.title,
         status: "queued",
         input,
         credits_spent: chargedCost,
+        updated_at: queuedAt,
       },
     });
   } catch (error) {
     const message = String(error.message);
-    if (!message.includes("workspace_user_id") && !message.includes("workspace_email")) {
+    if (
+      !message.includes("workspace_user_id") &&
+      !message.includes("workspace_email") &&
+      !message.includes("updated_at")
+    ) {
       throw error;
     }
 
@@ -99,8 +115,8 @@ async function createAutomationRun(env, user, slug, input, ip) {
       body: {
         user_id: user.id,
         automation_id: automation.id,
-        automation_slug: automation.slug,
-        title: automation.title,
+        automation_slug: slug,
+        title: slug === "instagram-profile-intelligence" ? "Instagram Profile Intelligence" : automation.title,
         status: "queued",
         input,
         credits_spent: chargedCost,
@@ -250,7 +266,7 @@ async function handleRunRequest(request, env, ctx) {
     throw new HttpError(400, "slug wajib diisi.");
   }
 
-  const executor = getAutomationExecutor(slug);
+  const executor = getAutomationExecutor(resolveAutomationSlug(slug));
   if (!executor) {
     throw new HttpError(409, `Automation ${slug} belum aktif di worker automation baru.`);
   }
@@ -604,13 +620,13 @@ async function listAutomationFiles(request, env) {
   try {
     const runs = await automationDb(
       env,
-      `runs?workspace_user_id=eq.${encodeURIComponent(user.id)}&select=id,title,output,status,created_at&not=output.is.null&order=created_at.desc&limit=30`,
+      `runs?workspace_user_id=eq.${encodeURIComponent(user.id)}&select=id,title,status,created_at,completed_at,automation_slug,output,error&output=not.is.null&order=created_at.desc&limit=30`,
     );
     return json({ runs, source: "automation-db" }, 200, corsHeaders());
   } catch {
     const runs = await db(
       env,
-      `runs?user_id=eq.${user.id}&select=id,title,output,status,created_at&not=output.is.null&order=created_at.desc&limit=30`,
+      `runs?user_id=eq.${user.id}&select=id,title,status,created_at,completed_at,automation_slug,output,error&output=not.is.null&order=created_at.desc&limit=30`,
     );
     return json({ runs, source: "legacy-db" }, 200, corsHeaders());
   }

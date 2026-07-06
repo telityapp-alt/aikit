@@ -190,7 +190,18 @@ export const instagramProfilesBrightData = {
   },
 
   async execute(env, validatedInput) {
-    const apiKey = requireEnv(env, "BRIGHTDATA_API_KEY");
+    const apiKey =
+      env.BRIGHTDATA_API_KEY ||
+      env.BRIGHTDATA_API_TOKEN ||
+      env.BRIGHTDATA_BEARER_TOKEN ||
+      null;
+    if (!apiKey) {
+      requireEnv(
+        env,
+        "BRIGHTDATA_API_KEY",
+        "Konfigurasi server Bright Data belum lengkap. Pasang BRIGHTDATA_API_KEY di .dev.vars lokal dan di secret environment Cloudflare.",
+      );
+    }
     const datasetId =
       env.BRIGHTDATA_INSTAGRAM_PROFILES_DATASET_ID ||
       env.BRIGHTDATA_INSTAGRAM_DATASET_ID ||

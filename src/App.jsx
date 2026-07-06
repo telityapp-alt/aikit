@@ -899,7 +899,11 @@ function App() {
             const slug = popoverCard.id || "automasi";
             setPopoverCard(null);
             if (popoverCardSource === "module") {
-              navigate(`/dashboard/module/${slug}`);
+              navigate(
+                slug === "contact-manager"
+                  ? "/dashboard/apps/crm/overview"
+                  : `/dashboard/module/${slug}`,
+              );
             } else {
               navigate(
                 slug === "automasi"

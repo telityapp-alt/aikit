@@ -19,22 +19,6 @@
     "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_pli5g34Fg5iAgNnYduBPdA_1nYW93CO",
     "AUTOMATION_SUPABASE_URL": "https://lftgaziycyvxqtlwvxgi.supabase.co"
   },
-  "queues": {
-    "producers": [
-      {
-        "binding": "RUN_QUEUE",
-        "queue": "aikit-run-queue"
-      }
-    ],
-    "consumers": [
-      {
-        "queue": "aikit-run-queue",
-        "max_batch_size": 4,
-        "max_batch_timeout": 10,
-        "max_retries": 3
-      }
-    ]
-  },
   "r2_buckets": [
     {
       "binding": "REPORTS_BUCKET",
